@@ -17,7 +17,7 @@ from fairseq.optim.fp16_optimizer import FP16Optimizer
 from fairseq.logging import progress_bar
 
 from fairnr.data import (
-    ShapeViewDataset, SampledPixelDataset, ShapeViewStreamDataset,
+    ShapeViewDataset, ShapeViewLightDataset, SampledPixelDataset, ShapeViewStreamDataset,
     WorldCoordDataset, ShapeDataset, InfiniteDataset
 )
 from fairnr.data.data_utils import write_images, recover_image, parse_views
@@ -163,7 +163,7 @@ class SingleObjRenderingTask(FairseqTask):
         """
         Load a given dataset split (train, valid, test)
         """
-        self.datasets[split] = ShapeViewDataset(
+        self.datasets[split] = ShapeViewLightDataset(
             self.train_data if split == 'train' else \
                 self.val_data if split == 'valid' else self.test_data,
             views=self.train_views if split == 'train' else \

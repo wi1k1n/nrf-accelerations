@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from .shape_dataset import (
-    ShapeDataset, ShapeViewDataset, ShapeViewStreamDataset,
+    ShapeDataset, ShapeViewDataset, ShapeViewLightDataset, ShapeViewStreamDataset,
     SampledPixelDataset, WorldCoordDataset,
     InfiniteDataset
 )

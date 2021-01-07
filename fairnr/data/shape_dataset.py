@@ -370,6 +370,29 @@ class ShapeViewDataset(ShapeDataset):
         return results
 
 
+class ShapeViewLightDataset(ShapeViewDataset):
+    """
+    Same as ShapeViewDataset but also considers point light source
+    """
+    def __init__(self,
+                paths,
+                views,
+                num_view,
+                subsample_valid=-1,
+                resolution=None,
+                load_depth=False,
+                load_mask=False,
+                train=True,
+                preload=True,
+                repeat=1,
+                binarize=True,
+                bg_color="1,1,1",
+                min_color=-1,
+                ids=None):
+
+        super().__init__(paths, views, num_view, subsample_valid, resolution, load_depth, load_mask, train, preload, repeat, binarize, bg_color, min_color, ids)
+
+
 class ShapeViewStreamDataset(BaseWrapperDataset):
     """
     Different from ShapeViewDataset.

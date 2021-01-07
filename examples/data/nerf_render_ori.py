@@ -54,6 +54,28 @@ out_data = {
 bpy.context.scene.render.use_persistent_data = True
 
 
+# Hardware setup
+print("---------------   SCENE LIST   ---------------")
+for scene in bpy.data.scenes:
+    print(scene.name)
+    scene.cycles.device = 'GPU'
+    scene.render.resolution_percentage = 200 
+    scene.cycles.samples = CYCLES_SAMPLES
+
+# Enable CUDA
+bpy.context.preferences.addons['cycles'].preferences.compute_device_type = 'CUDA'
+
+# Enable and list all devices, or optionally disable CPU
+print("----------------------------------------------")
+for devices in bpy.context.preferences.addons['cycles'].preferences.get_devices():
+    for d in devices:
+        d.use = True
+        if d.type == 'CPU':
+            d.use = False
+        print("Device '{}' type {} : {}" . format(d.name, d.type, d.use))
+print("----------------------------------------------")
+
+
 # Set up rendering of depth map.
 bpy.context.scene.use_nodes = True
 tree = bpy.context.scene.node_tree
@@ -131,6 +153,12 @@ cam_constraint.track_axis = 'TRACK_NEGATIVE_Z'
 cam_constraint.up_axis = 'UP_Y'
 b_empty = parent_obj_to_camera(cam)
 cam_constraint.target = b_empty
+
+# Set up the point light to be colocated with camera
+pointLight = scene.objects['PointLight']
+pointLight.location = b_empty.location
+pointLight.parent = b_empty
+pointLight.location = cam.location
 
 scene.render.image_settings.file_format = 'PNG'  # set output format to .png
 
