@@ -42,8 +42,11 @@ class ShapeDataset(FairseqDataset):
         _data_per_shape = {}
         _data_per_shape['shape'] = list(range(len(self.paths)))
         _ixts = self.find_intrinsics()
+        _glbs = self.find_global()
         if len(_ixts) > 0:
             _data_per_shape['ixt'] = _ixts
+        if len(_glbs) > 0:
+            _data_per_shape['glb'] = _glbs
 
         if self.subsample_valid > -1:
             for key in _data_per_shape:
@@ -80,11 +83,21 @@ class ShapeDataset(FairseqDataset):
                 ixt_list.append(path + '/intrinsics.txt')
         return ixt_list
 
+    def find_global(self):
+        glb_list = []
+        for path in self.paths:
+            if os.path.exists(path + '/global.txt'):
+                glb_list.append(path + '/global.txt')
+        return glb_list
+
     def _load_shape(self, packed_data):  
         intrinsics = data_utils.load_intrinsics(packed_data['ixt']).astype('float32') \
             if packed_data.get('ixt', None) is not None else None
         shape_id = packed_data['shape']
-        return {'intrinsics': intrinsics, 'id': shape_id}
+        shape_data = {'intrinsics': intrinsics, 'id': shape_id}
+        if packed_data.get('glb', None) is not None:   # additional global feature (if any)
+           shape_data['global_index'] = np.loadtxt(packed_data['glb']).astype('int64')
+        return shape_data
 
     def _load_batch(self, data, index):
         return index, self._load_shape(data[index])
@@ -357,6 +370,29 @@ class ShapeViewDataset(ShapeDataset):
         return results
 
 
+class ShapeViewLightDataset(ShapeViewDataset):
+    """
+    Same as ShapeViewDataset but also considers point light source
+    """
+    def __init__(self,
+                paths,
+                views,
+                num_view,
+                subsample_valid=-1,
+                resolution=None,
+                load_depth=False,
+                load_mask=False,
+                train=True,
+                preload=True,
+                repeat=1,
+                binarize=True,
+                bg_color="1,1,1",
+                min_color=-1,
+                ids=None):
+
+        super().__init__(paths, views, num_view, subsample_valid, resolution, load_depth, load_mask, train, preload, repeat, binarize, bg_color, min_color, ids)
+
+
 class ShapeViewStreamDataset(BaseWrapperDataset):
     """
     Different from ShapeViewDataset.
@@ -369,6 +405,7 @@ class ShapeViewStreamDataset(BaseWrapperDataset):
 
         self.dataset.repeat == 1
         self.dataset.num_view == 1
+        self.total_num_shape = dataset.total_num_shape
 
         # reset the data_index
         self.dataset.data_index = []
