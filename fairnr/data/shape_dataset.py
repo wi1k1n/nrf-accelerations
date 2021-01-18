@@ -21,13 +21,13 @@ class ShapeDataset(FairseqDataset):
     """
     A dataset that only returns data per shape
     """
-    def __init__(self, 
-                paths, 
+    def __init__(self,
+                paths,
                 preload=True,
                 repeat=1,
                 subsample_valid=-1,
                 ids=None):
-        
+
         if os.path.isdir(paths):
             self.paths = [paths]
         else:
@@ -53,7 +53,7 @@ class ShapeDataset(FairseqDataset):
                 _data_per_shape[key] = _data_per_shape[key][::self.subsample_valid]
             self.paths = self.paths[::self.subsample_valid]
             self.total_num_shape = len(self.paths)
-        
+
         # group the data..
         data_list = []
         for r in range(repeat):
@@ -62,7 +62,7 @@ class ShapeDataset(FairseqDataset):
                 self.cache = []
                 logger.info('pre-load the dataset into memory.')
 
-            for id in range(self.total_num_shape): 
+            for id in range(self.total_num_shape):
                 element = {}
                 for key in _data_per_shape:
                     element[key] = _data_per_shape[key][id]
@@ -90,7 +90,7 @@ class ShapeDataset(FairseqDataset):
                 glb_list.append(path + '/global.txt')
         return glb_list
 
-    def _load_shape(self, packed_data):  
+    def _load_shape(self, packed_data):
         intrinsics = data_utils.load_intrinsics(packed_data['ixt']).astype('float32') \
             if packed_data.get('ixt', None) is not None else None
         shape_id = packed_data['shape']
@@ -117,7 +117,7 @@ class ShapeDataset(FairseqDataset):
     def _collater(self, samples):
         results = {}
 
-        results['shape'] = torch.from_numpy(np.array([s[0] for s in samples]))    
+        results['shape'] = torch.from_numpy(np.array([s[0] for s in samples]))
         for key in samples[0][1]:
             if samples[0][1][key] is not None:
                 results[key] = torch.from_numpy(
@@ -139,12 +139,12 @@ class ShapeViewDataset(ShapeDataset):
     A dataset contains a series of images renderred offline for an object.
     """
 
-    def __init__(self, 
-                paths, 
+    def __init__(self,
+                paths,
                 views,
                 num_view,
                 subsample_valid=-1,
-                resolution=None, 
+                resolution=None,
                 load_depth=False,
                 load_mask=False,
                 train=True,
@@ -154,7 +154,7 @@ class ShapeViewDataset(ShapeDataset):
                 bg_color="1,1,1",
                 min_color=-1,
                 ids=None):
-        
+
         super().__init__(paths, False, repeat, subsample_valid, ids)
 
         self.train = train
@@ -169,7 +169,7 @@ class ShapeViewDataset(ShapeDataset):
             self.resolution = [resolution, resolution]
         self.world2camera = True
         self.cache_view = None
-        
+
         bg_color = [float(b) for b in bg_color.split(',')] \
             if isinstance(bg_color, str) else [bg_color]
         if min_color == -1:
@@ -182,7 +182,7 @@ class ShapeViewDataset(ShapeDataset):
 
         # -- load per-view data
         _data_per_view = {}
-        _data_per_view['rgb'] = self.find_rgb()  
+        _data_per_view['rgb'] = self.find_rgb()
         _data_per_view['ext'] = self.find_extrinsics()
         if self.find_intrinsics_per_view() is not None:
             _data_per_view['ixt_v'] = self.find_intrinsics_per_view()
@@ -191,8 +191,9 @@ class ShapeViewDataset(ShapeDataset):
         if self.load_mask:
             _data_per_view['mask'] = self.find_mask()
         _data_per_view['view'] = self.summary_view_data(_data_per_view)
-        
+
         # group the data.
+        self.perm_ids = []
         _index = 0
         for r in range(repeat):
             # HACK: making several copies to enable multi-GPU usage.
@@ -200,12 +201,13 @@ class ShapeViewDataset(ShapeDataset):
                 self.cache = []
                 logger.info('pre-load the dataset into memory.')
 
-            for id in range(self.total_num_shape): 
+            self.perm_ids.append([])
+            for id in range(self.total_num_shape):
                 element = {}
                 total_num_view = len(_data_per_view['rgb'][id])
-                perm_ids = np.random.permutation(total_num_view) if train else np.arange(total_num_view)
+                self.perm_ids[-1].append(np.random.permutation(total_num_view) if train else np.arange(total_num_view))
                 for key in _data_per_view:
-                    element[key] = [_data_per_view[key][id][i] for i in perm_ids]
+                    element[key] = [_data_per_view[key][id][i] for i in self.perm_ids[-1][-1]]
                 self.data[_index].update(element)
 
                 if r == 0 and preload:
@@ -256,7 +258,7 @@ class ShapeViewDataset(ShapeDataset):
         if len(file_list[0]) == 0:
             raise FileNotFoundError
         return [[files[i] for i in self.views] for files in file_list]
-    
+
     def find_rgb(self):
         try:
             return self.select([sorted(glob.glob(path + '/rgb/*.*g')) for path in self.paths])
@@ -265,12 +267,12 @@ class ShapeViewDataset(ShapeDataset):
                 return self.select([sorted(glob.glob(path + '/color/*.*g')) for path in self.paths])
             except FileNotFoundError:
                 raise FileNotFoundError("CANNOT find rendered images.")
-    
+
     def find_depth(self):
         try:
             return self.select([sorted(glob.glob(path + '/depth/*.exr')) for path in self.paths])
         except FileNotFoundError:
-            raise FileNotFoundError("CANNOT find estimated depths images") 
+            raise FileNotFoundError("CANNOT find estimated depths images")
 
     def find_mask(self):
         try:
@@ -286,8 +288,8 @@ class ShapeViewDataset(ShapeDataset):
                 self.world2camera = False
                 return self.select([sorted(glob.glob(path + '/pose/*.txt')) for path in self.paths])
             except FileNotFoundError:
-                raise FileNotFoundError('world2camera or camera2world matrices not found.')   
-    
+                raise FileNotFoundError('world2camera or camera2world matrices not found.')
+
     def find_intrinsics_per_view(self):
         try:
             return self.select([sorted(glob.glob(path + '/intrinsic/*.txt')) for path in self.paths])
@@ -306,12 +308,12 @@ class ShapeViewDataset(ShapeDataset):
 
     def _load_view(self, packed_data, view_idx):
         image, uv, ratio = data_utils.load_rgb(
-            packed_data['rgb'][view_idx], 
+            packed_data['rgb'][view_idx],
             resolution=self.resolution,
             bg_color=self.bg_color,
             min_rgb=self.min_color)
         rgb, alpha = image[:3], image[3]  # C x H x W for RGB
-        extrinsics = data_utils.load_matrix(packed_data['ext'][view_idx]) 
+        extrinsics = data_utils.load_matrix(packed_data['ext'][view_idx])
         extrinsics = geometry.parse_extrinsics(extrinsics, self.world2camera).astype('float32')  # this is C2W
         intrinsics = data_utils.load_intrinsics(packed_data['ixt_v'][view_idx]).astype('float32') \
             if packed_data.get('ixt_v', None) is not None else None
@@ -327,9 +329,9 @@ class ShapeViewDataset(ShapeDataset):
         return {
             'path': packed_data['rgb'][view_idx],
             'view': view_idx,
-            'uv': uv.reshape(2, -1), 
-            'colors': rgb.reshape(3, -1), 
-            'alpha': alpha.reshape(-1), 
+            'uv': uv.reshape(2, -1),
+            'colors': rgb.reshape(3, -1),
+            'alpha': alpha.reshape(-1),
             'extrinsics': extrinsics,
             'intrinsics': intrinsics,
             'depths': z.reshape(-1) if z is not None else None,
@@ -363,7 +365,7 @@ class ShapeViewDataset(ShapeDataset):
                 results[key] = torch.from_numpy(
                     np.array([[d[key] for d in s[2]] for s in samples])
                 )
-                
+
         results['colors'] = results['colors'].transpose(2, 3)
         if results.get('full_rgb', None) is not None:
             results['full_rgb'] = results['full_rgb'].transpose(2, 3)
@@ -392,6 +394,37 @@ class ShapeViewLightDataset(ShapeViewDataset):
 
         super().__init__(paths, views, num_view, subsample_valid, resolution, load_depth, load_mask, train, preload, repeat, binarize, bg_color, min_color, ids)
 
+        _data_per_view = {}
+        _data_per_view['pl'] = self.find_extrinsics_light()
+
+        _index = 0
+        for r in range(repeat):
+            # HACK: making several copies to enable multi-GPU usage.
+            for id in range(self.total_num_shape):
+                element = {}
+                for key in _data_per_view:
+                    element[key] = [_data_per_view[key][id][i] for i in self.perm_ids[r][id]]
+                self.data[_index].update(element)
+
+                _index += 1
+
+    def find_extrinsics_light(self):
+        try:
+            self.world2camera = False
+            return self.select([sorted(glob.glob(path + '/pose_pl/*.txt')) for path in self.paths])
+        except FileNotFoundError:
+            raise FileNotFoundError('world2camera or camera2world matrices not found.')
+
+
+    def _load_view(self, packed_data, view_idx):
+        ret = super()._load_view(packed_data, view_idx)
+
+        extrinsics_pl = data_utils.load_matrix(packed_data['pl'][view_idx])
+        extrinsics_pl = geometry.parse_extrinsics(extrinsics_pl, self.world2camera).astype('float32')  # this is C2W
+
+        ret['extrinsics_pl'] = extrinsics_pl
+
+        return ret
 
 class ShapeViewStreamDataset(BaseWrapperDataset):
     """
@@ -422,7 +455,7 @@ class ShapeViewStreamDataset(BaseWrapperDataset):
     @property
     def cache(self):
         return self.dataset.cache
-    
+
     @property
     def data(self):
         return self.dataset.data
@@ -447,7 +480,7 @@ class ShapeViewStreamDataset(BaseWrapperDataset):
         except Exception:
             caches = [self._load_batch(self.data, id, view_id) for view_id in views]
             cache = [caches[0][0], caches[0][1], [caches[i][2][0] for i in range(len(views))]]
-           
+
             if data_utils.get_rank() == 0:
                 np.savez(npzfile, cache=cache)
             return cache
@@ -458,15 +491,15 @@ class SampledPixelDataset(BaseWrapperDataset):
     A wrapper dataset, which split rendered images into pixels
     """
 
-    def __init__(self, 
-        dataset, 
-        num_sample=None, 
-        sampling_on_mask=1.0, 
-        sampling_on_bbox=False, 
+    def __init__(self,
+        dataset,
+        num_sample=None,
+        sampling_on_mask=1.0,
+        sampling_on_bbox=False,
         sampling_at_center=1.0,
-        resolution=512, 
+        resolution=512,
         patch_size=1):
-        
+
         super().__init__(dataset)
         self.num_sample = num_sample
         self.sampling_on_mask = sampling_on_mask
@@ -481,10 +514,10 @@ class SampledPixelDataset(BaseWrapperDataset):
         # sample pixels from the original images
         sample_index = [
             data_utils.sample_pixel_from_image(
-                data['alpha'].shape[-1], 
-                self.num_sample, 
-                data.get('mask', None) 
-                    if data.get('mask', None) is not None 
+                data['alpha'].shape[-1],
+                self.num_sample,
+                data.get('mask', None)
+                    if data.get('mask', None) is not None
                     else data.get('alpha', None),
                 self.sampling_on_mask,
                 self.sampling_on_bbox,
@@ -493,7 +526,7 @@ class SampledPixelDataset(BaseWrapperDataset):
                 patch_size=self.patch_size)
             for data in data_per_view
         ]
-        
+
         for i, data in enumerate(data_per_view):
             data_per_view[i]['full_rgb'] = copy.deepcopy(data['colors'])
             for key in data:
@@ -502,14 +535,14 @@ class SampledPixelDataset(BaseWrapperDataset):
                     and data[key].shape[-1] > self.num_sample:
 
                     if len(data[key].shape) == 2:
-                        data_per_view[i][key] = data[key][:, sample_index[i]] 
+                        data_per_view[i][key] = data[key][:, sample_index[i]]
                     else:
                         data_per_view[i][key] = data[key][sample_index[i]]
             data_per_view[i]['index'] = sample_index[i]
         return index, data_per_shape, data_per_view
 
     def num_tokens(self, index):
-        return self.dataset.num_view * self.num_sample 
+        return self.dataset.num_view * self.num_sample
 
 
 class WorldCoordDataset(BaseWrapperDataset):
@@ -530,7 +563,7 @@ class WorldCoordDataset(BaseWrapperDataset):
             ray_dir = geometry.get_ray_direction(
                 ray_start, data['uv'], intrinsics, inv_RT, 1
             )
-            
+
             # here we still keep the original data for tracking purpose
             data.update({
                 'ray_start': ray_start,
@@ -539,7 +572,7 @@ class WorldCoordDataset(BaseWrapperDataset):
             return data
 
         return index, data_per_shape, [camera2world(data) for data in data_per_view]
-        
+
     def collater(self, samples):
         results = self.dataset.collater(samples)
         if results is None:
