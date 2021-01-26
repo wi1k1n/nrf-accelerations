@@ -3,6 +3,7 @@ import pyperclip
 
 COPY2CLIPBOARD = True
 # DATA = "Lego"
+WITH_LIGHT = True
 DATA = "bunny_static"
 RES = "160x160"
 PIXELS_PER_VIEW = '64'  # should be powers of 2 (?)
@@ -12,7 +13,7 @@ SUFFIX = "v1"
 DATASET = "/home/mazlov/documents/thesis/codes/blender/" + DATA
 SAVE = "checkpoint/" + DATA
 MODEL = ARCH + SUFFIX
-USE_OCTREE = False
+USE_OCTREE = True
 
 # create directory if doesn't exist
 # if not os.path.exists(SAVE + '/' + MODEL): os.makedirs(SAVE + '/' + MODEL)
@@ -20,6 +21,9 @@ USE_OCTREE = False
 # create configuration file
 with open('configuration.txt', 'w') as f:
 	f.write(DATASET)
+	if WITH_LIGHT:
+		f.write('\n--with-point-light')
+		f.write('\n--inputs-to-texture "feat:0:256,ray:4,light:4,lightd:0:1"')
 	f.write('\n--user-dir fairnr')
 	f.write('\n--task single_object_rendering')
 	f.write('\n--train-views "0..100"')

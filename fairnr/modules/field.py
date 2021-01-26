@@ -12,7 +12,7 @@ import torch.nn.functional as F
 from torch.autograd import grad
 from collections import OrderedDict
 from fairnr.modules.implicit import (
-    ImplicitField, SignedDistanceField,
+    ImplicitField, SignedDistanceField, LightTextureField,
     TextureField, HyperImplicitField, BackgroundField
 )
 from fairnr.modules.module_utils import NeRFPosEmbLinear
@@ -102,18 +102,18 @@ class RaidanceField(Field):
 
         if not getattr(args, "hypernetwork", False):
             self.feature_field = ImplicitField(
-                den_input_dim, den_feat_dim, args.feature_embed_dim, 
+                den_input_dim, den_feat_dim, args.feature_embed_dim,
                 args.feature_layers + 2 if not self.nerf_style else 8,          # +2 is to adapt to old code
-                with_ln=self.with_ln if not self.nerf_style else False, 
+                with_ln=self.with_ln if not self.nerf_style else False,
                 skips=self.skips if not self.nerf_style else [4],
-                spec_init=True if not self.nerf_style else False)  
+                spec_init=True if not self.nerf_style else False)
         else:
             assert (not self.nerf_style), "Hypernetwork does not support NeRF style MLPs yet."
             den_contxt_dim = self.den_input_dims[-1]
             self.feature_field = HyperImplicitField(
                 den_contxt_dim, den_input_dim - den_contxt_dim, 
                 den_feat_dim, args.feature_embed_dim, args.feature_layers + 2)  # +2 is to adapt to old code
-        
+
     def build_density_predictor(self, args):
         den_feat_dim = self.tex_input_dims[0]
         self.predictor = SignedDistanceField(
@@ -123,16 +123,23 @@ class RaidanceField(Field):
 
     def build_texture_renderer(self, args):
         tex_input_dim = sum(self.tex_input_dims)
-        self.renderer = TextureField(
-            tex_input_dim, args.texture_embed_dim, 
-            args.texture_layers + 2 if not self.nerf_style else 2, 
-            with_ln=self.with_ln if not self.nerf_style else False,
-            spec_init=True if not self.nerf_style else False)
+        if not getattr(args, "with_point_light", False):
+            self.renderer = TextureField(
+                tex_input_dim, args.texture_embed_dim,
+                args.texture_layers + 2 if not self.nerf_style else 2,
+                with_ln=self.with_ln if not self.nerf_style else False,
+                spec_init=True if not self.nerf_style else False)
+        else:
+            self.renderer = LightTextureField(
+                tex_input_dim, args.texture_embed_dim,
+                args.texture_layers + 2 if not self.nerf_style else 2,
+                with_ln=self.with_ln if not self.nerf_style else False,
+                spec_init=True if not self.nerf_style else False)
 
     def parse_inputs(self, arguments):
         def fillup(p):
             assert len(p) > 0
-            default = 'b' if (p[0] != 'ray') and (p[0] != 'normal') else 'a'
+            default = 'b' if (p[0] != 'ray') and (p[0] != 'normal') and (p[0] != 'light') else 'a'
 
             if len(p) == 1:
                 return [p[0], 0, 3, default]
@@ -207,6 +214,9 @@ class RaidanceField(Field):
                             help='use hypernetwork to model feature')
         parser.add_argument('--hyper-feature-embed-dim', type=int, metavar='N',
                             help='feature dimension used to predict the hypernetwork. consistent with context embedding')
+        # light signed distance
+        parser.add_argument('--with-point-light', action='store_true',
+                            help='texture field uses point light data')
 
         # backgound parameters
         parser.add_argument('--background-depth', type=float,
