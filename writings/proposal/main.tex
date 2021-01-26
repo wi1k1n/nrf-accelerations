@@ -15,6 +15,7 @@
 \usepackage{geometry}
 \usepackage{booktabs}
 \usepackage{lipsum}
+\usepackage{wrapfig}
 
 \newcommand{\rphr}[1]{{\color{blue}#1}}
 \newcommand{\addrefs}{{\color{orange}[..addrefs..]}}
@@ -60,7 +61,14 @@ When a BRDF is changing across a surface, it is referred to as a spatially-varyi
 
 \cite{deepsdf2019} propose deep signed distance functions (DeepSDF), which stores scene information in the network. It can be extended to multi-shape version and is memory efficient.
 
-\cite{nerf2020mildenhall} reaches appealing results by combining (implicit) neural scene representation together with ray marching technique. Authors also use some improvements such as: \textit{positional encoding} for more detailed renders and \textit{hierarchical volume sampling} for increasing efficiency of the approach. Although this method allows novel view synthesis, the scene appearance is not modeled. Another problem is an overall inefficiency of the approach.
+\cite{nerf2020mildenhall} reaches appealing results by combining (implicit) neural scene representation together with ray marching technique. Authors employ an MLP to implicitly represent the scene by taking positional inputs and returning the color at the given point. The scheme of used MLP is outlined in \Cref{fig:mlp_nerf}. Authors also use some improvements such as: \textit{positional encoding} for more detailed renders and \textit{hierarchical volume sampling} for increasing efficiency of the approach. Although this method allows novel view synthesis, the scene appearance is not modeled. Another problem is an overall inefficiency of the approach.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.6\textwidth]{img/mlp_nerf.png}
+    \caption{MLP used in NeRF \cite{nerf2020mildenhall} Dark blue boxes represent hidden layers. Black arrows indicate FC-layers with sigmoid activation, orange arrows - FC-layers without activation. $\zeta(.)$ stays for positional encoding function. $\sigma$ is 1D volume density, $c$ is a 3D color value. }
+    \label{fig:mlp_nerf}
+\end{figure}
 
 \cite{nrf2020} introduce neural reflectance field (NRF), which is a neural scene representation that implicitly encodes scene geometry (in form of volume density), normal and reflectance properties of the scene. Authors extend the idea of \cite{nerf2020mildenhall} by implying single-bounce single-point direct illumination from non-colocated light source by adding light transmittance term to the rendering equation. This requires using ray marching algorithm to light ray as well. Although the same technique of \textit{positional encoding} and \textit{hierarchical volume sampling} has been used, the rendering is still highly time inefficient, especially under novel non-colocated light and view. Even precomputing the light transmittance volume does not help much. Due to these performance difficulties authors only consider colocated light source in their experiments.
 
@@ -70,7 +78,14 @@ When a BRDF is changing across a surface, it is referred to as a spatially-varyi
 
 \cite{boss2020nerd} follows the NeRF architecture, but introduce explicit decomposition and rendering steps. The authors use 2 networks: first for sampling points along the ray and the second one for estimating color and normal information as well as BRDF parameters of the scene, which implies physically plausible output values. The big advantage of this decomposition approach is a textured mesh extraction.
 
-\cite{srinivasan2020nerv} extend the original NeRF approach not only for novel view but also for novel direct and indirect (one bounce) light conditions. The authors exploit a quite simple idea of predicting visibility and surface fields for the scene along with other appearance properties. These fields are used later for illumination estimation, which is plugged into rendering integral.
+\cite{srinivasan2020nerv} extend the original NeRF approach not only for novel view but also for novel direct and indirect (one bounce) light conditions. The authors exploit a quite simple idea of predicting visibility and surface fields for the scene along with other appearance properties. These fields are used later for illumination estimation, which is plugged into rendering integral. Authors use 2 networks instead of one used in NeRF for predicting the volume density and appearance parameters. The normal map is calculated as negative gradient vector of the volume density predicted by MLP. Another (the 3rd) network learns to predict visibility and max. depth information, which allows to efficiently model the scene under one-bounce indirect illumination. The scheme of used MLPs is shown on \Cref{fig:mlp_nerv}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.6\textwidth]{img/mlp_nerv.png}
+    \caption{Two separate MLPs $MLP_\theta$ and $MLP_\psi$ are used to predict volume density $\sigma$ and appearance parameters diffuse albedo $c_{dif}$ as well as roughness $\gamma_{rough}$. The 3\textsuperscript{rd} MLP predicts visibility $v_\phi$ and max. depth $d_\phi$ values. Dark blue boxes represent hidden layers. Black arrows indicate FC-layers with ReLU activations.}
+    \label{fig:mlp_nerv}
+\end{figure}
 
 A few recent works also focus on improving performance of such a group of approaches as 3D scene reconstruction. \cite{lindell2020autoint} employ neural networks for faster approximation of integral calculations in volume rendering tasks. \cite{tancik2020meta} improves the optimization trajectory of the model in coordinate-based neural representations such as NRF using so-called "Meta Initialization" instead of standard initialization of neural models.
 
@@ -81,13 +96,48 @@ A few recent works also focus on improving performance of such a group of approa
 
 \section{Proposed Solution}
 
-The proposed solution involves NRF as a scene representation together with the ray marching framework as proposed in \cite{nrf2020}. This allows not only to take into account view-dependant effects but also consider relighting re-rendered scene. In order to reduce the time consumption of the approach the effectiveness of sparse voxel octrees \cite{nsvf2020} can be leveraged.
+The proposed solution involves NRF as a scene representation together with the ray marching framework as proposed in \cite{nrf2020}. This allows not only to take into account view-dependant effects but also consider relighting re-rendered scene. In order to reduce the time consumption of the approach the effectiveness of sparse voxel octrees \cite{nsvf2020} can be leveraged. The extended NSVF architecture is then looks as shown in \Cref{fig:mlp_nsvfnrf_explicit}
 
-Although this solution suppose to be more time effective, there is still a limitation for the colocated light source. Assuming that the media inside the voxels is homogeneous this approach is going to be extended to non-colocated light sources by using approximation instead of real sampling for the light rays.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.6\textwidth]{img/mlp_nsvfnrf_explicit.png}
+    \caption{The green boxes indicate inputs, the red boxes indicate outputs.
+    % The left part of the scheme is responsible for encoding point in voxels' corners and then creating a Feature Field.
+    Conceptually the architecture repeats the one proposed in \cite{nsvf2020}. However, instead of color the network outputs appearance vector $R$, which is then used (together with light and view directions, normal and light intensity) to evaluate appearance model. The $L_l$ denotes the light radiance considering the point light falloff.}
+    \label{fig:mlp_nsvfnrf_explicit}
+\end{figure}
+
+% \begin{wrapfigure}{r}{0.4\textwidth}
+%     \centering
+%     \includegraphics[width=0.4\textwidth]{img/light_nrf.png}
+%     \caption{}
+%     \label{fig:mlp_nerf}
+% \end{wrapfigure}
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\textwidth]{img/light_nrf_approx_both.png}
+    \caption{The sketch of how the view and light rays are sampled on the scene. The left part shows the same idea as used proposed by \cite{nrf2020} with the difference of using sparse voxel octree optimization (SVO), proposed by \cite{nsvf2020}. A lot of samples have to be sampled on light rays, which is very computationally demanding even with using SVO approach. The right part shows the proposed approximation for sampling the light rays. Assuming that the density inside each voxel is homogeneous, the collective transmittance of the voxels intersected by the ray is linearly dependant on the distance the ray travelled inside the voxel. The transmittance decay outside the voxels is assumed negligible.}
+    \label{fig:light_nrf_approx_both}
+\end{figure}
+
+Although this solution suppose to be more time effective, there is still a limitation for the colocated light source, because the light rays have to be sampled in a similar way the view rays are sampled (\Cref{fig:light_nrf_approx_both}, left). Assuming that the media inside the voxels is homogeneous this approach is going to be extended to non-colocated light sources by using approximation instead of real sampling for the light rays, as shown on \Cref{fig:light_nrf_approx_both} (right).
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\textwidth]{img/mlp_nsvfnrf_implicit.png}
+    \caption{The original NSVF (\cite{nsvf2020}) network is extended for modelling single point light illumination. The positionally encoded light direction $l$ is being concatenated with the distance to the point light source $d$, view direction $v$ and 3\textsuperscript{rd} hidden layer of denisity predictor to form a first layer of the Texture predictor that outputs color value $c$. Only 4 hidden layers of Texture predictor might not be enough and might have to be increased.}
+    \label{fig:mlp_nsvfnrf_implicit}
+\end{figure}
 
 Originally the approach implies the usage of explicit reflectance model.
 That means that the produced output is limited by used BRDF, e.g. the subsurface scattering effects are not modelled in BRDFs.
-However, the implicit neural representation of reflectance model can remove these restrictions allowing to reproduce richer light- and view-dependant surface effects.
+However, the implicit neural representation of reflectance model can remove these restrictions allowing to reproduce richer light- and view-dependant surface effects. The \Cref{fig:mlp_nsvfnrf_implicit} shows the network architecture based on NSVF approach (\cite{nsvf2020}), which is extended to model single point light illumination.
+
+\rphr{Probably add here a few words on the BRDF that is going to be used (Cook-Torance -> Disnay ... vs. sggx}
 
 
 \subsection{Road map}
@@ -186,6 +236,8 @@ Implementation details of the proposed solution may undergo some changes during 
 Another way to increase the speed of the approach (2-3 times faster) is to decompose it into sub-scenes using Voronoi-based decomposition and employ multiple networks to these parts as proposed by \cite{rebain2020derf}. As soon as these implementations become available it can be plugged into the proposed method.
 
 Auto integration technique from \cite{lindell2020autoint} has good prerequisites to be adopted to the proposed method and can also be used to make the method up to 10 times faster.
+
+The proposed solution considers light ray to be represented the same way the view ray is represented using 3D vector. However, light ray can also be parametrized using half-vector, which allows to drop one dimension down assuming isotropic reflection of the scene. Experiments with this kind of parametrization are planned as an extension point of this work.
 
 \section{Timeline}
 
