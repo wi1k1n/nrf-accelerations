@@ -119,7 +119,7 @@ The proposed solution involves NRF as a scene representation together with the r
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.75\textwidth]{img/light_nrf_approx_both.png}
-    \caption{The sketch of how the view and light rays are sampled on the scene. The left part shows the same idea as used proposed by \cite{nrf2020} with the difference of using sparse voxel octree optimization (SVO), proposed by \cite{nsvf2020}. A lot of samples have to be sampled on light rays, which is very computationally demanding even with using SVO approach. The right part shows the proposed approximation for sampling the light rays. Assuming that the density inside each voxel is homogeneous, the collective transmittance of the voxels intersected by the ray is linearly dependant on the distance the ray travelled inside the voxel. The transmittance decay outside the voxels is assumed negligible.}
+    \caption{The sketch of how the view and light rays are sampled on the scene. The left part shows the same idea as used proposed by \cite{nrf2020} with the difference of using sparse voxel octree optimization (SVO), proposed by \cite{nsvf2020}. A lot of samples have to be sampled on light rays, which is very computationally demanding even with using SVO approach. The right part shows the proposed approximation for sampling the light rays. Assuming that the density inside each voxel is homogeneous, the collective transmittance of the voxels intersected by the ray is dependant on the distance the ray travelled inside the voxel. The transmittance decay outside the voxels is assumed negligible.}
     \label{fig:light_nrf_approx_both}
 \end{figure}
 
@@ -175,6 +175,9 @@ However, the implicit neural representation of reflectance model can remove thes
     \item \textit{Non-colocated light extension}
     Extension for non-colocated light sources requires an approximation step in order to make the approach feasible.
     The offered technique is to approximate light transmittance only according to depth inside the sparse voxels instead of applying the whole ray marching framework for the light rays.
+    \begin{itemize}
+        \item \Cref{fig:light_nrf_approx_both} (right) shows formulas for calculating light transmittance inside voxels. The $\bar\sigma_{v_k}$ indicates an average transmittance inside the voxel. For efficiency purposes it has to be precomputed and recalculated throughout the training.
+    \end{itemize}
     
     \item \textit{Training/Evaluation stage}
     Training the model on synthetic dataset with the non-colocated light sources.
