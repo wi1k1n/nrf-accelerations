@@ -83,7 +83,7 @@ When a BRDF is changing across a surface, it is referred to as a spatially-varyi
 \begin{figure}[t]
     \centering
     \includegraphics[width=0.6\textwidth]{img/mlp_nerv.png}
-    \caption{Two separate MLPs $MLP_\theta$ and $MLP_\psi$ are used to predict volume density $\sigma$ and appearance parameters diffuse albedo $c_{dif}$ as well as roughness $\gamma_{rough}$. The 3\textsuperscript{rd} MLP predicts visibility $v_\phi$ and max. depth $d_\phi$ values. Dark blue boxes represent hidden layers. Black arrows indicate FC-layers with ReLU activations.}
+    \caption{Schematics for NeRD approach \cite{srinivasan2020nerv}. Two separate MLPs $MLP_\theta$ and $MLP_\psi$ are used to predict volume density $\sigma$ and appearance parameters diffuse albedo $c_{dif}$ as well as roughness $\gamma_{rough}$. The 3\textsuperscript{rd} MLP predicts visibility $v_\phi$ and max. depth $d_\phi$ values. Dark blue boxes represent hidden layers. Black arrows indicate FC-layers with ReLU activations.}
     \label{fig:mlp_nerv}
 \end{figure}
 
@@ -96,7 +96,7 @@ A few recent works also focus on improving performance of such a group of approa
 
 \section{Proposed Solution}
 
-The proposed solution involves NRF as a scene representation together with the ray marching framework as proposed in \cite{nrf2020}. This allows not only to take into account view-dependant effects but also consider relighting re-rendered scene. In order to reduce the time consumption of the approach the effectiveness of sparse voxel octrees \cite{nsvf2020} can be leveraged. The extended NSVF architecture is then looks as shown in \Cref{fig:mlp_nsvfnrf_explicit}
+The proposed solution involves NRF as a scene representation together with the ray marching framework as proposed in \cite{nrf2020}. This allows not only to take into account view-dependant effects but also consider relighting re-rendered scene. In order to reduce the time consumption of the approach the effectiveness of sparse voxel octrees \cite{nsvf2020} can be leveraged. The extended NSVF architecture is then looks like as shown in \Cref{fig:mlp_nsvfnrf_explicit}
 
 
 \begin{figure}[t]
@@ -136,6 +136,12 @@ Although this solution suppose to be more time effective, there is still a limit
 Originally the approach implies the usage of explicit reflectance model.
 That means that the produced output is limited by used BRDF, e.g. the subsurface scattering effects are not modelled in BRDFs.
 However, the implicit neural representation of reflectance model can remove these restrictions allowing to reproduce richer light- and view-dependant surface effects. The \Cref{fig:mlp_nsvfnrf_implicit} shows the network architecture based on NSVF approach (\cite{nsvf2020}), which is extended to model single point light illumination.
+
+In original approach the input view direction is defined in global coordinate system.
+In this case the MLP learns how the point looks like from the given view direction.
+However, the appearance at the point is highly dependant on the normal of the surface.
+That's why the network can be nudged to learn material appearance properties by using view and light directions transformed into local tangent frame.
+The normal direction can be calculated using negative normalized gradient vector of the $\sigma$.
 
 \rphr{Probably add here a few words on the BRDF that is going to be used (Cook-Torance -> Disnay ... vs. sggx}
 
