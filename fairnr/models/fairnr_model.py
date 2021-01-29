@@ -107,7 +107,7 @@ class BaseModel(BaseFairseqModel):
     def forward(self, ray_split=1, **kwargs):
         with with_torch_seed(self.unique_seed):   # make sure different GPU sample different rays
             ray_start, ray_dir, uv = self.reader(**kwargs)
-        
+
         kwargs.update({
             'field_fn': self.field.forward,
             'input_fn': self.encoder.forward})

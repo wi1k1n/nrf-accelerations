@@ -1,13 +1,14 @@
 import os, os.path as op, sys
 import pyperclip
 
-COPY2CLIPBOARD = True
+COPY2CLIPBOARD = True  # after running the script the configuration is inserted into clipboard
+
 # DATA = "Lego"
-WITH_LIGHT = True
 DATA = "bunny_static"
-RES = "160x160"
-PIXELS_PER_VIEW = '64'  # should be powers of 2 (?)
-ARCH = "nsvf_base"
+RES = "100x100"
+PIXELS_PER_VIEW = '32'  # should be powers of 2 (?)
+WITH_LIGHT = True
+ARCH = "mlnrf_base"
 SUFFIX = "v1"
 # DATASET = "data/Synthetic_NeRF/" + DATA
 DATASET = "/home/mazlov/documents/thesis/codes/blender/" + DATA

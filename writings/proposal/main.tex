@@ -70,7 +70,7 @@ When a BRDF is changing across a surface, it is referred to as a spatially-varyi
     \label{fig:mlp_nerf}
 \end{figure}
 
-\cite{nrf2020} introduce neural reflectance field (NRF), which is a neural scene representation that implicitly encodes scene geometry (in form of volume density), normal and reflectance properties of the scene. Authors extend the idea of \cite{nerf2020mildenhall} by implying single-bounce single-point direct illumination from non-colocated light source by adding light transmittance term to the rendering equation. This requires using ray marching algorithm to light ray as well. Although the same technique of \textit{positional encoding} and \textit{hierarchical volume sampling} has been used, the rendering is still highly time inefficient, especially under novel non-colocated light and view. Even precomputing the light transmittance volume does not help much. Due to these performance difficulties authors only consider colocated light source in their experiments.
+\cite{nrf2020} introduce neural reflectance field (NRF), which is a neural scene representation that implicitly encodes scene geometry (in form of volume density), normal and reflectance properties of the scene. Authors extend the idea of \cite{nerf2020mildenhall} by implying single-bounce single-point direct illumination from non-colocated light source by adding light transmittance term to the rendering equation. This requires using ray marching algorithm to the light ray as well. Although the same technique of \textit{positional encoding} and \textit{hierarchical volume sampling} has been used, the rendering is still highly time inefficient, especially under novel non-colocated light and view. Even precomputing the light transmittance volume does not help much. Due to these performance difficulties authors only consider colocated light source in their experiments. A big advantage of the algorithm is a possibility to use and arbitrary appearance model. In their work authors use microfacet BRDF that combines diffuse Lambertian term with specular term that uses GGX distribution \cite{walter2007microfacet}. For furry objects the fur reflectance model \cite{kajiya1989fur} is used.
 
 \cite{nsvf2020} try to alleviate this problem by introducing neural sparse voxel fields (NSVFs), which leverage the usage of sparse voxel octrees for scene representation. The usage of classical ray marching approach together with combination of implicit NeRFs and explicit octree structure results in more than 10 times faster renders comparing to \cite{nerf2020mildenhall}. Authors also use a bunch of techniques such as: \textit{self-prunning} of octrees and \textit{progressive training} for efficient handling essential and non-essential voxels. However, the light interaction is not modelled meaning that only global illumination is going to be implicitly represented in the model.
 
@@ -89,7 +89,7 @@ When a BRDF is changing across a surface, it is referred to as a spatially-varyi
 
 A few recent works also focus on improving performance of such a group of approaches as 3D scene reconstruction. \cite{lindell2020autoint} employ neural networks for faster approximation of integral calculations in volume rendering tasks. \cite{tancik2020meta} improves the optimization trajectory of the model in coordinate-based neural representations such as NRF using so-called "Meta Initialization" instead of standard initialization of neural models.
 
-\rphr{\cite{guo2020osf} so they adjust NeRF setup with 2 types of light-rays: intra-object (within the object) and inter-object (within the scene), right? and then they say, that intra-object light is modeled implicitly with MLP (light scattering), but inter-object light rays are traced explicitly (shadows casting). Does that mean, that they need semantic segmentation (to separate objects from the scene) for real-world cases? their results look quite appealing, and I like the idea of combining learnable and non-learnable light transport, but I don't see how this can work on real-world datasets (if I got their idea right)}
+\cite{guo2020osf} propose to adjust NeRF setup with two types of light-rays: intra-object (within the object) and inter-object (within the scene). The intra-object light is modeled implicitly with MLP (light scattering), but inter-object light rays are traced explicitly (shadows casting).
 
 % \textbf{Metrics}
 
@@ -142,8 +142,6 @@ In this case the MLP learns how the point looks like from the given view directi
 However, the appearance at the point is highly dependant on the normal of the surface.
 That's why the network can be nudged to learn material appearance properties by using view and light directions transformed into local tangent frame.
 The normal direction can be calculated using negative normalized gradient vector of the $\sigma$.
-
-\rphr{Probably add here a few words on the BRDF that is going to be used (Cook-Torance -> Disnay ... vs. sggx}
 
 
 \subsection{Road map}
@@ -247,6 +245,8 @@ Another way to increase the speed of the approach (2-3 times faster) is to decom
 Auto integration technique from \cite{lindell2020autoint} has good prerequisites to be adopted to the proposed method and can also be used to make the method up to 10 times faster.
 
 The proposed solution considers light ray to be represented the same way the view ray is represented using 3D vector. However, light ray can also be parametrized using half-vector, which allows to drop one dimension down assuming isotropic reflection of the scene. Experiments with this kind of parametrization are planned as an extension point of this work.
+
+In \cite{nrf2020} the GGX distribution is used for specular term of microfacet BRDF model. However, the better results might be achieved by using symmetric variant of distribution - SGGX \cite{heitz2015sggx}.
 
 \section{Timeline}
 

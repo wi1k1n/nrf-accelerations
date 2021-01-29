@@ -251,6 +251,9 @@ class VolumeRenderer(Renderer):
             input_fn.track_voxel_probs(samples['sampled_point_voxel_idx'].long(), results['probs'])
         return results
 
+@register_renderer('light_volume_renderer')
+class LightVolumeRenderer(VolumeRenderer):
+    ...
 
 @register_renderer('surface_volume_rendering')
 class SurfaceVolumeRenderer(VolumeRenderer):

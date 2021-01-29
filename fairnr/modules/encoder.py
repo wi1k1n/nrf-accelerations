@@ -215,7 +215,7 @@ class SparseVoxelEncoder(Encoder):
         if self.voxel_path is not None:
             # read voxel file
             assert os.path.exists(self.voxel_path), "voxel file must exist"
-            
+
             if Path(self.voxel_path).suffix == '.ply':
                 from plyfile import PlyData, PlyElement
                 plyvoxel = PlyData.read(self.voxel_path)
@@ -711,6 +711,10 @@ class SparseVoxelEncoder(Encoder):
     def num_voxels(self):
         return self.keep.long().sum()
 
+@register_encoder('sparsevoxel_light_encoder')
+class SparseVoxelLightEncoder(SparseVoxelEncoder):
+    def __init__(self, args, voxel_path=None, bbox_path=None, shared_values=None):
+        super().__init__(args, voxel_path, bbox_path, shared_values)
 
 @register_encoder('multi_sparsevoxel_encoder')
 class MultiSparseVoxelEncoder(Encoder):
