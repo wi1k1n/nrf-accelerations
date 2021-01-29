@@ -76,14 +76,23 @@ When a BRDF is changing across a surface, it is referred to as a spatially-varyi
 
 \cite{rebain2020derf} propose a framework to decompose the scene into multiple parts in order to increase the time efficiency of \cite{nerf2020mildenhall}'s approach. This implies parallel evaluation of the NeRF networks, which are responsible for different parts of the scene decomposed using Voronoi Diagrams \cite{aurenhammer1991voronoi} based method. The final image is composed using Painter's Algorithm \cite{Newell1972ANA}. This method does not model any light interaction thereby limiting scene reconstruction under novel light conditions.
 
-\cite{boss2020nerd} follows the NeRF architecture, but introduce explicit decomposition and rendering steps. The authors use 2 networks: first for sampling points along the ray and the second one for estimating color and normal information as well as BRDF parameters of the scene, which implies physically plausible output values. The big advantage of this decomposition approach is a textured mesh extraction.
+\cite{boss2020nerd} follows the NeRF architecture, but introduce explicit decomposition and rendering steps. The authors use 2 networks: first for sampling points along the ray and the second one for estimating color and normal information as well as BRDF parameters of the scene, which implies physically plausible output values. The big advantage of this decomposition approach is a textured mesh extraction. The overview of the MLP architecture is shown on \Cref{fig:mlp_nerd}.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.78\textwidth]{img/mlp_nerd.png}
+    \caption{TODO: \textbf{NeRD Architecture} \cite{boss2020nerd}. The architecture consists of two networks. Here, $N_{\theta_1}/N_{\phi_1}$ denote instances of the main network which encodes the reflectance volume. $r(t)$ defines a ray with sampling positions $x_i$, $\gamma(x)$ is the Fourier Embedding, and $\Gamma^j$ denotes the Spherical Gaussian parameters per image $j$. $c$ is the output color for and $\sigma$ is the density in the volume.
+    The individual samples along the ray need to be alpha composed based on the density $\sigma$ along the ray.
+    This is denoted as ``Comp.''.}
+    \label{fig:mlp_nerd}
+\end{figure}
 
 \cite{srinivasan2020nerv} extend the original NeRF approach not only for novel view but also for novel direct and indirect (one bounce) light conditions. The authors exploit a quite simple idea of predicting visibility and surface fields for the scene along with other appearance properties. These fields are used later for illumination estimation, which is plugged into rendering integral. Authors use 2 networks instead of one used in NeRF for predicting the volume density and appearance parameters. The normal map is calculated as negative gradient vector of the volume density predicted by MLP. Another (the 3rd) network learns to predict visibility and max. depth information, which allows to efficiently model the scene under one-bounce indirect illumination. The scheme of used MLPs is shown on \Cref{fig:mlp_nerv}
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=0.6\textwidth]{img/mlp_nerv.png}
-    \caption{Schematics for NeRD approach \cite{srinivasan2020nerv}. Two separate MLPs $MLP_\theta$ and $MLP_\psi$ are used to predict volume density $\sigma$ and appearance parameters diffuse albedo $c_{dif}$ as well as roughness $\gamma_{rough}$. The 3\textsuperscript{rd} MLP predicts visibility $v_\phi$ and max. depth $d_\phi$ values. Dark blue boxes represent hidden layers. Black arrows indicate FC-layers with ReLU activations.}
+    \caption{Schematics for NeRV \cite{srinivasan2020nerv} approach. Two separate MLPs $MLP_\theta$ and $MLP_\psi$ are used to predict volume density $\sigma$ and appearance parameters diffuse albedo $c_{dif}$ as well as roughness $\gamma_{rough}$. The 3\textsuperscript{rd} MLP predicts visibility $v_\phi$ and max. depth $d_\phi$ values. Dark blue boxes represent hidden layers. Black arrows indicate FC-layers with ReLU activations.}
     \label{fig:mlp_nerv}
 \end{figure}
 
