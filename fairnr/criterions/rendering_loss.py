@@ -153,7 +153,7 @@ class SRNLossCriterion(RenderingCriterion):
         if L < target_colors.size(2):    
             target_colors = target_colors.gather(2, flatten_index.unsqueeze(-1).repeat(1,1,1,3))
             masks = masks.gather(2, flatten_uv) if masks is not None else None
-    
+
         if 'other_logs' in net_output:
             other_logs.update(net_output['other_logs'])
 

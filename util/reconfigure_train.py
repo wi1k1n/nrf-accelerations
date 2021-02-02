@@ -3,12 +3,12 @@ import pyperclip
 
 COPY2CLIPBOARD = True  # after running the script the configuration is inserted into clipboard
 
-# DATA = "Lego"
-DATA = "bunny_static"
-RES = "100x100"
+# DATA = "bunny_static"
+DATA = "donut_static_png"
+RES = "128x128"
 PIXELS_PER_VIEW = '32'  # should be powers of 2 (?)
-WITH_LIGHT = True
-ARCH = "mlnrf_base"
+WITH_LIGHT = False
+ARCH = "nsvf_base"
 SUFFIX = "v1"
 # DATASET = "data/Synthetic_NeRF/" + DATA
 DATASET = "/home/mazlov/documents/thesis/codes/blender/" + DATA
@@ -33,7 +33,8 @@ with open('configuration.txt', 'w') as f:
 	f.write('\n--view-per-batch 2')
 	f.write('\n--pixel-per-view '+PIXELS_PER_VIEW)
 	f.write('\n--no-preload')
-	f.write('\n--sampling-on-mask 1.0 --no-sampling-at-reader')
+	f.write('\n--sampling-on-mask 1.0')
+	f.write('\n--no-sampling-at-reader')
 	f.write('\n--valid-view-resolution '+RES)
 	f.write('\n--valid-views "100..200"')
 	f.write('\n--valid-view-per-batch 1')

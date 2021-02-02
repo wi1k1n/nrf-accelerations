@@ -17,6 +17,7 @@ import skimage.metrics
 import pandas as pd
 import pylab as plt
 import fairseq.distributed_utils as du
+import OpenEXR, Imath
 
 from plyfile import PlyData, PlyElement
 from fairseq.meters import StopwatchMeter
@@ -72,10 +73,27 @@ def load_rgb(
     bg_color=[1.0, 1.0, 1.0],
     min_rgb=-1,
     interpolation='AREA'):
-    if with_alpha:
-        img = imageio.imread(path)  # RGB-ALPHA
+    if OpenEXR.isOpenExrFile(path):
+        exr = OpenEXR.InputFile(path)
+        hdr = exr.header()
+        dw = hdr['dataWindow']
+        ch = hdr['channels']
+        if not ('R' in ch and 'G' in ch and 'B' in ch):
+            raise ValueError('Wrong EXR data')
+        sz = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
+        tps = {Imath.PixelType.UINT: np.uint, Imath.PixelType.HALF: np.half, Imath.PixelType.FLOAT: float}
+
+        img = np.stack((np.frombuffer(exr.channel('R'), dtype=tps[ch['R'].type.v]),
+                  np.frombuffer(exr.channel('G'), dtype=tps[ch['G'].type.v]),
+                  np.frombuffer(exr.channel('B'), dtype=tps[ch['B'].type.v])))\
+            .reshape(3, sz[0], sz[1]).transpose(1, 2, 0)
+
+        #TODO: handle with_alpha
     else:
-        img = imageio.imread(path)[:, :, :3]
+        if with_alpha:
+            img = imageio.imread(path)  # RGB-ALPHA
+        else:
+            img = imageio.imread(path)[:, :, :3]
 
     img = skimage.img_as_float32(img).astype('float32')
     H, W, D = img.shape

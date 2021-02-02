@@ -260,13 +260,22 @@ class ShapeViewDataset(ShapeDataset):
         return [[files[i] for i in self.views] for files in file_list]
 
     def find_rgb(self):
-        try:
-            return self.select([sorted(glob.glob(path + '/rgb/*.*g')) for path in self.paths])
-        except FileNotFoundError:
-            try:
-                return self.select([sorted(glob.glob(path + '/color/*.*g')) for path in self.paths])
-            except FileNotFoundError:
-                raise FileNotFoundError("CANNOT find rendered images.")
+        folders = ['rgb', 'color']
+        extensions = ['exr', 'png', 'jpg', 'jpeg']
+        for folder in folders:
+            for ext in extensions:
+                try:
+                    return self.select([sorted(glob.glob(path + '/' + folder + '/*.*'+ ext)) for path in self.paths])
+                except FileNotFoundError:
+                    pass
+        raise FileNotFoundError("CANNOT find rendered images.")
+        # try:
+        #     return self.select([sorted(glob.glob(path + '/rgb/*.*g')) for path in self.paths])
+        # except FileNotFoundError:
+        #     try:
+        #         return self.select([sorted(glob.glob(path + '/color/*.*g')) for path in self.paths])
+        #     except FileNotFoundError:
+        #         raise FileNotFoundError("CANNOT find rendered images.")
 
     def find_depth(self):
         try:
