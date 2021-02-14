@@ -80,15 +80,21 @@ def load_rgb(
         ch = hdr['channels']
         if not ('R' in ch and 'G' in ch and 'B' in ch):
             raise ValueError('Wrong EXR data')
+        if with_alpha and not 'A' in ch:
+            raise ValueError('EXR file doesn\'t have alpha channel')
         sz = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
         tps = {Imath.PixelType.UINT: np.uint, Imath.PixelType.HALF: np.half, Imath.PixelType.FLOAT: float}
 
-        img = np.stack((np.frombuffer(exr.channel('R'), dtype=tps[ch['R'].type.v]),
-                  np.frombuffer(exr.channel('G'), dtype=tps[ch['G'].type.v]),
-                  np.frombuffer(exr.channel('B'), dtype=tps[ch['B'].type.v])))\
-            .reshape(3, sz[0], sz[1]).transpose(1, 2, 0)
+        r = np.frombuffer(exr.channel('R'), dtype=tps[ch['R'].type.v])
+        g = np.frombuffer(exr.channel('G'), dtype=tps[ch['G'].type.v])
+        b = np.frombuffer(exr.channel('B'), dtype=tps[ch['B'].type.v])
+        if with_alpha:
+            a = np.frombuffer(exr.channel('A'), dtype=tps[ch['A'].type.v])
+            img = np.stack((r, g, b, a)).reshape(4, sz[0], sz[1])
+        else:
+            img = np.stack((r, g, b)).reshape(3, sz[0], sz[1])
 
-        #TODO: handle with_alpha
+        img = img.transpose(1, 2, 0)
     else:
         if with_alpha:
             img = imageio.imread(path)  # RGB-ALPHA

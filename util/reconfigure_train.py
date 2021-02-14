@@ -3,18 +3,20 @@ import pyperclip
 
 COPY2CLIPBOARD = True  # after running the script the configuration is inserted into clipboard
 
-# DATA = "bunny_static"
+# DATA = "bunny_static_exr"
 DATA = "donut_static_png"
-RES = "128x128"
+RES = "100x100"
 PIXELS_PER_VIEW = '32'  # should be powers of 2 (?)
 WITH_LIGHT = False
-ARCH = "nsvf_base"
+ARCH = "mlnrf_base"
 SUFFIX = "v1"
 # DATASET = "data/Synthetic_NeRF/" + DATA
 DATASET = "/home/mazlov/documents/thesis/codes/blender/" + DATA
 SAVE = "checkpoint/" + DATA
 MODEL = ARCH + SUFFIX
 USE_OCTREE = True
+CHUNK_SIZE = '1'  # > 1 to save memory to time
+LR = '0.0001'
 
 # create directory if doesn't exist
 # if not os.path.exists(SAVE + '/' + MODEL): os.makedirs(SAVE + '/' + MODEL)
@@ -28,6 +30,7 @@ with open('configuration.txt', 'w') as f:
 	f.write('\n--user-dir fairnr')
 	f.write('\n--task single_object_rendering')
 	f.write('\n--train-views "0..100"')
+	f.write('\n--chunk-size '+CHUNK_SIZE)
 	f.write('\n--view-resolution '+RES)
 	f.write('\n--max-sentences 1')
 	f.write('\n--view-per-batch 2')
@@ -51,8 +54,9 @@ with open('configuration.txt', 'w') as f:
 	f.write('\n--adam-betas "(0.9, 0.999)"')
 	f.write('\n--lr-scheduler "polynomial_decay"')
 	f.write('\n--total-num-update 150000')
-	f.write('\n--lr 0.001')
+	f.write('\n--lr '+LR)
 	f.write('\n--clip-norm 0.0')
+	# f.write('\n--clip-norm 0.01')
 	f.write('\n--criterion "srn_loss"')
 	f.write('\n--num-workers 0')
 	f.write('\n--seed 2')
