@@ -126,7 +126,7 @@ def load_rgb(
         img[:, :, :3] *= 2.
 
     img[:, :, :3] = img[:, :, :3] * img[:, :, 3:] + np.asarray(bg_color)[None, None, :] * (1 - img[:, :, 3:])
-    img[:, :, 3] = img[:, :, 3] * (img[:, :, :3] != np.asarray(bg_color)[None, None, :]).any(-1) 
+    img[:, :, 3] = img[:, :, 3] * (img[:, :, :3] != np.asarray(bg_color)[None, None, :]).any(-1)
     img = img.transpose(2, 0, 1)
     
     return img, uv, ratio
