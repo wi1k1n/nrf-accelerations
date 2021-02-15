@@ -90,11 +90,19 @@ def load_rgb(
         b = np.frombuffer(exr.channel('B'), dtype=tps[ch['B'].type.v])
         if with_alpha:
             a = np.frombuffer(exr.channel('A'), dtype=tps[ch['A'].type.v])
-            img = np.stack((r, g, b, a)).reshape(4, sz[0], sz[1])
+            img = np.stack((r, g, b, a)).reshape(4, sz[0]*sz[1]).T
         else:
-            img = np.stack((r, g, b)).reshape(3, sz[0], sz[1])
+            img = np.stack((r, g, b)).reshape(3, sz[0]*sz[1]).T
 
-        img = img.transpose(1, 2, 0)
+        # Tonemapping
+        pmin = np.percentile(img, 0.1, axis=0)
+        pmax = np.percentile(img, 99.9, axis=0)
+        img = np.clip(img, pmin, pmax)
+        # img = (img - img.min(0)) / img.max(0) * 255.0
+        img = (img - img.min(0)) / img.max(0)
+
+        img = img.reshape(sz[0], sz[1], -1)
+
     else:
         if with_alpha:
             img = imageio.imread(path)  # RGB-ALPHA

@@ -3,8 +3,8 @@ import pyperclip
 
 COPY2CLIPBOARD = True  # after running the script the configuration is inserted into clipboard
 
-# DATA = "bunny_static_exr"
-DATA = "donut_static_png"
+DATA = "bunny_static_exr"
+# DATA = "donut_static_png"
 RES = "100x100"
 PIXELS_PER_VIEW = '32'  # should be powers of 2 (?)
 WITH_LIGHT = False
@@ -16,7 +16,7 @@ SAVE = "checkpoint/" + DATA
 MODEL = ARCH + SUFFIX
 USE_OCTREE = True
 CHUNK_SIZE = '1'  # > 1 to save memory to time
-LR = '0.0001'
+LR = '0.001'  # 0.001
 
 # create directory if doesn't exist
 # if not os.path.exists(SAVE + '/' + MODEL): os.makedirs(SAVE + '/' + MODEL)
