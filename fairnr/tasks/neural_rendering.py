@@ -63,6 +63,8 @@ class SingleObjRenderingTask(FairseqTask):
                             help="if not set, if valid view resolution will be train view resolution")   
         parser.add_argument("--min-color", choices=(0, -1), default=-1, type=int,
                             help="RGB range used in the model. conventionally used -1 ~ 1")
+        parser.add_argument("--preprocess", choices=('none', 'mstd', 'minmax'), default='none', type=str,
+                            help="preprocess the images before training. mstd - mean/std, minmax - (-1, 1). none - does nothing")
         parser.add_argument("--virtual-epoch-steps", type=int, default=None,
                             help="virtual epoch used in Infinite Dataset. if None, set max-update")
         parser.add_argument("--pruning-every-steps", type=int, default=None,
@@ -182,6 +184,7 @@ class SingleObjRenderingTask(FairseqTask):
             binarize=(not getattr(self.args, "no_load_binary", False)) and (split!='test'),
             bg_color=getattr(self.args, "transparent_background", "1,1,1"),
             min_color=getattr(self.args, "min_color", -1),
+            preprocess=getattr(self.args, "preprocess", 'none'),
             ids=self.object_ids
         )
 

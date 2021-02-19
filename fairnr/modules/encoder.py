@@ -211,6 +211,8 @@ class SparseVoxelEncoder(Encoder):
             "at least initial bounding box or pretrained voxel files are required."
         self.voxel_index = None
         self.scene_scale = getattr(args, "scene_scale", 1.0)
+        assert not (getattr(args, "voxel_size", None) and getattr(args, "voxel_num", None)), \
+            '--voxel-size is mutually exclusive with --voxel-num'
 
         if self.voxel_path is not None:
             # read voxel file
@@ -263,7 +265,14 @@ class SparseVoxelEncoder(Encoder):
         else:
             # read bounding-box file
             bbox = np.loadtxt(self.bbox_path)
-            voxel_size = bbox[-1] if getattr(args, "voxel_size", None) is None else args.voxel_size
+            assert len(bbox) == 7, 'wrong format of bbox.txt. should be: x_min y_min z_min x_max y_max z_max initial_voxel_size'
+            if getattr(args, "voxel_num", None):
+                voxel_size = ((bbox[3]-bbox[0]) * (bbox[4]-bbox[1]) * (bbox[5]-bbox[2]) / args.voxel_num) ** (1/3)
+            elif getattr(args, "voxel_size", None):
+                voxel_size = args.voxel_size
+            else:
+                voxel_size = bbox[-1]
+            # voxel_size = bbox[-1] if getattr(args, "voxel_size", None) is None else args.voxel_size
             fine_points = torch.from_numpy(bbox2voxels(bbox[:6], voxel_size))
         
         half_voxel = voxel_size * .5
@@ -348,7 +357,8 @@ class SparseVoxelEncoder(Encoder):
     @staticmethod
     def add_args(parser):
         parser.add_argument('--initial-boundingbox', type=str, help='the initial bounding box to initialize the model')
-        parser.add_argument('--voxel-size', type=float, metavar='D', help='voxel size of the input points (initial')
+        parser.add_argument('--voxel-size', type=float, metavar='D', help='voxel size of the input points (initial). mutually exclusive with --voxel-num')
+        parser.add_argument('--voxel-num', type=float, help='initial number of voxels (overrides voxel-size from bbox.txt). mutually exclusive with --voxel-size')
         parser.add_argument('--voxel-path', type=str, help='path for pretrained voxel file. if provided no update')
         parser.add_argument('--voxel-embed-dim', type=int, metavar='N', help="embedding size")
         parser.add_argument('--deterministic-step', action='store_true',

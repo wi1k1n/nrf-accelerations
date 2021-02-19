@@ -72,7 +72,10 @@ def load_rgb(
     with_alpha=True, 
     bg_color=[1.0, 1.0, 1.0],
     min_rgb=-1,
-    interpolation='AREA'):
+    interpolation='AREA',
+    preprocessor=None):
+
+    # If input files are EXR-files
     if OpenEXR.isOpenExrFile(path):
         exr = OpenEXR.InputFile(path)
         hdr = exr.header()
@@ -92,38 +95,40 @@ def load_rgb(
             a = np.frombuffer(exr.channel('A'), dtype=tps[ch['A'].type.v])
             img = np.stack((r, g, b, a)).reshape(4, sz[0]*sz[1]).T
         else:
-            img = np.stack((r, g, b)).reshape(3, sz[0]*sz[1]).T
+            img = np.stack((r, g, b, np.ones((sz[0], sz[1])))).reshape(3, sz[0]*sz[1]).T
 
-        # Tonemapping
-        pmin = np.percentile(img, 0.1, axis=0)
-        pmax = np.percentile(img, 99.9, axis=0)
-        img = np.clip(img, pmin, pmax)
-        # img = (img - img.min(0)) / img.max(0) * 255.0
-        img = (img - img.min(0)) / img.max(0)
-
-        img = img.reshape(sz[0], sz[1], -1)
-
+        img = img.reshape(sz[0], sz[1], -1).astype('float32')
+    # If input files are PNG-files
     else:
         if with_alpha:
             img = imageio.imread(path)  # RGB-ALPHA
         else:
             img = imageio.imread(path)[:, :, :3]
 
-    img = skimage.img_as_float32(img).astype('float32')
+        img = skimage.img_as_float32(img).astype('float32')
+
+        if img.shape[-1] == 3:
+            img = np.concatenate([img, np.ones((img.shape[0], img.shape[1], 1))], -1).astype('float32')
+
     H, W, D = img.shape
     h, w = resolution
-    
-    if D == 3:
-        img = np.concatenate([img, np.ones((img.shape[0], img.shape[1], 1))], -1).astype('float32')
-    
     uv, ratio = get_uv(H, W, h, w)
-    if (h < H) or (w < W):
-        # img = cv2.resize(img, (w, h), interpolation=cv2.INTER_NEAREST).astype('float32')
-        img = cv2.resize(img, (w, h), interpolation=cv2.INTER_AREA).astype('float32')
 
-    if min_rgb == -1:  # 0, 1  --> -1, 1
-        img[:, :, :3] -= 0.5
-        img[:, :, :3] *= 2.
+    if (h < H) or (w < W):
+        if interpolation.lower() == 'area': intp = cv2.INTER_AREA
+        elif interpolation.lower() == 'nearest': intp = cv2.INTER_NEAREST
+        else: raise NotImplemented('Given interpolation type \'{0}\' is not implemented'.format(interpolation))
+        img = cv2.resize(img, (w, h), interpolation=intp).astype('float32')
+
+
+    if preprocessor:
+        img = preprocessor.preprocess(img)
+
+    # if min_rgb == -1:  # 0, 1  --> -1, 1
+    #     img[:, :, :3] -= 0.5
+    #     img[:, :, :3] *= 2.
+
+    img[...,:3] = np.interp(img[...,:3], (img[...,:3].min(), np.percentile(img[...,:3], 99.9)), (-1, 1))
 
     img[:, :, :3] = img[:, :, :3] * img[:, :, 3:] + np.asarray(bg_color)[None, None, :] * (1 - img[:, :, 3:])
     img[:, :, 3] = img[:, :, 3] * (img[:, :, :3] != np.asarray(bg_color)[None, None, :]).any(-1)
@@ -399,3 +404,64 @@ class GPUTimer(object):
         self.end.record()
         torch.cuda.synchronize()
         self.sum = self.start.elapsed_time(self.end) / 1000.
+
+
+
+class Preprocessor:
+    def __init__(self): pass
+    def preprocess(self, img): return img
+    def preprocessInverse(self, img): return img
+
+class MinMaxPreprocessor(Preprocessor):
+    _percentileMin = 0
+    _percentileMax = 99.9
+    def __init__(self, min = None, max = None, tmin = -1, tmax = 1):
+        super().__init__()
+        self.min = min
+        self.max = max
+        self.tmin = tmin
+        self.tmax = tmax
+
+    def preprocess(self, img):
+        if self.min is None or self.max is None:
+            rgbimg = img[..., 0:3]
+            rgbimg = rgbimg[rgbimg < np.percentile(rgbimg, MinMaxPreprocessor._percentileMax, axis=None)]
+            rgbimg = rgbimg[rgbimg > np.percentile(rgbimg, MinMaxPreprocessor._percentileMin, axis=None)]
+            if self.min is None:
+                self.min = rgbimg.min()
+            if self.max is None:
+                self.max = rgbimg.max()
+            img[..., 0:3] = np.interp(img[..., 0:3], (self.min, self.max), (self.tmin, self.tmax))
+        return img
+
+    def preprocessInverse(self, img):
+        if self.mean is None or self.std is None:
+            raise ValueError('mean or std are not calculated. call preprocess() first to create them')
+        img[..., 0:3] = np.interp(img[..., 0:3], (self.tmin, self.tmax), (self.min, self.max))
+        return img
+
+class MSTDPreprocessor(Preprocessor):
+    _percentileMin = 0
+    _percentileMax = 99.9
+    def __init__(self, mean = None, std = None):
+        super().__init__()
+        self.mean = mean
+        self.std = std
+
+    def preprocess(self, img):
+        if self.mean is None or self.std is None:
+            rgbimg = img[..., 0:3]
+            rgbimg = rgbimg[rgbimg < np.percentile(rgbimg, MSTDPreprocessor._percentileMax, axis=None)]
+            rgbimg = rgbimg[rgbimg > np.percentile(rgbimg, MSTDPreprocessor._percentileMin, axis=None)]
+            if self.mean is None:
+                self.mean = np.mean(rgbimg, axis=None)
+            if self.std is None:
+                self.std = np.std(rgbimg, axis=None) + 1e-5
+            img[..., 0:3] = (img[..., 0:3] - self.mean) / self.std
+        return img
+
+    def preprocessInverse(self, img):
+        if self.mean is None or self.std is None:
+            raise ValueError('mean or std are not calculated. call preprocess() first to create them')
+        img[..., 0:3] = img[..., 0:3] * self.std + self.mean
+        return img

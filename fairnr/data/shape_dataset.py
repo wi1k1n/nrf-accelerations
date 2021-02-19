@@ -153,6 +153,7 @@ class ShapeViewDataset(ShapeDataset):
                 binarize=True,
                 bg_color="1,1,1",
                 min_color=-1,
+                preprocess='none',
                 ids=None):
 
         super().__init__(paths, False, repeat, subsample_valid, ids)
@@ -179,6 +180,12 @@ class ShapeViewDataset(ShapeDataset):
         self.bg_color = bg_color
         self.min_color = min_color
         self.apply_mask_color = (self.bg_color[0] >= -1) & (self.bg_color[0] <= 1)  # if need to apply
+        if preprocess.lower() == 'mstd':
+            self.preprocessor = data_utils.MSTDPreprocessor()
+        elif preprocess.lower() == 'minmax':
+            self.preprocessor = data_utils.MinMaxPreprocessor()
+        else:
+            self.preprocessor = data_utils.Preprocessor()
 
         # -- load per-view data
         _data_per_view = {}
@@ -320,7 +327,8 @@ class ShapeViewDataset(ShapeDataset):
             packed_data['rgb'][view_idx],
             resolution=self.resolution,
             bg_color=self.bg_color,
-            min_rgb=self.min_color)
+            min_rgb=self.min_color,
+            preprocessor=self.preprocessor)
         rgb, alpha = image[:3], image[3]  # C x H x W for RGB
         extrinsics = data_utils.load_matrix(packed_data['ext'][view_idx])
         extrinsics = geometry.parse_extrinsics(extrinsics, self.world2camera).astype('float32')  # this is C2W
@@ -399,9 +407,10 @@ class ShapeViewLightDataset(ShapeViewDataset):
                 binarize=True,
                 bg_color="1,1,1",
                 min_color=-1,
+                preprocess='none',
                 ids=None):
 
-        super().__init__(paths, views, num_view, subsample_valid, resolution, load_depth, load_mask, train, preload, repeat, binarize, bg_color, min_color, ids)
+        super().__init__(paths, views, num_view, subsample_valid, resolution, load_depth, load_mask, train, preload, repeat, binarize, bg_color, min_color, preprocess, ids)
 
         _data_per_view = {}
         _data_per_view['pl'] = self.find_extrinsics_light()
