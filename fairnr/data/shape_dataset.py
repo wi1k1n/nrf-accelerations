@@ -83,6 +83,13 @@ class ShapeDataset(FairseqDataset):
                 ixt_list.append(path + '/intrinsics.txt')
         return ixt_list
 
+    def find_postprocessing_data(self):
+        pprc_list = []
+        for path in self.paths:
+            if os.path.exists(path + '/postprocessing.txt'):
+                pprc_list.append(path + '/postprocessing.txt')
+        return pprc_list
+
     def find_global(self):
         glb_list = []
         for path in self.paths:
@@ -180,10 +187,17 @@ class ShapeViewDataset(ShapeDataset):
         self.bg_color = bg_color
         self.min_color = min_color
         self.apply_mask_color = (self.bg_color[0] >= -1) & (self.bg_color[0] <= 1)  # if need to apply
+
+        # find and load preprocessing data
+        _pprc = self.find_postprocessing_data()
+        pprc = None
+        if len(_pprc) > 0:
+            pprc = data_utils.load_postprocessing_data(_pprc[0])
+        # create preprocessor for dataset
         if preprocess.lower() == 'mstd':
-            self.preprocessor = data_utils.MSTDPreprocessor()
+            self.preprocessor = data_utils.MSTDPreprocessor(None)
         elif preprocess.lower() == 'minmax':
-            self.preprocessor = data_utils.MinMaxPreprocessor()
+            self.preprocessor = data_utils.MinMaxPreprocessor(pprc)
         else:
             self.preprocessor = data_utils.Preprocessor()
 

@@ -11,9 +11,15 @@ import numpy as np
 import imageio
 import OpenEXR, Imath
 
+OUTPUTFILE = 'postprocessing.txt'
+
 print ('\n########## POSTPROCESSING ##########')
 print (sys.argv)
 
+# print('Not Implemented!')
+# exit()
+
+# CALCULATE MEAN and STD
 parser = argparse.ArgumentParser(description='Postprocesses the created dataset')
 parser.add_argument('images_folder', metavar='imgs', type=str, help='path where files has been saved')
 parser.add_argument('output_folder', metavar='out', type=str, help='path where results should be saved')
@@ -21,8 +27,8 @@ parser.add_argument('output_folder', metavar='out', type=str, help='path where r
 argv = sys.argv[1:]
 args = parser.parse_args(argv)
 
-mu = None
-mus = None
+mu = []
+mus = []
 i = 0
 png = True
 
@@ -32,6 +38,7 @@ for flnm in os.listdir(args.images_folder):
     print (flpth)
     if flnm.endswith(".png"): 
         img = imageio.imread(flpth)
+        img = img.reshape(-1, img.shape[-1])
     if OpenEXR.isOpenExrFile(flpth):
         png = False
         exr = OpenEXR.InputFile(flpth)
@@ -52,24 +59,28 @@ for flnm in os.listdir(args.images_folder):
         else:
             img = np.stack((r, g, b)).reshape(3, sz[0]*sz[1]).T
 
-    if mu is None: mu = img
-    else: mu = (mu * i + img) / (i + 1)
+    cmean = img.mean(0)
+    mu.append(cmean)
+    mus.append(np.square(cmean))
 
-    if mus is None: mus = img
-    else: mus = (mus * i + np.square(img)) / (i + 1)
+    # if mu is None: mu = cmean
+    # else: mu = (mu * i + cmean) / (i + 1)
+
+    # if mus is None: mus = np.square(cmean)
+    # else: mus = (mus * i + np.square(cmean)) / (i + 1)
 
     i += 1
 
-print ('## Saving results: ')
-if png:
-    flpth = os.path.join(args.output_folder, 'mean.png')
-    print (flpth)
-    imageio.imwrite(flpth, img.astype(np.ubyte))
-else:
-    flpth = os.path.join(args.output_folder, 'mean.exr')
-    print (flpth)
-    exr = OpenEXR.OutputFile(flpth, hdr)
-    exr.writePixels({'R': img[:,0].reshape(sz[0], -1),
-                     'G': img[:,1].reshape(sz[0], -1),
-                     'B': img[:,2].reshape(sz[0], -1),
-                     'A': img[:,3].reshape(sz[0], -1)})
+print ('{0} samples in dataset'.format(i))
+
+mu_g = np.array(mu).mean(0)  # mu for the whole dataset
+mus_g = np.array(mus).mean(0)  # mu^2 for the whole dataset
+std_g = np.sqrt(mus_g - np.square(mu_g))  # std_g for the whole dataset
+
+print('Mean: {}'.format(mu_g))
+print('Std: {}'.format(std_g))
+
+print ('## Saving postprocessing data: ')
+with open(os.path.join(args.output_folder, OUTPUTFILE), 'w') as fi:
+    print(', '.join(map(str, list(mu_g))), file=fi)
+    print(', '.join(map(str, list(std_g))), file=fi)

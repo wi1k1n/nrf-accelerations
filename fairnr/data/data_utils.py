@@ -120,7 +120,6 @@ def load_rgb(
         else: raise NotImplemented('Given interpolation type \'{0}\' is not implemented'.format(interpolation))
         img = cv2.resize(img, (w, h), interpolation=intp).astype('float32')
 
-
     if preprocessor:
         img = preprocessor.preprocess(img)
 
@@ -128,14 +127,13 @@ def load_rgb(
     #     img[:, :, :3] -= 0.5
     #     img[:, :, :3] *= 2.
 
-    img[...,:3] = np.interp(img[...,:3], (img[...,:3].min(), np.percentile(img[...,:3], 99.9)), (-1, 1))
+    # img[...,:3] = np.interp(img[...,:3], (img[...,:3].min(), np.percentile(img[...,:3], 99.9)), (-1, 1))
 
-    img[:, :, :3] = img[:, :, :3] * img[:, :, 3:] + np.asarray(bg_color)[None, None, :] * (1 - img[:, :, 3:])
-    img[:, :, 3] = img[:, :, 3] * (img[:, :, :3] != np.asarray(bg_color)[None, None, :]).any(-1)
+    # img[:, :, :3] = img[:, :, :3] * img[:, :, 3:] + np.asarray(bg_color)[None, None, :] * (1 - img[:, :, 3:])
+    # img[:, :, 3] = img[:, :, 3] * (img[:, :, :3] != np.asarray(bg_color)[None, None, :]).any(-1)
     img = img.transpose(2, 0, 1)
     
     return img, uv, ratio
-
 
 def load_depth(path, resolution=None, depth_plane=5):
     if path is None:
@@ -210,6 +208,25 @@ def load_intrinsics(filepath, resized_width=None, invert_y=False):
                                [0., 0, 1, 0],
                                [0, 0, 0, 1]])
     return full_intrinsic
+
+
+def load_postprocessing_data(filepath):
+    try:
+        with open(filepath, 'r') as file:
+            _mean = np.fromstring(file.readline(), sep=', ')
+            _std = np.fromstring(file.readline(), sep=', ')
+        postprocessing = {
+            'mean': _mean,
+            'std': _std
+        }
+        return postprocessing
+    except ValueError:
+        pass
+
+    return {
+        'mean': None,
+        'std': None
+    }
 
 
 def unflatten_img(img, width=512):
@@ -408,19 +425,18 @@ class GPUTimer(object):
 
 
 class Preprocessor:
-    def __init__(self): pass
     def preprocess(self, img): return img
     def preprocessInverse(self, img): return img
 
 class MinMaxPreprocessor(Preprocessor):
     _percentileMin = 0
     _percentileMax = 99.9
-    def __init__(self, min = None, max = None, tmin = -1, tmax = 1):
-        super().__init__()
-        self.min = min
-        self.max = max
-        self.tmin = tmin
-        self.tmax = tmax
+    def __init__(self, preprocess_data = None):
+        preprocess_data = {} if preprocess_data is None else preprocess_data
+        self.min = preprocess_data.get('min', None)
+        self.max = preprocess_data.get('max', None)
+        self.tmin = preprocess_data.get('tmin', -1)
+        self.tmax = preprocess_data.get('tmax', 1)
 
     def preprocess(self, img):
         if self.min is None or self.max is None:
@@ -431,7 +447,7 @@ class MinMaxPreprocessor(Preprocessor):
                 self.min = rgbimg.min()
             if self.max is None:
                 self.max = rgbimg.max()
-            img[..., 0:3] = np.interp(img[..., 0:3], (self.min, self.max), (self.tmin, self.tmax))
+        img[..., 0:3] = np.interp(img[..., 0:3], (self.min, self.max), (self.tmin, self.tmax))
         return img
 
     def preprocessInverse(self, img):
@@ -441,23 +457,20 @@ class MinMaxPreprocessor(Preprocessor):
         return img
 
 class MSTDPreprocessor(Preprocessor):
-    _percentileMin = 0
-    _percentileMax = 99.9
-    def __init__(self, mean = None, std = None):
-        super().__init__()
-        self.mean = mean
-        self.std = std
+    def __init__(self, preprocess_data = None):
+        preprocess_data = {} if preprocess_data is None else preprocess_data
+        self.mean = preprocess_data.get('mean', None)
+        self.std = preprocess_data.get('std', None)
+        self.axis = 0 if preprocess_data.get('channelwise', None) else None
 
     def preprocess(self, img):
         if self.mean is None or self.std is None:
             rgbimg = img[..., 0:3]
-            rgbimg = rgbimg[rgbimg < np.percentile(rgbimg, MSTDPreprocessor._percentileMax, axis=None)]
-            rgbimg = rgbimg[rgbimg > np.percentile(rgbimg, MSTDPreprocessor._percentileMin, axis=None)]
             if self.mean is None:
-                self.mean = np.mean(rgbimg, axis=None)
+                self.mean = np.mean(rgbimg, axis=self.axis)
             if self.std is None:
-                self.std = np.std(rgbimg, axis=None) + 1e-5
-            img[..., 0:3] = (img[..., 0:3] - self.mean) / self.std
+                self.std = np.std(rgbimg, axis=self.axis) + 1e-5
+        img[..., 0:3] = (img[..., 0:3] - self.mean) / self.std
         return img
 
     def preprocessInverse(self, img):

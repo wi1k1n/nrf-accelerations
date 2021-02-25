@@ -17,23 +17,25 @@ from mathutils import Vector
 import numpy as np
 
 np.random.seed(2)  # fixed seed
-
 DEBUG = False
-VOXEL_NUMS = 64  #512
-VIEWS = 10  #200
-RESOLUTION = 300  #800
-RESULTS_PATH = 'rgb'
-DEPTH_SCALE = 1.4
-COLOR_DEPTH = 16  # 8
-FORMAT = 'PNG'  # 'PNG'/OPEN_EXR'/'HDR' # use 16/32 bit color depth with OPEN_EXR format
-RANDOM_VIEWS = True
-UPPER_VIEWS = True
-CIRCLE_FIXED_START = (.3,0,0)
+POSTPROCESSING_SCRIPT = True
 
-CYCLES_SAMPLES = 100  #500
+VOXEL_NUMS = 64  #512
+VIEWS = 200
+RESOLUTION = 800
+COLOR_DEPTH = 16  # 8
+FORMAT = 'OPEN_EXR'  # 'PNG'/OPEN_EXR'/'HDR' # use 16/32 bit color depth with OPEN_EXR format
+
+CYCLES_SAMPLES = 500
+CIRCLE_FIXED_START = (.3,0,0)
 LIGHT_SETUP = 'fixed' # none/fixed/colocated
 CAM_INIT_LOCATION = (4, -4, 4)  # (0, 0.3, 0.2)
-POSTPROCESSING_SCRIPT = True
+
+DEPTH_SCALE = 1.4
+RANDOM_VIEWS = True
+UPPER_VIEWS = True
+RESULTS_PATH = 'rgb'
+
 
 parser = argparse.ArgumentParser(description='Renders given obj file by rotation a camera around it.')
 parser.add_argument('output', type=str, help='path where files will be saved')

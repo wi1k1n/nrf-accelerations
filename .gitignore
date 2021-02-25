@@ -5,6 +5,7 @@
 __pycache__/
 *.pt
 .idea/
+.run/
 .vscode/
 build/
 *.egg-info/
