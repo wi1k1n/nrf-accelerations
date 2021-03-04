@@ -7,8 +7,8 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "bunny_static_exr"
-# DATA = "ttoy_static_exr"
+# DATA = "bunny_static_exr"
+DATA = "toybox_static_png"
 RES = "100x100"
 PIXELS_PER_VIEW = '80'  # should be powers of 2 (?)
 WITH_LIGHT = False
@@ -18,19 +18,19 @@ DATASET = "/home/mazlov/documents/thesis/codes/blender/" + DATA  # "data/Synthet
 SAVE = "checkpoint/" + DATA
 MODEL = ARCH + SUFFIX
 USE_OCTREE = True
-CHUNK_SIZE = '128'  # > 1 to save memory to time
+CHUNK_SIZE = '1'#'256'  # > 1 to save memory to time
 LR = '0.001'  # 0.001
-VOXEL_NUM = '512'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
+VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 #TODO: VOXEL_NUM & VOXEL_SIZE might not work as intended!
 
 
-HALF_VOXEL_SIZE_AT = '2000,8500,35000'  # '5000,25000,75000'
+HALF_VOXEL_SIZE_AT = '2000,12500'#,35000'  # '5000,25000,75000'
 REDUCE_STEP_SIZE_AT = '2000,8500,35000'  # '5000,25000,75000'
-PRUNNING_EVERY_STEPS = '1500'  # '2500'
+PRUNNING_EVERY_STEPS = '2500'  # '1500'
 SAVE_INTERVAL_UPDATES = '100'  # '500'
 TOTAL_NUM_UPDATE = '75000'  # 150000
 
-PREPROCESS = 'mstd'  # none/mstd/minmax
+PREPROCESS = 'none'  # none/mstd/minmax
 MIN_COLOR = '-1'  # '-1'
 BG_COLOR = '1.0,1.0,1.0'  # '1.0,1.0,1.0'
 
@@ -65,6 +65,7 @@ parameters += '\n--valid-view-resolution ' + RES
 parameters += '\n--valid-views "100..200"'
 parameters += '\n--valid-view-per-batch 1'
 parameters += '\n--transparent-background "' + BG_COLOR + '"'
+# parameters += '\n--no-background-loss'
 parameters += '\n--background-stop-gradient'
 parameters += '\n--arch ' + ARCH
 parameters += '\n--initial-boundingbox ' + DATASET + '/bbox.txt'

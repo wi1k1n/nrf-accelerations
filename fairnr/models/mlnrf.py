@@ -41,102 +41,37 @@ class MLNRFModel(NSVFModel):
 		# 					help='if set, we do not sample points uniformly through voxels.')
 
 	def intersecting(self, ray_start, ray_dir, encoder_states, **kwargs):
-		S = ray_dir.size(0)
-		ray_start, ray_dir, intersection_outputs, hits, sampled_uv = \
-			super().intersecting(ray_start, ray_dir, encoder_states, **kwargs)
-		return ray_start, ray_dir, intersection_outputs, hits, sampled_uv
+		return super().intersecting(ray_start, ray_dir, encoder_states, **kwargs)
 
 	def raymarching(self, ray_start, ray_dir, intersection_outputs, encoder_states, fine=False):
-		samples, all_results = super().raymarching(ray_start, ray_dir, intersection_outputs, encoder_states, fine)
-		all_results['voxel_edges'] = self.encoder.get_edge(ray_start, ray_dir, samples, encoder_states)
-		all_results['voxel_depth'] = samples['sampled_point_depth'][:, 0]
-		return samples, all_results
+		return super().raymarching(ray_start, ray_dir, intersection_outputs, encoder_states, fine)
 
 	def prepare_hierarchical_sampling(self, intersection_outputs, samples, all_results):
-		intersection_outputs = super().prepare_hierarchical_sampling(intersection_outputs, samples, all_results)
-		if getattr(self.args, "fine_num_sample_ratio", 0) > 0:
-			intersection_outputs['steps'] = samples['sampled_point_voxel_idx'].ne(-1).sum(
-				-1).float() * self.args.fine_num_sample_ratio
-		return intersection_outputs
+		return super().prepare_hierarchical_sampling(intersection_outputs, samples, all_results)
 
 	def postprocessing(self, ray_start, ray_dir, all_results, hits, sizes):
-		# we need fill_in for NSVF for background
-		S, V, P = sizes
-		fullsize = S * V * P
-
-		all_results['missed'] = fill_in((fullsize,), hits, all_results['missed'], 1.0).view(S, V, P)
-		all_results['colors'] = fill_in((fullsize, 3), hits, all_results['colors'], 0.0).view(S, V, P, 3)
-		all_results['depths'] = fill_in((fullsize,), hits, all_results['depths'], 0.0).view(S, V, P)
-
-		BG_DEPTH = self.field.bg_color.depth
-		bg_color = self.field.bg_color(all_results['colors'])
-		all_results['colors'] += all_results['missed'].unsqueeze(-1) * bg_color.reshape(fullsize, 3).view(S, V, P, 3)
-		all_results['depths'] += all_results['missed'] * BG_DEPTH
-		if 'normal' in all_results:
-			all_results['normal'] = fill_in((fullsize, 3), hits, all_results['normal'], 0.0).view(S, V, P, 3)
-		if 'voxel_depth' in all_results:
-			all_results['voxel_depth'] = fill_in((fullsize,), hits, all_results['voxel_depth'], BG_DEPTH).view(S, V, P)
-		if 'voxel_edges' in all_results:
-			all_results['voxel_edges'] = fill_in((fullsize, 3), hits, all_results['voxel_edges'], 1.0).view(S, V, P, 3)
-		if 'feat_n2' in all_results:
-			all_results['feat_n2'] = fill_in((fullsize,), hits, all_results['feat_n2'], 0.0).view(S, V, P)
-		return all_results
+		return super().postprocessing(ray_start, ray_dir, all_results, hits, sizes)
 
 	def add_other_logs(self, all_results):
-		return {'voxs_log': item(self.encoder.voxel_size),
-				'stps_log': item(self.encoder.step_size),
-				'nvox_log': item(self.encoder.num_voxels)}
+		return super().add_other_logs(all_results)
 
 	def _visualize(self, images, sample, output, state, **kwargs):
-		img_id, shape, view, width, name = state
-		images = super()._visualize(images, sample, output, state, **kwargs)
-		if 'voxel_edges' in output and output['voxel_edges'] is not None:
-			# voxel hitting visualization
-			images['{}_voxel/{}:HWC'.format(name, img_id)] = {
-				'img': output['voxel_edges'][shape, view].float(),
-				'min_val': 0,
-				'max_val': 1,
-				'weight':
-					compute_normal_map(
-						sample['ray_start'][shape, view].float(),
-						sample['ray_dir'][shape, view].float(),
-						output['voxel_depth'][shape, view].float(),
-						sample['extrinsics'][shape, view].float().inverse(),
-						width, proj=True)
-			}
-
-		if 'feat_n2' in output and output['feat_n2'] is not None:
-			images['{}_featn2/{}:HWC'.format(name, img_id)] = {
-				'img': output['feat_n2'][shape, view].float(),
-				'min_val': 0,
-				'max_val': 1
-			}
-		return images
+		return super()._visualize(images, sample, output, state, **kwargs)
 
 	@torch.no_grad()
 	def prune_voxels(self, th=0.5, train_stats=False):
-		self.encoder.pruning(self.field, th, train_stats=train_stats)
-		self.clean_caches()
+		super().prune_voxels(th, train_stats)
 
 	@torch.no_grad()
 	def split_voxels(self):
-		logger.info("half the global voxel size {:.4f} -> {:.4f}".format(
-			self.encoder.voxel_size.item(), self.encoder.voxel_size.item() * .5))
-		self.encoder.splitting()
-		self.encoder.voxel_size *= .5
-		self.encoder.max_hits *= 1.5
-		self.clean_caches()
+		super().split_voxels()
 
 	@torch.no_grad()
 	def reduce_stepsize(self):
-		logger.info("reduce the raymarching step size {:.4f} -> {:.4f}".format(
-			self.encoder.step_size.item(), self.encoder.step_size.item() * .5))
-		self.encoder.step_size *= .5
+		super().reduce_stepsize()
 
 	def clean_caches(self, reset=False):
-		self.encoder.clean_runtime_caches()
-		if reset:
-			self.encoder.reset_runtime_caches()
+		super().clean_caches()
 
 
 @register_model_architecture("mlnrf", "mlnrf_base")

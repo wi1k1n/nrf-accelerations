@@ -73,6 +73,7 @@ class ImplicitField(nn.Module):
     def init_weights(self, m):
         if type(m) == nn.Linear:
             nn.init.kaiming_normal_(m.weight, a=0.0, nonlinearity='relu', mode='fan_in')
+            # nn.init.uniform_(m.weight)
 
 
 class HyperImplicitField(nn.Module):

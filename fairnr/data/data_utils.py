@@ -123,14 +123,14 @@ def load_rgb(
     if preprocessor:
         img = preprocessor.preprocess(img)
 
-    # if min_rgb == -1:  # 0, 1  --> -1, 1
-    #     img[:, :, :3] -= 0.5
-    #     img[:, :, :3] *= 2.
+    if min_rgb == -1:  # 0, 1  --> -1, 1
+        img[:, :, :3] -= 0.5
+        img[:, :, :3] *= 2.
 
     # img[...,:3] = np.interp(img[...,:3], (img[...,:3].min(), np.percentile(img[...,:3], 99.9)), (-1, 1))
 
-    # img[:, :, :3] = img[:, :, :3] * img[:, :, 3:] + np.asarray(bg_color)[None, None, :] * (1 - img[:, :, 3:])
-    # img[:, :, 3] = img[:, :, 3] * (img[:, :, :3] != np.asarray(bg_color)[None, None, :]).any(-1)
+    img[:, :, :3] = img[:, :, :3] * img[:, :, 3:] + np.asarray(bg_color)[None, None, :] * (1 - img[:, :, 3:])
+    img[:, :, 3] = img[:, :, 3] * (img[:, :, :3] != np.asarray(bg_color)[None, None, :]).any(-1)
     img = img.transpose(2, 0, 1)
     
     return img, uv, ratio
@@ -211,22 +211,26 @@ def load_intrinsics(filepath, resized_width=None, invert_y=False):
 
 
 def load_postprocessing_data(filepath):
+    postprocessing = {
+        'mean': None,
+        'std': None,
+        'min': None,
+        'max': None,
+    }
     try:
         with open(filepath, 'r') as file:
-            _mean = np.fromstring(file.readline(), sep=', ')
-            _std = np.fromstring(file.readline(), sep=', ')
-        postprocessing = {
-            'mean': _mean,
-            'std': _std
-        }
-        return postprocessing
+            l = file.readline()
+            if len(l) > 0: postprocessing.update({'mean': np.fromstring(l, sep=', ')})
+            l = file.readline()
+            if len(l) > 0: postprocessing.update({'std': np.fromstring(l, sep=', ')})
+            l = file.readline()
+            if len(l) > 0: postprocessing.update({'min': np.fromstring(l, sep=', ')})
+            l = file.readline()
+            if len(l) > 0: postprocessing.update({'max': np.fromstring(l, sep=', ')})
     except ValueError:
         pass
 
-    return {
-        'mean': None,
-        'std': None
-    }
+    return postprocessing
 
 
 def unflatten_img(img, width=512):
@@ -344,7 +348,7 @@ def write_images(writer, images, updates):
     for tag in images:
         img = images[tag]
         tag, dataform = tag.split(':')
-        writer.add_image(tag, img, updates, dataformats=dataform)
+        writer.add_image(tag, img, updates, dataformats=dataform, flush_secs=15)
 
 
 def compute_psnr(p, t):
