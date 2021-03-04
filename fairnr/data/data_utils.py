@@ -348,7 +348,7 @@ def write_images(writer, images, updates):
     for tag in images:
         img = images[tag]
         tag, dataform = tag.split(':')
-        writer.add_image(tag, img, updates, dataformats=dataform, flush_secs=15)
+        writer.add_image(tag, img, updates, dataformats=dataform)
 
 
 def compute_psnr(p, t):

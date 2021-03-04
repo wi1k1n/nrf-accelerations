@@ -113,7 +113,7 @@ class SingleObjRenderingTask(FairseqTask):
 
         if len(self.args.tensorboard_logdir) > 0 and getattr(args, "distributed_rank", -1) == 0:
             from tensorboardX import SummaryWriter
-            self.writer = SummaryWriter(self.args.tensorboard_logdir + '/images')
+            self.writer = SummaryWriter(self.args.tensorboard_logdir + '/images', flush_secs=15)
         else:
             self.writer = None
 
@@ -316,6 +316,7 @@ class SingleObjRenderingTask(FairseqTask):
             images = model.visualize(sample, shape=0, view=0)
             if images is not None:
                 write_images(self.writer, images, self._num_updates['step'])
+                self.writer.flush()
         
         return loss, sample_size, logging_output
     
