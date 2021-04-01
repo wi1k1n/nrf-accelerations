@@ -11,7 +11,8 @@ SAVE_FILE = True
 DATA = "toybox_static_png"
 RES = "100x100"
 PIXELS_PER_VIEW = '80'  # should be powers of 2 (?)
-WITH_LIGHT = False
+SCENE_SCALE = '1.0'
+WITH_LIGHT = True
 ARCH = "mlnrf_base"
 SUFFIX = "v1"
 DATASET = "/home/mazlov/documents/thesis/codes/blender/" + DATA  # "data/Synthetic_NeRF/" + DATA
@@ -27,7 +28,7 @@ VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 HALF_VOXEL_SIZE_AT = '2000,12500'#,35000'  # '5000,25000,75000'
 REDUCE_STEP_SIZE_AT = '2000,8500,35000'  # '5000,25000,75000'
 PRUNNING_EVERY_STEPS = '2500'  # '1500'
-SAVE_INTERVAL_UPDATES = '100'  # '500'
+SAVE_INTERVAL_UPDATES = '500'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
 
 PREPROCESS = 'none'  # none/mstd/minmax
@@ -36,6 +37,8 @@ BG_COLOR = '1.0,1.0,1.0'  # '1.0,1.0,1.0'
 
 
 XML_PATH = '.run/train.run.xml'
+NUM_BACKUPS = 10
+
 
 # create directory if doesn't exist
 # if not os.path.exists(SAVE + '/' + MODEL): os.makedirs(SAVE + '/' + MODEL)
@@ -54,6 +57,7 @@ if 'VOXEL_NUM' in locals():
 	parameters += '\n--voxel-num ' + locals()['VOXEL_NUM']
 elif 'VOXEL_SIZE' in locals():
 	parameters += '\n--voxel-size ' + locals()['VOXEL_SIZE']
+parameters += '\n--scene-scale ' + SCENE_SCALE
 parameters += '\n--view-resolution ' + RES
 parameters += '\n--max-sentences 1'
 parameters += '\n--view-per-batch 2'
@@ -120,6 +124,14 @@ if INJECT_PYCHARM:
 		break
 
 	# Create backup
-	copyfile(op.abspath(XML_PATH), op.abspath(XML_PATH + '.backup'))
+	xmlDir = op.dirname(XML_PATH)
+	backups = [int(op.splitext(f)[0].split('.')[-1]) for f in os.listdir(xmlDir) if f.endswith('.backup') and op.isfile(op.join(xmlDir, f))]
+	lastBackup, firstBackup = (max(backups), min(backups)) if any(backups) else (0, None)
+
+	copyfile(op.abspath(XML_PATH), op.abspath(XML_PATH + '.' + str(lastBackup + 1) + '.backup'))
 
 	tree.write(op.abspath(XML_PATH))
+
+	# Delete the oldest backup
+	if len(backups) >= NUM_BACKUPS:
+		os.remove(op.abspath(XML_PATH + '.' + str(firstBackup) + '.backup'))

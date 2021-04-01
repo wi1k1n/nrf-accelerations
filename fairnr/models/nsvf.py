@@ -54,7 +54,7 @@ class NSVFModel(NeRFModel):
                 uv, size, mask=mask, return_mask=True)
             sampled_masks = sampled_masks.reshape(uv.size(0), -1).bool()
             hits, sampled_masks = hits[sampled_masks].reshape(S, -1), sampled_masks.unsqueeze(-1)
-            intersection_outputs = {name: outs[sampled_masks.expand_as(outs)].reshape(S, -1, outs.size(-1)) 
+            intersection_outputs = {name: outs[sampled_masks.expand_as(outs)].reshape(S, -1, outs.size(-1))
                 for name, outs in intersection_outputs.items()}
             ray_start = ray_start[sampled_masks.expand_as(ray_start)].reshape(S, -1, 3)
             ray_dir = ray_dir[sampled_masks.expand_as(ray_dir)].reshape(S, -1, 3)

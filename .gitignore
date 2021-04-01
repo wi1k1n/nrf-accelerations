@@ -21,3 +21,6 @@ configuration.txt
 configuration_render.txt
 fairnr.uml
 examples/data/ilya/
+util/remote_debugger/ssh_credentials.py
+rd_mirror.lnk
+remdeb/

@@ -726,6 +726,10 @@ class SparseVoxelLightEncoder(SparseVoxelEncoder):
     def __init__(self, args, voxel_path=None, bbox_path=None, shared_values=None):
         super().__init__(args, voxel_path, bbox_path, shared_values)
 
+    def forward(self, samples, encoder_states):
+        inputs = super().forward(samples, encoder_states)
+        return inputs
+
 @register_encoder('multi_sparsevoxel_encoder')
 class MultiSparseVoxelEncoder(Encoder):
     def __init__(self, args):
