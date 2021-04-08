@@ -1,27 +1,35 @@
 import argparse, sys, os, json
 import numpy as np
-import matplotlib
-matplotlib.use('Qt5Agg')  # or can use 'TkAgg', whatever you have/prefer
-from matplotlib import pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
-PATH = "D:\\edu\\UniBonn\\Study\\thesis\\codes\\blender\\data\\drums"
+import plotly.graph_objects as go
 
-filepath = os.path.join(PATH, 'transforms.json')
+PATH = "D:\\edu\\UniBonn\\Study\\thesis\\codes\\blender\\datasets\\rocket"
+
+transformsPath = os.path.join(PATH, 'transforms.json')
+bboxPath = os.path.join(PATH, 'bbox.txt')
 
 data = None
-with open(filepath, 'r') as f:
+with open(transformsPath, 'r') as f:
 	data = json.load(f)
 
 if data is None:
 	print('Failed to open transforms.json')
 	exit(1)
 
+# Read bounding box for better visualization
+bbox = None
+if os.path.isfile(bboxPath):
+	bbox = np.loadtxt(bboxPath)
+if bbox:
+	xn, yn, zn, xx, yx, zx, _ = tuple(bbox)
+	#           0   1   2   3   0   4   5   1   5   6   2   6   7   3   7   4
+	cornersX = [xn, xn, xx, xx, xn, xn, xn, xn, xn, xx, xx, xx, xx, xx, xx, xn]
+	cornersY = [yx, yn, yn, yx, yx, yx, yn, yn, yn, yn, yn, yn, yx, yx, yx, yx]
+	cornersZ = [zn, zn, zn, zn, zn, zx, zx, zn, zx, zx, zn, zx, zx, zn, zx, zx]
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
 cams = []
 lights = []
+dirs = []
 
 # Iterate over renders
 for frame in data['frames']:
@@ -31,12 +39,28 @@ for frame in data['frames']:
 	Tpls = np.array(frame['pl_transform_matrix'])  # point light source
 
 	p = np.array([0, 0, 0, 1])
+	q = np.array([0, 0, -0.5, 1])
 	cams.append(np.matmul(Tcam, p))
+	dirs.append(np.matmul(Tcam, q))
 	lights.append(np.matmul(Tpls, p))
 
 cams = np.array(cams)
 lights = np.array(lights)
 
-ax.scatter(cams[:, 0], cams[:, 1], cams[:, 2], c='blue')
-ax.scatter(lights[:, 0], lights[:, 1], lights[:, 2], c='yellow')
-plt.show()
+# light positions
+data = [
+	# go.Scatter3d(x=cams[:, 0], y=cams[:, 1], z=cams[:, 2], marker=go.scatter3d.Marker(size = 3), mode='markers'),
+	go.Scatter3d(x=lights[:, 0], y=lights[:, 1], z=lights[:, 2], marker=dict(size=5, color="orange"), mode='markers'),
+]
+
+# add bounding box
+if bbox:
+	data.append(go.Scatter3d(x=cornersX, y=cornersY, z=cornersZ, mode='lines'))
+
+# add camera positions
+for ind, dir in enumerate(dirs):
+	data.append(go.Scatter3d(x=[cams[ind, 0], dir[0]], y=[cams[ind, 1], dir[1]], z=[cams[ind, 2], dir[2]], line=dict(color="blue", width=3), marker=dict(size=0), mode="lines"))
+
+
+fig = go.Figure(data=data)
+fig.write_html('visualize_cam_light.html', auto_open=True)
