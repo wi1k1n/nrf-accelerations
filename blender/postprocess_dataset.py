@@ -14,7 +14,7 @@ import OpenEXR, Imath
 OUTPUTFILE = 'postprocessing.txt'
 
 print ('\n########## POSTPROCESSING ##########')
-print (sys.argv)
+print ('argv:', sys.argv)
 
 # print('Not Implemented!')
 # exit()
