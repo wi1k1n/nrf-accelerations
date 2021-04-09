@@ -7,12 +7,11 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-# DATA = "bunny_static_exr"
-DATA = "toybox_static_png"
+DATA = "donut_static_png"
 RES = "100x100"
 PIXELS_PER_VIEW = '80'  # should be powers of 2 (?)
 SCENE_SCALE = '1.0'
-WITH_LIGHT = True
+WITH_LIGHT = False
 ARCH = "mlnrf_base"
 SUFFIX = "v1"
 DATASET = "/home/mazlov/documents/thesis/codes/blender/" + DATA  # "data/Synthetic_NeRF/" + DATA

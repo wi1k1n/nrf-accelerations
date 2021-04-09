@@ -18,3 +18,8 @@ else {
     Msgbox, No PyCharm instance found!
 }
 return
+
+^!+w::
+; Run reconfiguration script
+SetWorkingDir, D:\edu\UniBonn\Study\thesis\codes\NSVF
+RunWait, C:\Python37\python.exe "D:/edu/UniBonn/Study/thesis/codes/NSVF/util/reconfigure_train.py"

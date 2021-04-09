@@ -23,5 +23,6 @@ fairnr.uml
 examples/data/ilya/
 util/remote_debugger/ssh_credentials.py
 rd_mirror.lnk
+nsvf_train.ahk.lnk
 remdeb/
 *visualize_cam_light.html

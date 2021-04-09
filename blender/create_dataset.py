@@ -62,6 +62,7 @@ for scene in bpy.data.scenes:
     scene.cycles.device = 'GPU'
     scene.render.resolution_percentage = 200
     scene.cycles.samples = opts.CYCLES_SAMPLES
+    scene.cycles.max_bounces = opts.CYCLES_MAX_BOUNCES
 print()
 
 # Enable CUDA
@@ -322,6 +323,10 @@ with open(os.path.join(homedir, 'intrinsics.txt'), 'w') as fi:
     print("0.", file=fi)
     print("1.", file=fi)
     print("{} {}".format(H, W), file=fi)
+
+# write rendering options
+with open(os.path.join(homedir, 'render_params.txt'), 'w') as fi:
+    print(opts, file=fi)
 
 
 # Postprocessing script for the dataset
