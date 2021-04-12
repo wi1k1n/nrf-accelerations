@@ -7,20 +7,23 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "donut_static_png"
+DATA = "mug_static_png"
+NAME = "test"  # if empty, same as dataset
+WITH_LIGHT = True
 RES = "100x100"
 PIXELS_PER_VIEW = '80'  # should be powers of 2 (?)
 SCENE_SCALE = '1.0'
-WITH_LIGHT = False
+
+USE_OCTREE = True
+CHUNK_SIZE = '64'#'256'  # > 1 to save memory to time
+LR = '0.001'  # 0.001
+VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
+
 ARCH = "mlnrf_base"
 SUFFIX = "v1"
 DATASET = "/home/mazlov/documents/thesis/codes/blender/" + DATA  # "data/Synthetic_NeRF/" + DATA
-SAVE = "checkpoint/" + DATA
+SAVE = "checkpoint/" + DATA + (('_' + NAME) if NAME else '')
 MODEL = ARCH + SUFFIX
-USE_OCTREE = True
-CHUNK_SIZE = '1'#'256'  # > 1 to save memory to time
-LR = '0.001'  # 0.001
-VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 #TODO: VOXEL_NUM & VOXEL_SIZE might not work as intended!
 
 
