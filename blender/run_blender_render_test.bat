@@ -1,0 +1,1 @@
+"C:\Program Files\Blender Foundation\Blender 2.81\blender.exe" model.blend --background --python blender_render_test.py

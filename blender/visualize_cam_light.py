@@ -3,8 +3,9 @@ import numpy as np
 import open3d as o3d
 import plotly.graph_objects as go
 
-MODEL = 'guitar'
+MODEL = 'rocket_test'
 PATH = 'D:\\edu\\UniBonn\\Study\\thesis\\codes\\blender\\datasets\\' + MODEL
+CAM_ICONS = False
 
 
 
@@ -68,15 +69,18 @@ for frame in data['frames']:
 	dirs.append(np.matmul(Tcam, q))
 	lights.append(np.matmul(Tpls, p))
 
+if not len(cams):
+	print('No camera data found. Stopping...')
+	exit()
+
 cams = np.array(cams)
 lights = np.array(lights)
 
+plotData = []
 
 # light positions
-plotData = [
-	# go.Scatter3d(x=cams[:, 0], y=cams[:, 1], z=cams[:, 2], marker=go.scatter3d.Marker(size = 3), mode='markers'),
-	go.Scatter3d(x=lights[:, 0], y=lights[:, 1], z=lights[:, 2], name='lights', marker=dict(size=5, color="orange"), mode='markers'),
-]
+if len(lights):
+	plotData.append(go.Scatter3d(x=lights[:, 0], y=lights[:, 1], z=lights[:, 2], name='lights', marker=dict(size=5, color="orange"), mode='markers'))
 
 # add bounding box
 if bbox is not None and len(bbox) == 7:
@@ -86,8 +90,6 @@ if bbox is not None and len(bbox) == 7:
 if mesh is not None:
 	mesh3D = go.Mesh3d(x=vertices[0], y=vertices[1], z=vertices[2], i=triangles[0], j=triangles[1], k=triangles[2],
 		flatshading=True,
-		# colorscale=colorscale,
-		# intensity=z,
 		colorscale=[[0, 'gold'],
 					[0.5, 'mediumturquoise'],
 					[1, 'magenta']],
@@ -101,24 +103,31 @@ if mesh is not None:
 
 
 # camera icon sizes
-camScale = 1.5 * 0.01
-bw, bh, bt, lw, lh, lt = 1, 1, 3, 4.5, 4.5, 2.5
+# camScale = 1.5 * 0.01
+camScale = 1e-2 * np.array((bbox[3]-bbox[0], bbox[4]-bbox[1], bbox[5]-bbox[2])).mean()
+if CAM_ICONS:
+	bw, bh, bt, lw, lh, lt = 1, 1, 3, 4.5, 4.5, 2.5
 
-dw, dh = 0.5 * (lw - bw), 0.5 * (lh - bh)
-tt = bt + lt
-pts_x = np.array([-bw, -bw, bw, bw, -bw, -bw, bw, bw, -bw - dw, -bw - dw, bw + dw, bw + dw]) * camScale
-pts_y = np.array([-bh, bh, bh, -bh, -bh, bh, bh, -bh, -bh - dh, bh + dh, bh + dh, -bh - dh]) * camScale
-pts_z = -np.array([-bt, -bt, -bt, -bt, 0, 0, 0, 0, lt, lt, lt, lt]) * camScale
-conseq = [0, 1, 2, 3, 0, 4, 5, 1, 5, 6, 2, 6, 7, 3, 7, 4, 8, 9, 5, 9, 10, 6, 10, 11, 7, 11, 8]
+	dw, dh = 0.5 * (lw - bw), 0.5 * (lh - bh)
+	tt = bt + lt
+	pts_x = np.array([-bw, -bw, bw, bw, -bw, -bw, bw, bw, -bw - dw, -bw - dw, bw + dw, bw + dw]) * camScale
+	pts_y = np.array([-bh, bh, bh, -bh, -bh, bh, bh, -bh, -bh - dh, bh + dh, bh + dh, -bh - dh]) * camScale
+	pts_z = -np.array([-bt, -bt, -bt, -bt, 0, 0, 0, 0, lt, lt, lt, lt]) * camScale
+	conseq = [0, 1, 2, 3, 0, 4, 5, 1, 5, 6, 2, 6, 7, 3, 7, 4, 8, 9, 5, 9, 10, 6, 10, 11, 7, 11, 8]
+
+	cam_pts = np.array([p for p in zip(pts_x[conseq], pts_y[conseq], pts_z[conseq], np.ones(len(conseq)))])
+else:
+	cam_pts = np.array([[0, 0, 0, 1], [0, 0, -10 * camScale, 1]])
 
 # add camera positions
 for ind, dir in enumerate(dirs):
-	pts = np.array([p for p in zip(pts_x[conseq], pts_y[conseq], pts_z[conseq], np.ones(len(conseq)))])
 	Tpls = np.array(data['frames'][ind]['transform_matrix'])
-	pts_rot = np.matmul(Tpls, pts.T)
+	pts_rot = np.matmul(Tpls, cam_pts.T)
 	plotData.append(go.Scatter3d(x=pts_rot[0], y=pts_rot[1], z=pts_rot[2], name='cam{:2}'.format(ind), line=dict(color="blue", width=3), marker=dict(size=0), mode="lines"))
 
 
 
 fig = go.Figure(data=plotData)
+print('Saving to {0}'.format(os.path.abspath('visualize_cam_light.html')))
 fig.write_html('visualize_cam_light.html', auto_open=True)
+print('Saved. File size: {0} bytes'.format(os.path.getsize('visualize_cam_light.html')))

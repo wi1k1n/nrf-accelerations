@@ -10,7 +10,7 @@ import sys, os, argparse
 # print("Version info.")
 # print (sys.version_info)
 # exit()
-import json
+import json, time
 import bpy
 import mathutils
 from mathutils import Vector
@@ -177,9 +177,10 @@ assert bbox is not None, 'bbox.txt is not created. Check the main shape to have 
 # cb = bpy.ops.mesh.primitive_cube_add(size=1.1, location=((bbox[0]+bbox[3])*0.5, (bbox[1]+bbox[4])*0.5, (bbox[2]+bbox[5])*0.5))
 
 
+modelCenter = ((bbox[0]+bbox[3])*0.5, (bbox[1]+bbox[4])*0.5, (bbox[2]+bbox[5])*0.5)
 def parent_obj_to_camera(b_camera):
     # origin = (0, 0, 0)
-    origin = ((bbox[0]+bbox[3])*0.5, (bbox[1]+bbox[4])*0.5, (bbox[2]+bbox[5])*0.5)
+    origin = modelCenter
     b_empty = bpy.data.objects.new("Empty", None)
     b_empty.location = origin
     b_camera.parent = b_empty  # setup parenting
@@ -210,8 +211,18 @@ else:
     # otherwise try using custom property in .blend file
     camDst = bpy.context.scene.get('camDst')
 assert camDst is not None, 'Neither CAM_DISTANCE parameter nor camDst custom property specified. Please either setup camera distance to scene property in blender project file or override in render_params.py'
-cam.location = (0, camDst * np.cos(np.pi / 6), camDst * np.sin(np.pi / 6))
+
+camAngles = (min(opts.CAM_HEMISPHERE_ANGLES), max(min(opts.CAM_HEMISPHERE_ANGLES)))
+assert camAngles[0] >= -90 and camAngles[0] < camAngles[1] and camAngles[1] <= 90, 'CAM_HEMISPHERE_ANGLES should be a list of [a_min, a_max] angles, calculated from XY plane'
+
+camAngles = np.asarray(camAngles) * np.pi / 180.0
+camAnglesSin, camAnglesCos = np.sin(camAngles), np.cos(camAngles)
+maxCos = 1 if np.sign(camAnglesSin[0]) and np.sign(camAnglesSin[1]) else max(camAngleCos)
+cam.location = (0, camDst * maxCos, camDst * np.sin(np.acos(maxCos)) + modelCenter[2])
+if not opts.RANDOM_VIEWS:
+    cam.location[2] += camDst * camAnglesSin[1]
 # cam.location = (0, 0, 15)
+# cam.location = (0, camDst)
 print('Camera initial location: ', cam.location)
 
 cam_constraint = cam.constraints.new(type='TRACK_TO')
@@ -236,7 +247,7 @@ elif opts.LIGHT_SETUP == 'colocated':
 from math import radians
 
 stepsize = 360.0 / opts.VIEWS
-rotation_mode = 'XYZ'
+# rotation_mode = 'XYZ'
 
 if not opts.DEBUG:
     for output_node in [depth_file_output, normal_file_output]:
@@ -244,8 +255,8 @@ if not opts.DEBUG:
 
 out_data['frames'] = []
 
-if not opts.RANDOM_VIEWS:
-    b_empty.rotation_euler = CIRCLE_FIXED_START
+# if not opts.RANDOM_VIEWS:
+#     b_empty.rotation_euler = CIRCLE_FIXED_START
 
 def listify_matrix(matrix):
     matrix_list = []
@@ -253,30 +264,35 @@ def listify_matrix(matrix):
         matrix_list.append(list(row))
     return matrix_list
 
+# Iterating over views
 for i in range(0, opts.VIEWS):
-    if opts.DEBUG:
-        i = np.random.randint(0, opts.VIEWS)
-        b_empty.rotation_euler[2] += radians(stepsize*i)
+    # if opts.DEBUG:
+    #     i = np.random.randint(0, opts.VIEWS)
+    #     b_empty.rotation_euler[2] += radians(stepsize*i)
+    scene.render.filepath = os.path.join(fp, '{:04d}'.format(i))
     if opts.RANDOM_VIEWS:
-        scene.render.filepath = os.path.join(fp, '{:04d}'.format(i))
-        if opts.UPPER_VIEWS:
-            rot = np.random.uniform(0, 1, size=3) * (1,0,2*np.pi)
-            rot[0] = np.abs(np.arccos(1 - 2 * rot[0]) - np.pi/2)
-            b_empty.rotation_euler = rot
-        else:
-            b_empty.rotation_euler = np.random.uniform(0, 2*np.pi, size=3)
+        rot = np.random.uniform(0, np.pi, size=3) * (2, -1, 0)
+        # rot[0] = np.abs(rot[0])
+        b_empty.rotation_euler = rot
+        # if opts.UPPER_VIEWS:
+        #     # rot = np.random.uniform(0, 1, size=3) * (2, 0, 2 * np.pi)
+        #     # rot[0] = np.abs(np.arccos(1 - rot[0]) - np.pi/2)
+        #     # b_empty.rotation_euler = rot
+        #     rot = np.random.uniform(0, np.pi, size=3) * (2, -1, 0)
+        #     # rot[0] = np.abs(rot[0])
+        #     b_empty.rotation_euler = rot
+        # else:
+        #     b_empty.rotation_euler = np.random.uniform(0, 2 * np.pi, size=3)
     else:
         print("Rotation {}, {}".format((stepsize * i), radians(stepsize * i)))
-        scene.render.filepath = os.path.join(fp, '{:04d}'.format(i))
+
+    # apply changes
+    bpy.context.view_layer.update()
+
+    # print(b_empty.rotation_euler, cam.matrix_world)
 
     # depth_file_output.file_slots[0].path = scene.render.filepath + "_depth_"
     # normal_file_output.file_slots[0].path = scene.render.filepath + "_normal_"
-    print('BEFORE RENDER')
-    if opts.DEBUG:
-        break
-    else:
-        bpy.ops.render.render(write_still=True)  # render still
-    print('AFTER RENDER')
 
     frame_data = {
         'file_path': scene.render.filepath,
@@ -284,6 +300,8 @@ for i in range(0, opts.VIEWS):
         'transform_matrix': listify_matrix(cam.matrix_world),
         'pl_transform_matrix': listify_matrix(pointLight.matrix_world)
     }
+    out_data['frames'].append(frame_data)
+
     with open(os.path.join(homedir, "pose", '{:04d}.txt'.format(i)), 'w') as fo:
         for ii, pose in enumerate(frame_data['transform_matrix']):
             print(" ".join([str(-p) if (((j == 2) | (j == 1)) and (ii < 3)) else str(p)
@@ -294,7 +312,6 @@ for i in range(0, opts.VIEWS):
             print(" ".join([str(-p) if (((j == 2) | (j == 1)) and (ii < 3)) else str(p)
                             for j, p in enumerate(pose)]),
                 file=fo)
-    out_data['frames'].append(frame_data)
 
     if opts.RANDOM_VIEWS:
         if opts.UPPER_VIEWS:
@@ -306,7 +323,15 @@ for i in range(0, opts.VIEWS):
     else:
         b_empty.rotation_euler[2] += radians(stepsize)
 
-if not opts.DEBUG:
+
+    if opts.DEBUG:
+        continue
+    else:
+        print('BEFORE RENDER')
+        bpy.ops.render.render(write_still=True)  # render still
+    print('AFTER RENDER')
+
+if not opts.DEBUG or True:
     with open(os.path.join(homedir, 'transforms.json'), 'w') as out_file:
         json.dump(out_data, out_file, indent=4)
 
