@@ -7,10 +7,10 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "mug_static_png"
+DATA = "rocket_png"
 NAME = "test"  # if empty, same as dataset
 WITH_LIGHT = True
-RES = "100x100"
+RES = "70x70"
 PIXELS_PER_VIEW = '80'  # should be powers of 2 (?)
 SCENE_SCALE = '1.0'
 

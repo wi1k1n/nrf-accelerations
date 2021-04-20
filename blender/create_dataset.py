@@ -178,18 +178,7 @@ assert bbox is not None, 'bbox.txt is not created. Check the main shape to have 
 
 
 modelCenter = ((bbox[0]+bbox[3])*0.5, (bbox[1]+bbox[4])*0.5, (bbox[2]+bbox[5])*0.5)
-def parent_obj_to_camera(b_camera):
-    # origin = (0, 0, 0)
-    origin = modelCenter
-    b_empty = bpy.data.objects.new("Empty", None)
-    b_empty.location = origin
-    b_camera.parent = b_empty  # setup parenting
-
-    scn = bpy.context.scene
-    scn.collection.objects.link(b_empty)
-    bpy.context.view_layer.objects.active = b_empty
-    # scn.objects.active = b_empty
-    return b_empty
+print('Model center: {}'.format(modelCenter))
 
 
 scene = bpy.context.scene
@@ -212,24 +201,15 @@ else:
     camDst = bpy.context.scene.get('camDst')
 assert camDst is not None, 'Neither CAM_DISTANCE parameter nor camDst custom property specified. Please either setup camera distance to scene property in blender project file or override in render_params.py'
 
-camAngles = (min(opts.CAM_HEMISPHERE_ANGLES), max(min(opts.CAM_HEMISPHERE_ANGLES)))
+camAngles = (min(opts.CAM_HEMISPHERE_ANGLES), max(opts.CAM_HEMISPHERE_ANGLES))
 assert camAngles[0] >= -90 and camAngles[0] < camAngles[1] and camAngles[1] <= 90, 'CAM_HEMISPHERE_ANGLES should be a list of [a_min, a_max] angles, calculated from XY plane'
-
-camAngles = np.asarray(camAngles) * np.pi / 180.0
-camAnglesSin, camAnglesCos = np.sin(camAngles), np.cos(camAngles)
-maxCos = 1 if np.sign(camAnglesSin[0]) and np.sign(camAnglesSin[1]) else max(camAngleCos)
-cam.location = (0, camDst * maxCos, camDst * np.sin(np.acos(maxCos)) + modelCenter[2])
-if not opts.RANDOM_VIEWS:
-    cam.location[2] += camDst * camAnglesSin[1]
-# cam.location = (0, 0, 15)
-# cam.location = (0, camDst)
-print('Camera initial location: ', cam.location)
-
 cam_constraint = cam.constraints.new(type='TRACK_TO')
 cam_constraint.track_axis = 'TRACK_NEGATIVE_Z'
 cam_constraint.up_axis = 'UP_Y'
 cam_constraint.target_space = 'WORLD'
-b_empty = parent_obj_to_camera(cam)
+# b_empty = parent_obj_to_camera(cam)
+b_empty = bpy.data.objects.new("Empty", None)
+b_empty.location = modelCenter
 cam_constraint.target = b_empty
 
 # Set up the point light to be colocated with camera
@@ -238,13 +218,14 @@ assert scene.objects.get('PointLight'), 'PointLight not found. Please make sure 
 if opts.LIGHT_SETUP == 'none':
     bpy.ops.object.delete({"selected_objects": [pointLight]})
 elif opts.LIGHT_SETUP == 'colocated':
-    # pointLight.location = b_empty.location
-    pointLight.parent = b_empty
+    # raise NotImplementedError('camera is no longer parented to b_empty')
     pointLight.location = cam.location
+    pointLight.parent = cam
+    # pointLight.location = cam.location
 
 # scene.render.image_settings.file_format = 'PNG'  # set output format to .png
 
-from math import radians
+# from math import radians, degrees
 
 stepsize = 360.0 / opts.VIEWS
 # rotation_mode = 'XYZ'
@@ -264,27 +245,24 @@ def listify_matrix(matrix):
         matrix_list.append(list(row))
     return matrix_list
 
+rot = np.random.uniform(0, 1, size=(3, opts.VIEWS)) * np.array([1, 1, 0])[:, None]
+rot[0] = (rot[0] * (camAngles[1] - camAngles[0]) + 90 + camAngles[0]) / 180.0
+rot[0] = np.arccos(rot[0] * 2 - 1)
+rot[1] *= 2 * np.pi
+rot0sin, rot0cos = np.sin(rot[0]), np.cos(rot[0])
+rot1sin, rot1cos = np.sin(rot[1]), np.cos(rot[1])
+rot = rot.T
 # Iterating over views
 for i in range(0, opts.VIEWS):
-    # if opts.DEBUG:
-    #     i = np.random.randint(0, opts.VIEWS)
-    #     b_empty.rotation_euler[2] += radians(stepsize*i)
     scene.render.filepath = os.path.join(fp, '{:04d}'.format(i))
     if opts.RANDOM_VIEWS:
-        rot = np.random.uniform(0, np.pi, size=3) * (2, -1, 0)
-        # rot[0] = np.abs(rot[0])
-        b_empty.rotation_euler = rot
-        # if opts.UPPER_VIEWS:
-        #     # rot = np.random.uniform(0, 1, size=3) * (2, 0, 2 * np.pi)
-        #     # rot[0] = np.abs(np.arccos(1 - rot[0]) - np.pi/2)
-        #     # b_empty.rotation_euler = rot
-        #     rot = np.random.uniform(0, np.pi, size=3) * (2, -1, 0)
-        #     # rot[0] = np.abs(rot[0])
-        #     b_empty.rotation_euler = rot
-        # else:
-        #     b_empty.rotation_euler = np.random.uniform(0, 2 * np.pi, size=3)
+        cam.location[0] = camDst * rot0sin[i] * rot1cos[i] + modelCenter[0]
+        cam.location[1] = camDst * rot0sin[i] * rot1sin[i] + modelCenter[1]
+        cam.location[2] = camDst * rot0cos[i] + modelCenter[2]
     else:
-        print("Rotation {}, {}".format((stepsize * i), radians(stepsize * i)))
+        raise NotImplementedError('camera is no longer parented to b_empty')
+        b_empty.rotation_euler[1] = np.radians(stepsize * i)
+        print("Rotation {:.2f}d ({:.2f}r)".format((stepsize * i), np.radians(stepsize * i)))
 
     # apply changes
     bpy.context.view_layer.update()
@@ -296,7 +274,7 @@ for i in range(0, opts.VIEWS):
 
     frame_data = {
         'file_path': scene.render.filepath,
-        'rotation': radians(stepsize),
+        'rotation': np.radians(stepsize),
         'transform_matrix': listify_matrix(cam.matrix_world),
         'pl_transform_matrix': listify_matrix(pointLight.matrix_world)
     }
@@ -313,15 +291,15 @@ for i in range(0, opts.VIEWS):
                             for j, p in enumerate(pose)]),
                 file=fo)
 
-    if opts.RANDOM_VIEWS:
-        if opts.UPPER_VIEWS:
-            rot = np.random.uniform(0, 1, size=3) * (1,0,2*np.pi)
-            rot[0] = np.abs(np.arccos(1 - 2 * rot[0]) - np.pi/2)
-            b_empty.rotation_euler = rot
-        else:
-            b_empty.rotation_euler = np.random.uniform(0, 2*np.pi, size=3)
-    else:
-        b_empty.rotation_euler[2] += radians(stepsize)
+    # if opts.RANDOM_VIEWS:
+    #     if opts.UPPER_VIEWS:
+    #         rot = np.random.uniform(0, 1, size=3) * (1,0,2*np.pi)
+    #         rot[0] = np.abs(np.arccos(1 - 2 * rot[0]) - np.pi/2)
+    #         b_empty.rotation_euler = rot
+    #     else:
+    #         b_empty.rotation_euler = np.random.uniform(0, 2*np.pi, size=3)
+    # else:
+    #     b_empty.rotation_euler[2] += radians(stepsize)
 
 
     if opts.DEBUG:

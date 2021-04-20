@@ -28,3 +28,4 @@ remdeb/
 *visualize_cam_light.html
 *blender_render_test.html
 *saved.pckl
+*.npy
