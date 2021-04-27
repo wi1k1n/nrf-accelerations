@@ -1,4 +1,4 @@
-import os, os.path as op, sys
+import os, os.path as op, sys, time
 import pyperclip
 import xml.etree.ElementTree as ET
 from shutil import copyfile
@@ -7,8 +7,8 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "rocket_png"
-NAME = "test"  # if empty, same as dataset
+DATA = "rocket_static_png"
+NAME = "test"  # postfix for dataset name
 WITH_LIGHT = True
 RES = "70x70"
 PIXELS_PER_VIEW = '80'  # should be powers of 2 (?)
@@ -132,7 +132,9 @@ if INJECT_PYCHARM:
 
 	copyfile(op.abspath(XML_PATH), op.abspath(XML_PATH + '.' + str(lastBackup + 1) + '.backup'))
 
-	tree.write(op.abspath(XML_PATH))
+	for rpt in range(2):
+		tree.write(op.abspath(XML_PATH))
+		time.sleep(0.5)
 
 	# Delete the oldest backup
 	if len(backups) >= NUM_BACKUPS:

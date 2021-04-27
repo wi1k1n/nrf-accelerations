@@ -108,9 +108,9 @@ class BaseModel(BaseFairseqModel):
         with with_torch_seed(self.unique_seed):   # make sure different GPU sample different rays
             ray_start, ray_dir, uv = self.reader(**kwargs)
 
-        kwargs.update({
-            'field_fn': self.field.forward,
-            'input_fn': self.encoder.forward})
+        # kwargs.update({
+        #     'field_fn': self.field.forward,
+        #     'input_fn': self.encoder.forward})
 
         if ray_split == 1:
             results = self._forward(ray_start, ray_dir, **kwargs)
@@ -162,7 +162,7 @@ class BaseModel(BaseFairseqModel):
                 for name, s in encoder_states.items()}
             
             samples, all_results = self.raymarching(               # ray-marching
-                ray_start, ray_dir, intersection_outputs, encoder_states)
+                ray_start, ray_dir, intersection_outputs, encoder_states, **kwargs)
             
             if self.hierarchical:   # hierarchical sampling
                 intersection_outputs = self.prepare_hierarchical_sampling(
@@ -170,7 +170,7 @@ class BaseModel(BaseFairseqModel):
                 coarse_results = all_results.copy()
                 
                 samples, all_results = self.raymarching(
-                    ray_start, ray_dir, intersection_outputs, encoder_states, fine=True)
+                    ray_start, ray_dir, intersection_outputs, encoder_states, fine=True, **kwargs)
                 all_results['coarse'] = coarse_results
 
         hits = hits.reshape(-1)

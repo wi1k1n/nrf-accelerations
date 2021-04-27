@@ -3,7 +3,7 @@ import numpy as np
 import open3d as o3d
 import plotly.graph_objects as go
 
-MODEL = 'rocket_test'
+MODEL = 'rocket'
 PATH = 'D:\\edu\\UniBonn\\Study\\thesis\\codes\\blender\\datasets\\' + MODEL
 CAM_ICONS = False
 
@@ -79,8 +79,13 @@ lights = np.array(lights)
 plotData = []
 
 # light positions
+light_markers = [dict(size=3, color="orange", symbol='x'), dict(size=7, color="orange", symbol='cross')]
 if len(lights):
-	plotData.append(go.Scatter3d(x=lights[:, 0], y=lights[:, 1], z=lights[:, 2], name='lights', marker=dict(size=5, color="orange"), mode='markers'))
+	[plotData.append(go.Scatter3d(x=lights[:, 0], y=lights[:, 1], z=lights[:, 2],
+								 name='lights',
+								 marker=m,
+								 mode='markers')) \
+	for i, m in enumerate(light_markers)]
 
 # add bounding box
 if bbox is not None and len(bbox) == 7:

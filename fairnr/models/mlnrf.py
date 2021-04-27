@@ -43,8 +43,12 @@ class MLNRFModel(NSVFModel):
 	def intersecting(self, ray_start, ray_dir, encoder_states, **kwargs):
 		return super().intersecting(ray_start, ray_dir, encoder_states, **kwargs)
 
-	def raymarching(self, ray_start, ray_dir, intersection_outputs, encoder_states, fine=False):
-		return super().raymarching(ray_start, ray_dir, intersection_outputs, encoder_states, fine)
+	def raymarching(self, ray_start, ray_dir, intersection_outputs, encoder_states, fine=False, **kwargs):
+		# kwargs4renderer = kwargs
+		# kwargs4renderer.pop('field_fn', None)
+		# kwargs4renderer.pop('input_fn', None)
+		return super().raymarching(ray_start, ray_dir, intersection_outputs, encoder_states, fine, **kwargs)
+		return None
 
 	def prepare_hierarchical_sampling(self, intersection_outputs, samples, all_results):
 		return super().prepare_hierarchical_sampling(intersection_outputs, samples, all_results)

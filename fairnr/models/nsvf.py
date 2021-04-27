@@ -74,8 +74,8 @@ class NSVFModel(NeRFModel):
             intersection_outputs['steps'] = dists.sum(-1) / self.encoder.step_size
         return ray_start, ray_dir, intersection_outputs, hits, sampled_uv
         
-    def raymarching(self, ray_start, ray_dir, intersection_outputs, encoder_states, fine=False):
-        samples, all_results = super().raymarching(ray_start, ray_dir, intersection_outputs, encoder_states, fine)
+    def raymarching(self, ray_start, ray_dir, intersection_outputs, encoder_states, fine=False, **kwargs):
+        samples, all_results = super().raymarching(ray_start, ray_dir, intersection_outputs, encoder_states, fine, **kwargs)
         all_results['voxel_edges'] = self.encoder.get_edge(ray_start, ray_dir, samples, encoder_states)
         all_results['voxel_depth'] = samples['sampled_point_depth'][:, 0]
         return samples, all_results

@@ -76,8 +76,7 @@ class VolumeRenderer(Renderer):
 
     def forward_once(
         self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states, 
-        early_stop=None, output_types=['sigma', 'texture']
-        ):
+        early_stop=None, output_types=['sigma', 'texture']):
         """
         chunks: set > 1 if out-of-memory. it can save some memory by time.
         """
@@ -95,10 +94,10 @@ class VolumeRenderer(Renderer):
         sampled_dir = ray_dir.unsqueeze(1).expand(*sampled_depth.size(), ray_dir.size()[-1])
         samples['sampled_point_xyz'] = sampled_xyz
         samples['sampled_point_ray_direction'] = sampled_dir
-    
+
         # apply mask    
-        samples = {name: s[sample_mask] for name, s in samples.items()}
-       
+        samples = {name: s[sample_mask] for name, s in samples.items() if s.shape[:2] == sample_mask.shape[:2]}
+        # TODO: the light points should also be masked, or shouldnn't they?
         # get encoder features as inputs
         field_inputs = input_fn(samples, encoder_states)
         
@@ -134,8 +133,7 @@ class VolumeRenderer(Renderer):
 
     def forward_chunk(
         self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
-        gt_depths=None, output_types=['sigma', 'texture'], global_weights=None,
-        ):
+        gt_depths=None, output_types=['sigma', 'texture'], global_weights=None, **kwargs):
         if self.trace_normal:
             output_types += ['normal']
 
@@ -253,7 +251,13 @@ class VolumeRenderer(Renderer):
 
 @register_renderer('light_volume_renderer')
 class LightVolumeRenderer(VolumeRenderer):
-    ...
+    def forward(self, input_fn, field_fn, ray_start, ray_dir, samples, *args, **kwargs):
+        pts = torch.Tensor([0, 0, 0, 1]).to(self.args.device_id)[None, :].expand(2, -1)[None, :, :, None]
+        plXYZ = torch.matmul(kwargs['extrinsics_pl'], pts)
+        samples.update({'point_light_xyz': plXYZ[:, :, :, 0]})
+
+        results = super().forward(input_fn, field_fn, ray_start, ray_dir, samples, *args, **kwargs)
+        return results
 
 @register_renderer('surface_volume_rendering')
 class SurfaceVolumeRenderer(VolumeRenderer):

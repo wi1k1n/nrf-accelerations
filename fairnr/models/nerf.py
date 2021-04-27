@@ -51,13 +51,13 @@ class NeRFModel(BaseModel):
             self.encoder.ray_intersect(ray_start, ray_dir, encoder_states)
         return ray_start, ray_dir, intersection_outputs, hits, None
 
-    def raymarching(self, ray_start, ray_dir, intersection_outputs, encoder_states, fine=False):
+    def raymarching(self, ray_start, ray_dir, intersection_outputs, encoder_states, fine=False, **kwargs):
         # sample points and use middle point approximation
         with with_torch_seed(self.unique_seed):  # make sure each GPU sample differently.
             samples = self.encoder.ray_sample(intersection_outputs)
         field = self.field_fine if fine and (self.field_fine is not None) else self.field 
         all_results = self.raymarcher(
-            self.encoder, field, ray_start, ray_dir, samples, encoder_states
+            self.encoder, field, ray_start, ray_dir, samples, encoder_states, **kwargs
         )
         return samples, all_results
 

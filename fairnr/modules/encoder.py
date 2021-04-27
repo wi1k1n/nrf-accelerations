@@ -728,7 +728,13 @@ class SparseVoxelLightEncoder(SparseVoxelEncoder):
 
     def forward(self, samples, encoder_states):
         inputs = super().forward(samples, encoder_states)
+        inputs.update({'light': torch.Tensor([1, 2, 3, 4, 5]).cuda()})
+        inputs.update({'lightd': torch.Tensor([-1, -2, -3, -4, -5]).cuda()})
         return inputs
+
+    def precompute(self, id=None, *args, **kwargs):
+        encoder_states = super().precompute(id, args, kwargs)
+        return encoder_states
 
 @register_encoder('multi_sparsevoxel_encoder')
 class MultiSparseVoxelEncoder(Encoder):
