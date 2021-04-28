@@ -146,7 +146,7 @@ class BaseModel(BaseFairseqModel):
         encoder_states = self.preprocessing(**kwargs)
         ray_start, ray_dir, intersection_outputs, hits, sampled_uv = \
             self.intersecting(ray_start, ray_dir, encoder_states, **kwargs)
-        
+        # intersection_outputs.shape: 1 x N_of_views_in_current_batch*PIXEL_PER_VIEW x N_of_intersected_voxels
         # save the original rays
         ray_start0 = ray_start.reshape(-1, 3).clone()
         ray_dir0 = ray_dir.reshape(-1, 3).clone()

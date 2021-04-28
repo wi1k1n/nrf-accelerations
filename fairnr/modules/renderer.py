@@ -95,12 +95,12 @@ class VolumeRenderer(Renderer):
         samples['sampled_point_xyz'] = sampled_xyz
         samples['sampled_point_ray_direction'] = sampled_dir
 
-        # apply mask    
-        samples = {name: s[sample_mask] for name, s in samples.items() if s.shape[:2] == sample_mask.shape[:2]}
-        # TODO: the light points should also be masked, or shouldnn't they?
+        # apply mask
+        samples = {name: s[sample_mask] for name, s in samples.items()}# if s.shape[:2] == sample_mask.shape[:2]}
         # get encoder features as inputs
         field_inputs = input_fn(samples, encoder_states)
-        
+
+
         # forward implicit fields
         field_outputs = field_fn(field_inputs, outputs=output_types)
         outputs = {'sample_mask': sample_mask}
@@ -252,9 +252,17 @@ class VolumeRenderer(Renderer):
 @register_renderer('light_volume_renderer')
 class LightVolumeRenderer(VolumeRenderer):
     def forward(self, input_fn, field_fn, ray_start, ray_dir, samples, *args, **kwargs):
-        pts = torch.Tensor([0, 0, 0, 1]).to(self.args.device_id)[None, :].expand(2, -1)[None, :, :, None]
-        plXYZ = torch.matmul(kwargs['extrinsics_pl'], pts)
-        samples.update({'point_light_xyz': plXYZ[:, :, :, 0]})
+        viewsN = kwargs['view'].shape[-1]
+        pixelsPerView = int(ray_start.shape[0] / viewsN)
+        voxelsN = samples['sampled_point_voxel_idx'].shape[-1]
+        # pts.shape: 1 x viewsN x 4 x 1
+        # kwargs['extrinsics_pl'].shape: 1 x viewsN x 4 x 4
+        pts = torch.Tensor([0, 0, 0, 1]).to(self.args.device_id)[None, :].expand(viewsN, -1)[None, :, :, None]
+        plXYZ = torch.matmul(kwargs['extrinsics_pl'], pts)  # 1 x viewsN x 4 x 1
+
+        plXYZExpanded = torch.repeat_interleave(plXYZ.squeeze(), pixelsPerView, 0)[:, None, :3].expand(-1, voxelsN, -1)
+        # plCYZExpanded.shape: viewsN * pixelsPerView x voxelsN x 3
+        samples.update({'point_light_xyz': plXYZExpanded})
 
         results = super().forward(input_fn, field_fn, ray_start, ray_dir, samples, *args, **kwargs)
         return results
