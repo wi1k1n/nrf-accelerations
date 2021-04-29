@@ -15,6 +15,7 @@ PIXELS_PER_VIEW = '80'  # should be powers of 2 (?)
 SCENE_SCALE = '1.0'
 
 USE_OCTREE = True
+USE_CPU = True
 CHUNK_SIZE = '64'#'256'  # > 1 to save memory to time
 LR = '0.001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
@@ -78,6 +79,8 @@ parameters += '\n--initial-boundingbox ' + DATASET + '/bbox.txt'
 parameters += '\n--raymarching-stepsize-ratio 0.125'
 if USE_OCTREE:
 	parameters += '\n--use-octree'
+if USE_CPU:
+	parameters += '\n--cpu'
 parameters += '\n--discrete-regularization'
 parameters += '\n--color-weight 128.0'
 parameters += '\n--alpha-weight 1.0'
