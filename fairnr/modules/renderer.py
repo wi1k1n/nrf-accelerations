@@ -253,16 +253,17 @@ class VolumeRenderer(Renderer):
 class LightVolumeRenderer(VolumeRenderer):
     def forward(self, input_fn, field_fn, ray_start, ray_dir, samples, *args, **kwargs):
         viewsN = kwargs['view'].shape[-1]
-        pixelsPerView = int(ray_start.shape[0] / viewsN)
+        pixelsPerView = int(kwargs['hits'].shape[-1] / viewsN)
         voxelsN = samples['sampled_point_voxel_idx'].shape[-1]
+        assert kwargs['extrinsics_pl'].shape[0] == 1, 'Multiple shapes are not supported yet'
         # pts.shape: 1 x viewsN x 4 x 1
         # kwargs['extrinsics_pl'].shape: 1 x viewsN x 4 x 4
         pts = torch.Tensor([0, 0, 0, 1]).to(self.args.device_id)[None, :].expand(viewsN, -1)[None, :, :, None]
         plXYZ = torch.matmul(kwargs['extrinsics_pl'], pts)  # 1 x viewsN x 4 x 1
 
-        plXYZExpanded = torch.repeat_interleave(plXYZ.squeeze(), pixelsPerView, 0)[:, None, :3].expand(-1, voxelsN, -1)
+        plXYZExpanded = torch.repeat_interleave(plXYZ[0, :, :, 0], pixelsPerView, 0)[:, None, :3].expand(-1, voxelsN, -1)
         # plCYZExpanded.shape: viewsN * pixelsPerView x voxelsN x 3
-        samples.update({'point_light_xyz': plXYZExpanded})
+        samples.update({'point_light_xyz': plXYZExpanded[None, ...][kwargs['hits']]})
 
         results = super().forward(input_fn, field_fn, ray_start, ray_dir, samples, *args, **kwargs)
         return results

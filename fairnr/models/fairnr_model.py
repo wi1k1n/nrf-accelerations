@@ -157,6 +157,7 @@ class BaseModel(BaseFairseqModel):
         if hits.sum() > 0:
             intersection_outputs = {
                 name: outs[hits] for name, outs in intersection_outputs.items()}
+            kwargs.update({'hits': hits})
             ray_start, ray_dir = ray_start[hits], ray_dir[hits]
             encoder_states = {name: s.reshape(-1, s.size(-1)) if s is not None else None
                 for name, s in encoder_states.items()}

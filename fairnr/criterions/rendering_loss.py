@@ -143,9 +143,11 @@ class SRNLossCriterion(RenderingCriterion):
         sampled_uv = sample['sampled_uv']  # S, V, 2, N, P, P (patch-size)
         S, V, _, N, P1, P2 = sampled_uv.size()
         H, W, h, w = sample['size'][0, 0].long().cpu().tolist()
+        # H, W, h, w = sample['size'][0, 0].cpu().tolist()
         L = N * P1 * P2
-        flatten_uv = sampled_uv.view(S, V, 2, L)#.long()
+        flatten_uv = sampled_uv.view(S, V, 2, L).long()
         flatten_index = (flatten_uv[:,:,0] // h + flatten_uv[:,:,1] // w * W).long()
+        # flatten_index = (flatten_uv[:,:,0] / h + flatten_uv[:,:,1] / w * W).long()
 
         assert 'colors' in sample and sample['colors'] is not None, "ground-truth colors not provided"
         target_colors = sample['colors']

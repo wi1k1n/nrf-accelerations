@@ -7,20 +7,21 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "rocket_static_png"
+DATA = "rocket_coloc_png"
 NAME = "test"  # postfix for dataset name
-WITH_LIGHT = True
-RES = "70x70"
-PIXELS_PER_VIEW = '80'  # should be powers of 2 (?)
+RES = "128x128"
+PIXELS_PER_VIEW = '80'#'80'  # should be powers of 2 (?)
 SCENE_SCALE = '1.0'
 
 USE_OCTREE = True
-USE_CPU = True
-CHUNK_SIZE = '64'#'256'  # > 1 to save memory to time
+USE_CPU = False  # WARNING: does not work on CPU
+CHUNK_SIZE = '128'#'256'  # > 1 to save memory to time
 LR = '0.001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
-ARCH = "mlnrf_base"
+WITH_LIGHT = True
+ARCH = "mlnrf_base"# ARCH = "nsvf_base"
+
 SUFFIX = "v1"
 DATASET = "/home/mazlov/documents/thesis/codes/blender/" + DATA  # "data/Synthetic_NeRF/" + DATA
 SAVE = "checkpoint/" + DATA + (('_' + NAME) if NAME else '')
@@ -28,10 +29,10 @@ MODEL = ARCH + SUFFIX
 #TODO: VOXEL_NUM & VOXEL_SIZE might not work as intended!
 
 
-HALF_VOXEL_SIZE_AT = '2000,12500'#,35000'  # '5000,25000,75000'
+HALF_VOXEL_SIZE_AT = '5000,12500'#,35000'  # '5000,25000,75000'
 REDUCE_STEP_SIZE_AT = '2000,8500,35000'  # '5000,25000,75000'
-PRUNNING_EVERY_STEPS = '2500'  # '1500'
-SAVE_INTERVAL_UPDATES = '500'  # '100'
+PRUNNING_EVERY_STEPS = '2500'#'5000'  # '1500'
+SAVE_INTERVAL_UPDATES = '500'#'750'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
 
 PREPROCESS = 'none'  # none/mstd/minmax

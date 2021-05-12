@@ -728,17 +728,22 @@ class SparseVoxelLightEncoder(SparseVoxelEncoder):
 
     def forward(self, samples, encoder_states):
         inputs = super().forward(samples, encoder_states)
-        light_dir = samples['sampled_point_xyz'] - samples['point_light_xyz']
-        light_dst = light_dir.norm(p=2, dim=1, keepdim=True)
-        # TODO: this is not very efficient, the dst should probably be generated earlier, when 'point_light_xyz' is computed
+        if 'point_light_xyz' in samples:
+            light_dir = samples['sampled_point_xyz'] - samples['point_light_xyz']
+            light_dst = light_dir.norm(p=2, dim=1, keepdim=True)
+            # TODO: this is not very efficient, the dst should probably be generated earlier, when 'point_light_xyz' is computed
 
-        inputs.update({'light': (light_dir / (light_dst + 1e-8)).cuda()})
-        inputs.update({'lightd': light_dst.cuda()})
+            inputs.update({'light': (light_dir / (light_dst + 1e-8)).cuda()})
+            inputs.update({'lightd': light_dst.cuda()})
         return inputs
 
     def precompute(self, id=None, *args, **kwargs):
         encoder_states = super().precompute(id, *args, **kwargs)
         return encoder_states
+
+    @torch.no_grad()
+    def pruning(self, field_fn, th=0.5, encoder_states=None, train_stats=False):
+        super().pruning(field_fn, th, encoder_states, train_stats)
 
 @register_encoder('multi_sparsevoxel_encoder')
 class MultiSparseVoxelEncoder(Encoder):
