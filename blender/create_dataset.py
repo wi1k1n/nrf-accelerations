@@ -215,20 +215,8 @@ cam_constraint.target = b_empty
 # Set up the point light to be colocated with camera
 pointLight = scene.objects['PointLight']
 assert scene.objects.get('PointLight'), 'PointLight not found. Please make sure there is a light with the name "PointLight"'
-if opts.LIGHT_SETUP == 'none':
-    bpy.ops.object.delete({"selected_objects": [pointLight]})
-elif opts.LIGHT_SETUP == 'colocated':
-    # raise NotImplementedError('camera is no longer parented to b_empty')
-    pointLight.location = cam.location
-    pointLight.parent = cam
-    # pointLight.location = cam.location
-
-# scene.render.image_settings.file_format = 'PNG'  # set output format to .png
-
-# from math import radians, degrees
 
 stepsize = 360.0 / opts.VIEWS
-# rotation_mode = 'XYZ'
 
 if not opts.DEBUG:
     for output_node in [depth_file_output, normal_file_output]:
@@ -255,6 +243,8 @@ rot = rot.T
 # Iterating over views
 for i in range(0, opts.VIEWS):
     scene.render.filepath = os.path.join(fp, '{:04d}'.format(i))
+
+    # Update camera position
     if opts.RANDOM_VIEWS:
         cam.location[0] = camDst * rot0sin[i] * rot1cos[i] + modelCenter[0]
         cam.location[1] = camDst * rot0sin[i] * rot1sin[i] + modelCenter[1]
@@ -263,6 +253,13 @@ for i in range(0, opts.VIEWS):
         raise NotImplementedError('camera is no longer parented to b_empty')
         b_empty.rotation_euler[1] = np.radians(stepsize * i)
         print("Rotation {:.2f}d ({:.2f}r)".format((stepsize * i), np.radians(stepsize * i)))
+
+    # Update light position if needed
+    if opts.LIGHT_SETUP == 'none':
+        bpy.ops.object.delete({"selected_objects": [pointLight]})
+    elif opts.LIGHT_SETUP == 'colocated':
+        pointLight.location = cam.location
+        # pointLight.parent = cam
 
     # apply changes
     bpy.context.view_layer.update()

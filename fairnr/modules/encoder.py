@@ -729,6 +729,7 @@ class SparseVoxelLightEncoder(SparseVoxelEncoder):
     def forward(self, samples, encoder_states):
         inputs = super().forward(samples, encoder_states)
         if 'point_light_xyz' in samples:
+            # TODO: the distances should be bbox normalized!!!!
             light_dir = samples['sampled_point_xyz'] - samples['point_light_xyz']
             light_dst = light_dir.norm(p=2, dim=1, keepdim=True)
             # TODO: this is not very efficient, the dst should probably be generated earlier, when 'point_light_xyz' is computed

@@ -3,6 +3,8 @@ import pyperclip
 import xml.etree.ElementTree as ET
 from shutil import copyfile
 
+from reconfigure_utils import inject_pycharm_config
+
 COPY2CLIPBOARD = False  # after running the script the configuration is inserted into clipboard
 INJECT_PYCHARM = True
 SAVE_FILE = True
@@ -11,6 +13,7 @@ DATA = "rocket_coloc_png"
 NAME = "test"  # postfix for dataset name
 RES = "128x128"
 PIXELS_PER_VIEW = '80'#'80'  # should be powers of 2 (?)
+VIEW_PER_BATCH = '2'
 SCENE_SCALE = '1.0'
 
 USE_OCTREE = True
@@ -64,7 +67,7 @@ elif 'VOXEL_SIZE' in locals():
 parameters += '\n--scene-scale ' + SCENE_SCALE
 parameters += '\n--view-resolution ' + RES
 parameters += '\n--max-sentences 1'
-parameters += '\n--view-per-batch 2'
+parameters += '\n--view-per-batch ' + VIEW_PER_BATCH
 parameters += '\n--pixel-per-view ' + PIXELS_PER_VIEW
 parameters += '\n--no-preload'
 parameters += '\n--sampling-on-mask 1.0'
@@ -118,28 +121,29 @@ if COPY2CLIPBOARD:
 	pyperclip.copy(parameters)
 
 if INJECT_PYCHARM:
-	tree = ET.parse(op.abspath(XML_PATH))
-	all_configs = tree.findall('configuration')
-	for config in all_configs:
-		if not ('name' in config.attrib) or config.get('name') != 'train': continue
-		for option in config.findall('option'):
-			if not ('name' in option.attrib) or option.get('name') != 'PARAMETERS': continue
-			assert ('value' in option.attrib), 'Theres no VALUE attribute in this configuration! Please check!'
-			option.set('value', parameters)
-			break
-		break
-
-	# Create backup
-	xmlDir = op.dirname(XML_PATH)
-	backups = [int(op.splitext(f)[0].split('.')[-1]) for f in os.listdir(xmlDir) if f.endswith('.backup') and op.isfile(op.join(xmlDir, f))]
-	lastBackup, firstBackup = (max(backups), min(backups)) if any(backups) else (0, None)
-
-	copyfile(op.abspath(XML_PATH), op.abspath(XML_PATH + '.' + str(lastBackup + 1) + '.backup'))
-
-	for rpt in range(2):
-		tree.write(op.abspath(XML_PATH))
-		time.sleep(0.5)
-
-	# Delete the oldest backup
-	if len(backups) >= NUM_BACKUPS:
-		os.remove(op.abspath(XML_PATH + '.' + str(firstBackup) + '.backup'))
+	inject_pycharm_config('train', XML_PATH, parameters, NUM_BACKUPS)
+	# tree = ET.parse(op.abspath(XML_PATH))
+	# all_configs = tree.findall('configuration')
+	# for config in all_configs:
+	# 	if not ('name' in config.attrib) or config.get('name') != 'train': continue
+	# 	for option in config.findall('option'):
+	# 		if not ('name' in option.attrib) or option.get('name') != 'PARAMETERS': continue
+	# 		assert ('value' in option.attrib), 'Theres no VALUE attribute in this configuration! Please check!'
+	# 		option.set('value', parameters)
+	# 		break
+	# 	break
+	#
+	# # Create backup
+	# xmlDir = op.dirname(XML_PATH)
+	# backups = [int(op.splitext(f)[0].split('.')[-1]) for f in os.listdir(xmlDir) if f.endswith('.backup') and op.isfile(op.join(xmlDir, f))]
+	# lastBackup, firstBackup = (max(backups), min(backups)) if any(backups) else (0, None)
+	#
+	# copyfile(op.abspath(XML_PATH), op.abspath(XML_PATH + '.' + str(lastBackup + 1) + '.backup'))
+	#
+	# for rpt in range(2):
+	# 	tree.write(op.abspath(XML_PATH))
+	# 	time.sleep(0.5)
+	#
+	# # Delete the oldest backup
+	# if len(backups) >= NUM_BACKUPS:
+	# 	os.remove(op.abspath(XML_PATH + '.' + str(firstBackup) + '.backup'))

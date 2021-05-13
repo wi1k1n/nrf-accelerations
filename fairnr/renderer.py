@@ -173,6 +173,8 @@ class NeuralRenderer(object):
                     'size': torch.cat([sample['size'][shape:shape+1] for _ in range(step, next_step)], 1),
                     'step': step
                 }
+                if 'extrinsics_pl' in sample:
+                    _sample.update({'extrinsics_pl': _sample['extrinsics']})
                 with data_utils.GPUTimer() as timer:
                     outs = model(**_sample)
                 logger.info("rendering frame={}\ttotal time={:.4f}".format(step, timer.sum))

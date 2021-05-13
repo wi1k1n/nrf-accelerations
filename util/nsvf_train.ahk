@@ -1,20 +1,20 @@
 ^!+q::
 ; Run reconfiguration script and then train
-Reconfigure()
+ReconfigureTrain()
 Train(1500)
 return
 
 ^!+w::
 ; Only run reconfiguration script
-Reconfigure()
+ReconfigureTrain()
 return
 
 ^!+e::
-; Only run configuration
-Train()
+; Only run reconfiguration script
+ReconfigureRender()
 return
 
-Reconfigure() {
+ReconfigureTrain() {
     SetWorkingDir, D:\edu\UniBonn\Study\thesis\codes\NSVF
     RunWait, C:\Python37\python.exe "D:/edu/UniBonn/Study/thesis/codes/NSVF/util/reconfigure_train.py"
     return
@@ -34,5 +34,10 @@ Train(w8time := 0) {
     else {
         Msgbox, No PyCharm instance found!
     }
+    return
+}
+ReconfigureRender() {
+    SetWorkingDir, D:\edu\UniBonn\Study\thesis\codes\NSVF
+    RunWait, C:\Python37\python.exe "D:/edu/UniBonn/Study/thesis/codes/NSVF/util/reconfigure_render.py"
     return
 }

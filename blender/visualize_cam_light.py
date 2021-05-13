@@ -3,7 +3,7 @@ import numpy as np
 import open3d as o3d
 import plotly.graph_objects as go
 
-MODEL = 'rocket'
+MODEL = 'rocket_test'
 PATH = 'D:\\edu\\UniBonn\\Study\\thesis\\codes\\blender\\datasets\\' + MODEL
 CAM_ICONS = False
 
