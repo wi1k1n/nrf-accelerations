@@ -48,3 +48,6 @@ def add_rendering_args(parser):
     group.add_argument("--render-camera-intrinsics", default=None, type=str)
     group.add_argument("--render-views", type=str, default=None, 
                         help="views sampled for rendering, you can set specific view id, or a range")
+
+    group.add_argument('--render-path-light', action='store_true',
+                        help='either the light or the camera is moving')

@@ -7,11 +7,12 @@ COPY2CLIPBOARD = False
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "rocket_coloc_png"
-NAME = "test"  # postfix for dataset name
-RES = "128x128"
+DATA = "rocket_random_png"
+NAME = ""  # postfix for dataset name
+RES = "256x256"
 
 CHUNK_SIZE = '256'
+RENDER_BEAM = '3'
 
 WITH_LIGHT = True
 ARCH = "mlnrf_base"# ARCH = "nsvf_base"
@@ -22,31 +23,49 @@ SAVE = "checkpoint/" + DATA + (('_' + NAME) if NAME else '')
 MODEL = ARCH + SUFFIX
 MODEL_PATH = SAVE + '/' + MODEL + '/checkpoint_last.pt'
 
+## Rocket
+RENDER_PATH_ARGS = '{\'radius\':2.5,\'h\':4,\'o\':(-0.1,0.05,1.25)}'
+RENDER_AT_VECTOR = '"(-0.1,0.05,1.25)"'
+## Guitar
+# RENDER_PATH_ARGS = '{\'radius\':0.8,\'h\':1.0,\'o\':(0,-0.06,0.5)}'
+# RENDER_AT_VECTOR = '"(0, -0.06, 0.575)"'
+
+RENDER_PATH_STYLE = 'circle'
+RENDER_PATH_LIGHT = True  # True - light source is moving, false - camera is moving
+RENDER_SPEED = '2'
+
+
 RAYMARCHING_TOLERANCE = '0.01'
 # MODELARGS = '{"chunk_size":'+CHUNK_SIZE+',"raymarching_tolerance":'+RAYMARCHING_TOLERANCE+'}'
 MODELARGS = ''
-
-
-HALF_VOXEL_SIZE_AT = '5000,12500'#,35000'  # '5000,25000,75000'
-REDUCE_STEP_SIZE_AT = '2000,8500,35000'  # '5000,25000,75000'
-PRUNNING_EVERY_STEPS = '2500'#'5000'  # '1500'
-SAVE_INTERVAL_UPDATES = '500'#'750'  # '100'
-TOTAL_NUM_UPDATE = '75000'  # 150000
+NUM_WORKERS = '4'
 
 # PREPROCESS = 'none'  # none/mstd/minmax
 # MIN_COLOR = '-1'  # '-1'
 # BG_COLOR = '1.0,1.0,1.0'  # '1.0,1.0,1.0'
 
-
 XML_PATH = '.run/render.run.xml'
 NUM_BACKUPS = 10
+
+
+
 
 # create configuration file
 parameters = ''
 parameters += DATASET
 parameters += '\n--path ' + MODEL_PATH
+
+parameters += '\n--render-path-style ' + RENDER_PATH_STYLE
+parameters += '\n--render-path-args ' + RENDER_PATH_ARGS
+parameters += '\n--render-at-vector ' + RENDER_AT_VECTOR
+parameters += '\n--render-angular-speed ' + RENDER_SPEED
+if WITH_LIGHT:
+	parameters += '\n--with-point-light'
+	if RENDER_PATH_LIGHT:
+		parameters += '\n--render-path-light'
+
 # parameters += '\n--model-overrides \'{"chunk_size":'+CHUNK_SIZE+',"raymarching_tolerance":0.01}\''
-parameters += '\n--render-beam 1'
+parameters += '\n--render-beam ' + RENDER_BEAM
 parameters += '\n--render-save-fps 24'
 # parameters += '\n--render-camera-poses ' + DATASET + '/test_traj.txt'
 if len(MODELARGS):
@@ -56,6 +75,8 @@ parameters += '\n--render-output ' + SAVE + '/' + ARCH + '/output'
 parameters += '\n--render-output-types "color" "depth" "voxel" "normal"'
 parameters += '\n--render-combine-output --log-format "simple"'
 # parameters += '\n--initial-boundingbox ' + DATASET + '/bbox.txt'
+if NUM_WORKERS:
+	parameters += '\n--num-workers ' + NUM_WORKERS
 parameters += '\n--seed 2'
 parameters += '\n--log-format simple'
 parameters += '\n--log-interval 1'

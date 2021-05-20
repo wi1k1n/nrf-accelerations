@@ -90,7 +90,7 @@ class NeuralRenderer(object):
 
     def generate_rays(self, t, intrinsics, img_size, inv_RT=None, action='none'):
         if inv_RT is None:
-            cam_pos = torch.tensor(self.path_gen(t * self.speed / 180 * np.pi), 
+            cam_pos = torch.tensor(self.path_gen(t * self.speed / 180 * np.pi, ),
                         device=intrinsics.device, dtype=intrinsics.dtype)
             cam_rot = geometry.look_at_rotation(cam_pos, at=self.at, up=self.up, inverse=True, cv=True)
             
@@ -121,6 +121,9 @@ class NeuralRenderer(object):
         else:
             raise NotImplementedError
 
+    def prepare_sample(self, shape, smpl, **kwargs):
+        return smpl
+
     @torch.no_grad()    
     def generate(self, models, sample, **kwargs):
         model = models[0]
@@ -145,7 +148,7 @@ class NeuralRenderer(object):
                 next_step = min(step + self.beam, max_step)
                 uv, inv_RT = zip(*[
                     self.generate_rays(
-                        k, 
+                        k,
                         sample['intrinsics'][shape], 
                         sample['size'][shape, 0],
                         self.test_poses[k] if self.test_poses is not None else None)
@@ -173,8 +176,9 @@ class NeuralRenderer(object):
                     'size': torch.cat([sample['size'][shape:shape+1] for _ in range(step, next_step)], 1),
                     'step': step
                 }
-                if 'extrinsics_pl' in sample:
-                    _sample.update({'extrinsics_pl': _sample['extrinsics']})
+                # if 'extrinsics_pl' in sample:
+                #     _sample.update({'extrinsics_pl': _sample['extrinsics']})
+                _sample = self.prepare_sample(shape, _sample, **kwargs)
                 with data_utils.GPUTimer() as timer:
                     outs = model(**_sample)
                 logger.info("rendering frame={}\ttotal time={:.4f}".format(step, timer.sum))
@@ -210,12 +214,20 @@ class NeuralRenderer(object):
                     prefix = os.path.join(output_path, 'pose')
                     Path(prefix).mkdir(parents=True, exist_ok=True)
                     pose = self.test_poses[k] if self.test_poses is not None else inv_RT[k-step].cpu().numpy()
-                    np.savetxt(os.path.join(prefix, image_name + '.txt'), pose)    
+                    np.savetxt(os.path.join(prefix, image_name + '.txt'), pose)
+
+                    self.save_additional(shape, k, step, _sample, output_path, image_name, **kwargs)
 
                 step = next_step
 
         logger.info("done")
         return step, image_names
+
+    def save_additional(self, shape, k, step, sample, output_path, image_name, **kwargs):
+        prefix = os.path.join(output_path, 'pose')
+        Path(prefix).mkdir(parents=True, exist_ok=True)
+        pose = self.test_poses[k] if self.test_poses is not None else sample['extrinsics'][shape, k-step].cpu().numpy()
+        np.savetxt(os.path.join(prefix, image_name + '.txt'), pose)
 
     def save_images(self, output_files, steps=None, combine_output=True):
         if not os.path.exists(self.output_dir):
@@ -250,3 +262,33 @@ class NeuralRenderer(object):
         for timestamp in timestamps:
             tempfile = os.path.join(self.output_dir, 'full_' + timestamp + '.mp4')
             os.remove(tempfile)
+
+
+class LightNeuralRenderer(NeuralRenderer):
+    def __init__(self, *args, **kwargs):
+        self.moving_light = kwargs.pop('moving_light', False)
+        super().__init__(*args, **kwargs)
+
+    @torch.no_grad()
+    def generate(self, models, sample, **kwargs):
+        return super().generate(models, sample, **kwargs)
+
+    def generate_rays(self, *args, **kwargs):
+        return super().generate_rays(*args, **kwargs)
+
+    def prepare_sample(self, shape, sample, **kwargs):
+        sample.update({'extrinsics_pl': sample['extrinsics']})
+        _, inv_RT = self.generate_rays(0,
+                                    sample['intrinsics'][shape],
+                                    sample['size'][shape, 0],
+                                    self.test_poses[0] if self.test_poses is not None else None)
+        sample.update({'extrinsics': inv_RT.unsqueeze(0).expand(self.beam, -1, -1).unsqueeze(0)})
+        return sample
+
+    def save_additional(self, shape, k, step, sample, output_path, image_name, **kwargs):
+        super().save_additional(shape, k, step, sample, output_path, image_name, **kwargs)
+
+        prefix = os.path.join(output_path, 'pose_pl')
+        Path(prefix).mkdir(parents=True, exist_ok=True)
+        pose = sample['extrinsics_pl'][shape, k-step].cpu().numpy()
+        np.savetxt(os.path.join(prefix, image_name + '.txt'), pose)

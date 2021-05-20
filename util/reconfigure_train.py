@@ -9,8 +9,8 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "rocket_coloc_png"
-NAME = "test"  # postfix for dataset name
+DATA = "rocket_random_png"
+NAME = ""  # postfix for dataset name
 RES = "128x128"
 PIXELS_PER_VIEW = '80'#'80'  # should be powers of 2 (?)
 VIEW_PER_BATCH = '2'
@@ -18,8 +18,8 @@ SCENE_SCALE = '1.0'
 
 USE_OCTREE = True
 USE_CPU = False  # WARNING: does not work on CPU
-CHUNK_SIZE = '128'#'256'  # > 1 to save memory to time
-LR = '0.001'  # 0.001
+CHUNK_SIZE = '256'#'256'  # > 1 to save memory to time
+LR = '0.0005'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
 WITH_LIGHT = True
@@ -32,9 +32,9 @@ MODEL = ARCH + SUFFIX
 #TODO: VOXEL_NUM & VOXEL_SIZE might not work as intended!
 
 
-HALF_VOXEL_SIZE_AT = '5000,12500'#,35000'  # '5000,25000,75000'
-REDUCE_STEP_SIZE_AT = '2000,8500,35000'  # '5000,25000,75000'
-PRUNNING_EVERY_STEPS = '2500'#'5000'  # '1500'
+REDUCE_STEP_SIZE_AT = '2250,8500,35000'  # '5000,25000,75000'
+HALF_VOXEL_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
+PRUNNING_EVERY_STEPS = '5500'
 SAVE_INTERVAL_UPDATES = '500'#'750'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
 

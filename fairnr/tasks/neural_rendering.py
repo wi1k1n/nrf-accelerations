@@ -22,7 +22,7 @@ from fairnr.data import (
 )
 from fairnr.data.data_utils import write_images, recover_image, parse_views
 from fairnr.data.geometry import ray, compute_normal_map
-from fairnr.renderer import NeuralRenderer
+from fairnr.renderer import NeuralRenderer, LightNeuralRenderer
 from fairnr.data.trajectory import get_trajectory
 from fairnr import ResetTrainerException
 
@@ -85,6 +85,8 @@ class SingleObjRenderingTask(FairseqTask):
         parser.add_argument("--pruning-rerun-train-set", action='store_true',
                             help="only works when --pruning-with-train-stats is also set.")
         parser.add_argument("--output-valid", type=str, default=None)
+        parser.add_argument('--with-point-light', action='store_true',
+                            help='texture field uses point light data')
 
     def __init__(self, args):
         super().__init__(args)
@@ -210,25 +212,47 @@ class SingleObjRenderingTask(FairseqTask):
         """
         build a neural renderer for visualization
         """
-        return NeuralRenderer(
-            beam=args.render_beam,
-            resolution=args.render_resolution,
-            frames=args.render_num_frames,
-            speed=args.render_angular_speed,
-            raymarching_steps=args.render_raymarching_steps,
-            path_gen=get_trajectory(args.render_path_style)(
-                **eval(args.render_path_args)
-            ),
-            at=eval(args.render_at_vector),
-            up=eval(args.render_up_vector),
-            fps=getattr(args, "render_save_fps", 24),
-            output_dir=args.render_output if args.render_output is not None
-                else os.path.join(args.path, "output"),
-            output_type=args.render_output_types,
-            test_camera_poses=getattr(args, "render_camera_poses", None),
-            test_camera_intrinsics=getattr(args, "render_camera_intrinsics", None),
-            test_camera_views=getattr(args, "render_views", None)
-        )
+        if (args.with_point_light):
+            return LightNeuralRenderer(
+                beam=args.render_beam,
+                resolution=args.render_resolution,
+                frames=args.render_num_frames,
+                speed=args.render_angular_speed,
+                raymarching_steps=args.render_raymarching_steps,
+                path_gen=get_trajectory(args.render_path_style)(
+                    **eval(args.render_path_args)
+                ),
+                moving_light=args.render_path_light,
+                at=eval(args.render_at_vector),
+                up=eval(args.render_up_vector),
+                fps=getattr(args, "render_save_fps", 24),
+                output_dir=args.render_output if args.render_output is not None
+                    else os.path.join(args.path, "output"),
+                output_type=args.render_output_types,
+                test_camera_poses=getattr(args, "render_camera_poses", None),
+                test_camera_intrinsics=getattr(args, "render_camera_intrinsics", None),
+                test_camera_views=getattr(args, "render_views", None)
+            )
+        else:
+            return NeuralRenderer(
+                beam=args.render_beam,
+                resolution=args.render_resolution,
+                frames=args.render_num_frames,
+                speed=args.render_angular_speed,
+                raymarching_steps=args.render_raymarching_steps,
+                path_gen=get_trajectory(args.render_path_style)(
+                    **eval(args.render_path_args)
+                ),
+                at=eval(args.render_at_vector),
+                up=eval(args.render_up_vector),
+                fps=getattr(args, "render_save_fps", 24),
+                output_dir=args.render_output if args.render_output is not None
+                    else os.path.join(args.path, "output"),
+                output_type=args.render_output_types,
+                test_camera_poses=getattr(args, "render_camera_poses", None),
+                test_camera_intrinsics=getattr(args, "render_camera_intrinsics", None),
+                test_camera_views=getattr(args, "render_views", None)
+            )
 
     def setup_trainer(self, trainer):
         # give the task ability to access the global trainer functions
