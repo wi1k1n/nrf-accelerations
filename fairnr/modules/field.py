@@ -215,8 +215,8 @@ class RaidanceField(Field):
         parser.add_argument('--hyper-feature-embed-dim', type=int, metavar='N',
                             help='feature dimension used to predict the hypernetwork. consistent with context embedding')
         # light signed distance
-        parser.add_argument('--with-point-light', action='store_true',
-                            help='texture field uses point light data')
+        # parser.add_argument('--with-point-light', action='store_true',
+        #                     help='texture field uses point light data')
 
         # backgound parameters
         parser.add_argument('--background-depth', type=float,

@@ -211,10 +211,10 @@ class NeuralRenderer(object):
                                 image_names.append(os.path.join(prefix, image_name + '.png'))
                     
                     # save pose matrix
-                    prefix = os.path.join(output_path, 'pose')
-                    Path(prefix).mkdir(parents=True, exist_ok=True)
-                    pose = self.test_poses[k] if self.test_poses is not None else inv_RT[k-step].cpu().numpy()
-                    np.savetxt(os.path.join(prefix, image_name + '.txt'), pose)
+                    # prefix = os.path.join(output_path, 'pose')
+                    # Path(prefix).mkdir(parents=True, exist_ok=True)
+                    # pose = self.test_poses[k] if self.test_poses is not None else inv_RT[k-step].cpu().numpy()
+                    # np.savetxt(os.path.join(prefix, image_name + '.txt'), pose)
 
                     self.save_additional(shape, k, step, _sample, output_path, image_name, **kwargs)
 
@@ -277,12 +277,18 @@ class LightNeuralRenderer(NeuralRenderer):
         return super().generate_rays(*args, **kwargs)
 
     def prepare_sample(self, shape, sample, **kwargs):
-        sample.update({'extrinsics_pl': sample['extrinsics']})
-        _, inv_RT = self.generate_rays(0,
-                                    sample['intrinsics'][shape],
-                                    sample['size'][shape, 0],
-                                    self.test_poses[0] if self.test_poses is not None else None)
-        sample.update({'extrinsics': inv_RT.unsqueeze(0).expand(self.beam, -1, -1).unsqueeze(0)})
+        if self.moving_light:
+            _, inv_RT = self.generate_rays(0,
+                                        sample['intrinsics'][shape],
+                                        sample['size'][shape, 0],
+                                        self.test_poses[0] if self.test_poses is not None else None)
+            sample.update({'extrinsics': inv_RT.unsqueeze(0).expand(self.beam, -1, -1).unsqueeze(0)})
+        else:
+            _, inv_RT = self.generate_rays(0,
+                                        sample['intrinsics'][shape],
+                                        sample['size'][shape, 0],
+                                        self.test_poses[0] if self.test_poses is not None else None)
+            sample.update({'extrinsics_pl': inv_RT.unsqueeze(0).expand(self.beam, -1, -1).unsqueeze(0)})
         return sample
 
     def save_additional(self, shape, k, step, sample, output_path, image_name, **kwargs):

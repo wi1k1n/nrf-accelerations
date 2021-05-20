@@ -9,10 +9,13 @@ SAVE_FILE = True
 
 DATA = "rocket_random_png"
 NAME = ""  # postfix for dataset name
+RENDER_OUTPUT = "output"  # output if empty
 RES = "256x256"
+RENDER_PATH_LIGHT = False  # True - light source is moving, false - camera is moving
+NUM_FRAMES = '100'
 
 CHUNK_SIZE = '256'
-RENDER_BEAM = '3'
+RENDER_BEAM = '1'
 
 WITH_LIGHT = True
 ARCH = "mlnrf_base"# ARCH = "nsvf_base"
@@ -31,14 +34,13 @@ RENDER_AT_VECTOR = '"(-0.1,0.05,1.25)"'
 # RENDER_AT_VECTOR = '"(0, -0.06, 0.575)"'
 
 RENDER_PATH_STYLE = 'circle'
-RENDER_PATH_LIGHT = True  # True - light source is moving, false - camera is moving
-RENDER_SPEED = '2'
+RENDER_SPEED = '3'
 
 
 RAYMARCHING_TOLERANCE = '0.01'
 # MODELARGS = '{"chunk_size":'+CHUNK_SIZE+',"raymarching_tolerance":'+RAYMARCHING_TOLERANCE+'}'
 MODELARGS = ''
-NUM_WORKERS = '4'
+NUM_WORKERS = ''
 
 # PREPROCESS = 'none'  # none/mstd/minmax
 # MIN_COLOR = '-1'  # '-1'
@@ -54,7 +56,8 @@ NUM_BACKUPS = 10
 parameters = ''
 parameters += DATASET
 parameters += '\n--path ' + MODEL_PATH
-
+if not RENDER_OUTPUT: RENDER_OUTPUT = "output"
+parameters += '\n--render-output ' + SAVE + '/' + ARCH + '/' + RENDER_OUTPUT + ('_light' if RENDER_PATH_LIGHT else '_cam')
 parameters += '\n--render-path-style ' + RENDER_PATH_STYLE
 parameters += '\n--render-path-args ' + RENDER_PATH_ARGS
 parameters += '\n--render-at-vector ' + RENDER_AT_VECTOR
@@ -63,6 +66,7 @@ if WITH_LIGHT:
 	parameters += '\n--with-point-light'
 	if RENDER_PATH_LIGHT:
 		parameters += '\n--render-path-light'
+parameters += '\n--render-num-frames ' + NUM_FRAMES
 
 # parameters += '\n--model-overrides \'{"chunk_size":'+CHUNK_SIZE+',"raymarching_tolerance":0.01}\''
 parameters += '\n--render-beam ' + RENDER_BEAM
@@ -71,7 +75,7 @@ parameters += '\n--render-save-fps 24'
 if len(MODELARGS):
 	parameters += '\n--model-overrides ' + MODELARGS
 parameters += '\n--render-resolution ' + RES
-parameters += '\n--render-output ' + SAVE + '/' + ARCH + '/output'
+# parameters += '\n--render-output ' + SAVE + '/' + ARCH + '/output'
 parameters += '\n--render-output-types "color" "depth" "voxel" "normal"'
 parameters += '\n--render-combine-output --log-format "simple"'
 # parameters += '\n--initial-boundingbox ' + DATASET + '/bbox.txt'

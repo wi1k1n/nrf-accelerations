@@ -10,7 +10,7 @@ INJECT_PYCHARM = True
 SAVE_FILE = True
 
 DATA = "rocket_random_png"
-NAME = ""  # postfix for dataset name
+NAME = "test"  # postfix for dataset name
 RES = "128x128"
 PIXELS_PER_VIEW = '80'#'80'  # should be powers of 2 (?)
 VIEW_PER_BATCH = '2'
