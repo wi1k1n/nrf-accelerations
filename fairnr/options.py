@@ -51,3 +51,7 @@ def add_rendering_args(parser):
 
     group.add_argument('--render-path-light', action='store_true',
                         help='either the light or the camera is moving')
+    group.add_argument('--targets-path', type=str, default=None,
+                        help='path to folder with target images')
+    group.add_argument('--render-dry-run', action='store_true',
+                        help='if the rendering should proceed without forward passes')

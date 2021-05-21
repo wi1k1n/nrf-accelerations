@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import sys, os, argparse
+import sys, os, argparse, re
 # print("Python version")
 # print (sys.version)
 # print (sys.executable)
@@ -15,6 +15,8 @@ import bpy
 import mathutils
 from mathutils import Vector
 import numpy as np
+from pprint import pprint
+from pathlib import Path
 
 sys.path.append(os.getcwd())
 from render_params import opts
@@ -34,17 +36,23 @@ args = parser.parse_args(argv)
 
 ### Manage directories
 homedir = args.output
-fp = bpy.path.abspath(f"{homedir}/{opts.RESULTS_PATH}")
+renderPath = bpy.path.abspath(f"{homedir}/{opts.RESULTS_PATH}")
 
 print('\n\n>> Processing model ' + os.path.abspath(opts.PATH_MODEL))
-print('>> Into folder ' + os.path.abspath(bpy.path.abspath(f"{homedir}")) + '\n\n')
+print('>> Into folder ' + os.path.abspath(bpy.path.abspath(f"{homedir}")))
+print('>> With arguments:')
+pprint(opts, width=1)
+print('\n\n')
 
-if not os.path.exists(fp):
-    os.makedirs(fp)
-if not os.path.exists(os.path.join(homedir, "pose")):
-    os.mkdir(os.path.join(homedir, "pose"))
-if not os.path.exists(os.path.join(homedir, "pose_pl")):
-    os.mkdir(os.path.join(homedir, "pose_pl"))
+# if not os.path.exists(renderPath):
+#     os.makedirs(renderPath)
+# if not os.path.exists(os.path.join(homedir, "pose")):
+#     os.mkdir(os.path.join(homedir, "pose"))
+# if not os.path.exists(os.path.join(homedir, "pose_pl")):
+#     os.mkdir(os.path.join(homedir, "pose_pl"))
+Path(renderPath).mkdir(parents=True, exist_ok=True)
+Path(os.path.join(homedir, "pose")).mkdir(parents=True, exist_ok=True)
+Path(os.path.join(homedir, "pose_pl")).mkdir(parents=True, exist_ok=True)
 
 # Data to store in JSON file
 out_data = {
@@ -192,17 +200,31 @@ scene.render.resolution_percentage = 100
 ### Setup camera for rendering
 assert scene.objects.get('Camera'), 'Camera not found. Please make sure there is a camera with the name "Camera"'
 cam = scene.objects['Camera']
-# Use overrided cam_distance from render parameters if exists
-camDst = None
-if hasattr(opts, 'CAM_DISTANCE') and opts.CAM_DISTANCE:
-    camDst = opts.CAM_DISTANCE
-else:
-    # otherwise try using custom property in .blend file
-    camDst = bpy.context.scene.get('camDst')
-assert camDst is not None, 'Neither CAM_DISTANCE parameter nor camDst custom property specified. Please either setup camera distance to scene property in blender project file or override in render_params.py'
 
-camAngles = (min(opts.CAM_HEMISPHERE_ANGLES), max(opts.CAM_HEMISPHERE_ANGLES))
-assert camAngles[0] >= -90 and camAngles[0] < camAngles[1] and camAngles[1] <= 90, 'CAM_HEMISPHERE_ANGLES should be a list of [a_min, a_max] angles, calculated from XY plane'
+# No need to all this stuff, if camera poses provided
+if opts.RANDOM_VIEWS:
+    # Use overrided cam_distance from render parameters if exists
+    camDst = None
+    if hasattr(opts, 'CAM_DISTANCE') and opts.CAM_DISTANCE:
+        camDst = opts.CAM_DISTANCE
+    else:
+        # otherwise try using custom property in .blend file
+        camDst = bpy.context.scene.get('camDst')
+    assert camDst is not None, 'Neither CAM_DISTANCE parameter nor camDst custom property specified. Please either setup camera distance to scene property in blender project file or override in render_params.py'
+
+    camAngles = (min(opts.CAM_HEMISPHERE_ANGLES), max(opts.CAM_HEMISPHERE_ANGLES))
+    assert camAngles[0] >= -90 and camAngles[0] < camAngles[1] and camAngles[1] <= 90, 'CAM_HEMISPHERE_ANGLES should be a list of [a_min, a_max] angles, calculated from XY plane'
+
+    # Precompute camera rotations
+    #                              [xyz] x VIEWS x [cam|light]
+    rot = np.random.uniform(0, 1, size=(3, opts.VIEWS, 2)) * np.array([1, 1, 0])[:, None, None]
+    rot[0] = (rot[0] * (camAngles[1] - camAngles[0]) + 90 + camAngles[0]) / 180.0
+    rot[0] = np.arccos(rot[0] * 2 - 1)
+    rot[1] *= 2 * np.pi
+    rot0sin, rot0cos = np.sin(rot[0]), np.cos(rot[0])
+    rot1sin, rot1cos = np.sin(rot[1]), np.cos(rot[1])
+    rot = rot.transpose(1, 0, 2)  # rot = rot.T
+
 cam_constraint = cam.constraints.new(type='TRACK_TO')
 cam_constraint.track_axis = 'TRACK_NEGATIVE_Z'
 cam_constraint.up_axis = 'UP_Y'
@@ -216,16 +238,11 @@ cam_constraint.target = b_empty
 pointLight = scene.objects['PointLight']
 assert scene.objects.get('PointLight'), 'PointLight not found. Please make sure there is a light with the name "PointLight"'
 
-stepsize = 360.0 / opts.VIEWS
 
+out_data['frames'] = []
 if not opts.DEBUG:
     for output_node in [depth_file_output, normal_file_output]:
         output_node.base_path = ''
-
-out_data['frames'] = []
-
-# if not opts.RANDOM_VIEWS:
-#     b_empty.rotation_euler = CIRCLE_FIXED_START
 
 def listify_matrix(matrix):
     matrix_list = []
@@ -233,35 +250,70 @@ def listify_matrix(matrix):
         matrix_list.append(list(row))
     return matrix_list
 
-rot = np.random.uniform(0, 1, size=(3, opts.VIEWS)) * np.array([1, 1, 0])[:, None]
-rot[0] = (rot[0] * (camAngles[1] - camAngles[0]) + 90 + camAngles[0]) / 180.0
-rot[0] = np.arccos(rot[0] * 2 - 1)
-rot[1] *= 2 * np.pi
-rot0sin, rot0cos = np.sin(rot[0]), np.cos(rot[0])
-rot1sin, rot1cos = np.sin(rot[1]), np.cos(rot[1])
-rot = rot.T
+
+camLightPoses = []
+# Validate camera and light poses
+if opts.RANDOM_VIEWS:
+    views2iterate = opts.VIEWS
+else:
+    fileFormat = re.compile('[0-9]+\.txt')
+    camLightPoses = [f for f in os.listdir(opts.VIEWS_PATH) if
+                os.path.isfile(os.path.join(opts.VIEWS_PATH, f)) and fileFormat.fullmatch(f) and
+                os.path.isfile(os.path.join(opts.LIGHTS_PATH, f))]
+    views2iterate = len(camLightPoses)
+    print('>> ', views2iterate, ' cam/light poses found')
+
 # Iterating over views
-for i in range(0, opts.VIEWS):
-    scene.render.filepath = os.path.join(fp, '{:04d}'.format(i))
+for i in range(0, views2iterate):
+    if i < opts.START_FROM: continue
+    orderedName = i if opts.RANDOM_VIEWS else int(camLightPoses[i][:-4])
+    scene.render.filepath = os.path.join(renderPath, '{:04d}'.format(orderedName))
 
     # Update camera position
     if opts.RANDOM_VIEWS:
-        cam.location[0] = camDst * rot0sin[i] * rot1cos[i] + modelCenter[0]
-        cam.location[1] = camDst * rot0sin[i] * rot1sin[i] + modelCenter[1]
-        cam.location[2] = camDst * rot0cos[i] + modelCenter[2]
-    else:
-        raise NotImplementedError('camera is no longer parented to b_empty')
-        b_empty.rotation_euler[1] = np.radians(stepsize * i)
-        print("Rotation {:.2f}d ({:.2f}r)".format((stepsize * i), np.radians(stepsize * i)))
+        cam.location[0] = camDst * rot0sin[i][0] * rot1cos[i][0] + modelCenter[0]
+        cam.location[1] = camDst * rot0sin[i][0] * rot1sin[i][0] + modelCenter[1]
+        cam.location[2] = camDst * rot0cos[i][0] + modelCenter[2]
 
-    # Update light position if needed
-    if opts.LIGHT_SETUP == 'none':
-        bpy.ops.object.delete({"selected_objects": [pointLight]})
-    elif opts.LIGHT_SETUP == 'colocated':
-        pointLight.location = cam.location
-        # pointLight.parent = cam
+        # Update light position if needed
+        if opts.LIGHT_SETUP == 'none':
+            bpy.ops.object.delete({"selected_objects": [pointLight]})
+        elif opts.LIGHT_SETUP == 'colocated':
+            pointLight.location = cam.location
+        elif opts.LIGHT_SETUP == 'random':
+            pointLight.location[0] = camDst * rot0sin[i][1] * rot1cos[i][1] + modelCenter[0]
+            pointLight.location[1] = camDst * rot0sin[i][1] * rot1sin[i][1] + modelCenter[1]
+            pointLight.location[2] = camDst * rot0cos[i][1] + modelCenter[2]
+    else:
+        print('## Processing file ', camLightPoses[i])
+        # cam.matrix_world = np.loadtxt(os.path.join(opts.VIEWS_PATH, camLightPoses[i]))
+        # pointLight.matrix_world = np.loadtxt(os.path.join(opts.LIGHTS_PATH, camLightPoses[i]))
+
+        Tv = np.loadtxt(os.path.join(opts.VIEWS_PATH, camLightPoses[i]))
+        Tl = np.loadtxt(os.path.join(opts.LIGHTS_PATH, camLightPoses[i]))
+
+        cam.location = Tv[:3, 3]
+        b_empty.location = np.matmul(Tv, np.array([0, 0, 1, 1]))[:3]
+        pointLight.location = Tl[:3, 3]
+
+        # scene.frame_set(scene.frame_current)
+        # bpy.context.view_layer.update()
+
+        # pprint(cam.location)
+        # pprint(cam.rotation_euler)
+        # pprint(cam.matrix_world)
+
+        # pointLight.matrix_world = np.loadtxt(os.path.join(opts.LIGHTS_PATH, camLightPoses[i]))
+
+        # pprint(cam.location)
+        # pos = np.matmul(T, np.array([0, 0, 0, 1]))
+        # pprint(pos)
+        # exit()
+        # raise NotImplementedError('camera is no longer parented to b_empty')
+
 
     # apply changes
+    scene.frame_set(scene.frame_current)
     bpy.context.view_layer.update()
 
     # print(b_empty.rotation_euler, cam.matrix_world)
@@ -271,32 +323,22 @@ for i in range(0, opts.VIEWS):
 
     frame_data = {
         'file_path': scene.render.filepath,
-        'rotation': np.radians(stepsize),
+        'rotation': np.radians(360.0 / views2iterate),  # TODO: not needed, but scared to delete :)
         'transform_matrix': listify_matrix(cam.matrix_world),
         'pl_transform_matrix': listify_matrix(pointLight.matrix_world)
     }
     out_data['frames'].append(frame_data)
 
-    with open(os.path.join(homedir, "pose", '{:04d}.txt'.format(i)), 'w') as fo:
+    with open(os.path.join(homedir, "pose", '{:04d}.txt'.format(orderedName)), 'w') as fo:
         for ii, pose in enumerate(frame_data['transform_matrix']):
             print(" ".join([str(-p) if (((j == 2) | (j == 1)) and (ii < 3)) else str(p)
                             for j, p in enumerate(pose)]),
                 file=fo)
-    with open(os.path.join(homedir, "pose_pl", '{:04d}.txt'.format(i)), 'w') as fo:
+    with open(os.path.join(homedir, "pose_pl", '{:04d}.txt'.format(orderedName)), 'w') as fo:
         for ii, pose in enumerate(frame_data['pl_transform_matrix']):
             print(" ".join([str(-p) if (((j == 2) | (j == 1)) and (ii < 3)) else str(p)
                             for j, p in enumerate(pose)]),
                 file=fo)
-
-    # if opts.RANDOM_VIEWS:
-    #     if opts.UPPER_VIEWS:
-    #         rot = np.random.uniform(0, 1, size=3) * (1,0,2*np.pi)
-    #         rot[0] = np.abs(np.arccos(1 - 2 * rot[0]) - np.pi/2)
-    #         b_empty.rotation_euler = rot
-    #     else:
-    #         b_empty.rotation_euler = np.random.uniform(0, 2*np.pi, size=3)
-    # else:
-    #     b_empty.rotation_euler[2] += radians(stepsize)
 
 
     if opts.DEBUG:
@@ -331,4 +373,4 @@ with open(os.path.join(homedir, 'render_params.txt'), 'w') as fi:
 
 # Postprocessing script for the dataset
 if POSTPROCESSING_SCRIPT:
-    os.system("python postprocess_dataset.py " + fp + " " + homedir)
+    os.system("python postprocess_dataset.py " + renderPath + " " + homedir)

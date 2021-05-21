@@ -39,7 +39,10 @@ class NeuralRenderer(object):
                 fps=24,
                 test_camera_poses=None,
                 test_camera_intrinsics=None,
-                test_camera_views=None):
+                test_camera_views=None,
+                dry_run=None):
+
+        self.dry_run = dry_run
 
         self.frames = frames
         self.speed = speed
@@ -180,11 +183,15 @@ class NeuralRenderer(object):
                 #     _sample.update({'extrinsics_pl': _sample['extrinsics']})
                 _sample = self.prepare_sample(shape, _sample, **kwargs)
                 with data_utils.GPUTimer() as timer:
-                    outs = model(**_sample)
+                    if not self.dry_run:
+                        outs = model(**_sample)
                 logger.info("rendering frame={}\ttotal time={:.4f}".format(step, timer.sum))
 
                 for k in range(step, next_step):
-                    images = model.visualize(_sample, None, 0, k-step)
+                    if self.dry_run:
+                        images = []
+                    else:
+                        images = model.visualize(_sample, None, 0, k-step)
                     image_name = "{:04d}".format(k)
 
                     for key in images:
@@ -209,14 +216,9 @@ class NeuralRenderer(object):
                                     if images[key].dim() == 3 else torch.stack(3*[images[key]], 0)        
                                 save_image(image, os.path.join(prefix, image_name + '.png'), format=None)
                                 image_names.append(os.path.join(prefix, image_name + '.png'))
-                    
-                    # save pose matrix
-                    # prefix = os.path.join(output_path, 'pose')
-                    # Path(prefix).mkdir(parents=True, exist_ok=True)
-                    # pose = self.test_poses[k] if self.test_poses is not None else inv_RT[k-step].cpu().numpy()
-                    # np.savetxt(os.path.join(prefix, image_name + '.txt'), pose)
 
-                    self.save_additional(shape, k, step, _sample, output_path, image_name, **kwargs)
+                    for img in self.save_additional(shape, k, step, _sample, output_path, image_name, **kwargs):
+                        image_names.append(os.path.join(output_path, img))
 
                 step = next_step
 
@@ -229,12 +231,17 @@ class NeuralRenderer(object):
         pose = self.test_poses[k] if self.test_poses is not None else sample['extrinsics'][shape, k-step].cpu().numpy()
         np.savetxt(os.path.join(prefix, image_name + '.txt'), pose)
 
+        return []
+
     def save_images(self, output_files, steps=None, combine_output=True):
         if not os.path.exists(self.output_dir):
             os.mkdir(self.output_dir)
         timestamp = time.strftime('%Y-%m-%d.%H-%M-%S',time.localtime(time.time()))
         if steps is not None:
             timestamp = "step_{}.".format(steps) + timestamp
+
+        if self.dry_run:
+            return timestamp
         
         if not combine_output:
             for type in self.output_type:
@@ -242,14 +249,17 @@ class NeuralRenderer(object):
                 # imageio.mimsave('{}/{}_{}.gif'.format(self.output_dir, type, timestamp), images, fps=self.fps)
                 imageio.mimwrite('{}/{}_{}.mp4'.format(self.output_dir, type, timestamp), images, fps=self.fps, quality=8)
         else:
-            images = [[imageio.imread(file_path) for file_path in output_files if type == file_path.split('/')[-2]] for type in self.output_type]
+            images = [[imageio.imread(file_path)[...,:3] for file_path in output_files if type == file_path.split('/')[-2]] for type in self.output_type]
             images = [np.concatenate([images[j][i] for j in range(len(images))], 1) for i in range(len(images[0]))]
             imageio.mimwrite('{}/{}_{}.mp4'.format(self.output_dir, 'full', timestamp), images, fps=self.fps, quality=8)
         
         return timestamp
 
     def merge_videos(self, timestamps):
-        logger.info("mergining mp4 files..")
+        if self.dry_run:
+            return
+
+        logger.info("merginng mp4 files..")
         timestamp = time.strftime('%Y-%m-%d.%H-%M-%S',time.localtime(time.time()))
         writer = imageio.get_writer(
             os.path.join(self.output_dir, 'full_' + timestamp + '.mp4'), fps=self.fps)
@@ -267,6 +277,7 @@ class NeuralRenderer(object):
 class LightNeuralRenderer(NeuralRenderer):
     def __init__(self, *args, **kwargs):
         self.moving_light = kwargs.pop('moving_light', False)
+        self.targets_path = kwargs.pop('targets_path', None)
         super().__init__(*args, **kwargs)
 
     @torch.no_grad()
@@ -282,6 +293,7 @@ class LightNeuralRenderer(NeuralRenderer):
                                         sample['intrinsics'][shape],
                                         sample['size'][shape, 0],
                                         self.test_poses[0] if self.test_poses is not None else None)
+            sample.update({'extrinsics_pl': sample['extrinsics']})
             sample.update({'extrinsics': inv_RT.unsqueeze(0).expand(self.beam, -1, -1).unsqueeze(0)})
         else:
             _, inv_RT = self.generate_rays(0,
@@ -298,3 +310,11 @@ class LightNeuralRenderer(NeuralRenderer):
         Path(prefix).mkdir(parents=True, exist_ok=True)
         pose = sample['extrinsics_pl'][shape, k-step].cpu().numpy()
         np.savetxt(os.path.join(prefix, image_name + '.txt'), pose)
+
+        imgs = []
+        if self.targets_path:
+            curImgFilename = os.path.join(self.targets_path, image_name + '.png')
+            if not os.path.exists(curImgFilename):
+                raise FileNotFoundError('The --targets-path option is specified, but there is no ' + curImgFilename + ' file')
+            imgs.append(curImgFilename)
+        return imgs

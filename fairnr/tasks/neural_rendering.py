@@ -223,6 +223,7 @@ class SingleObjRenderingTask(FairseqTask):
                     **eval(args.render_path_args)
                 ),
                 moving_light=args.render_path_light,
+                targets_path=args.targets_path,
                 at=eval(args.render_at_vector),
                 up=eval(args.render_up_vector),
                 fps=getattr(args, "render_save_fps", 24),
@@ -231,7 +232,8 @@ class SingleObjRenderingTask(FairseqTask):
                 output_type=args.render_output_types,
                 test_camera_poses=getattr(args, "render_camera_poses", None),
                 test_camera_intrinsics=getattr(args, "render_camera_intrinsics", None),
-                test_camera_views=getattr(args, "render_views", None)
+                test_camera_views=getattr(args, "render_views", None),
+                dry_run=args.render_dry_run
             )
         else:
             return NeuralRenderer(
@@ -251,7 +253,8 @@ class SingleObjRenderingTask(FairseqTask):
                 output_type=args.render_output_types,
                 test_camera_poses=getattr(args, "render_camera_poses", None),
                 test_camera_intrinsics=getattr(args, "render_camera_intrinsics", None),
-                test_camera_views=getattr(args, "render_views", None)
+                test_camera_views=getattr(args, "render_views", None),
+                dry_run=getattr(args.dry_run)
             )
 
     def setup_trainer(self, trainer):

@@ -35,7 +35,7 @@ png = True
 print ('## Reading files: ')
 for flnm in os.listdir(args.images_folder):
     flpth = os.path.join(args.images_folder, flnm)
-    print (flpth)
+    # print (flpth)
     if flnm.endswith(".png"): 
         img = imageio.imread(flpth)
         img = img.reshape(-1, img.shape[-1])
@@ -73,14 +73,17 @@ for flnm in os.listdir(args.images_folder):
 
 print ('{0} samples in dataset'.format(i))
 
-mu_g = np.array(mu).mean(0)  # mu for the whole dataset
-mus_g = np.array(mus).mean(0)  # mu^2 for the whole dataset
-std_g = np.sqrt(mus_g - np.square(mu_g))  # std_g for the whole dataset
+if i:
+    mu_g = np.array(mu).mean(0)  # mu for the whole dataset
+    mus_g = np.array(mus).mean(0)  # mu^2 for the whole dataset
+    std_g = np.sqrt(mus_g - np.square(mu_g))  # std_g for the whole dataset
 
-print('Mean: {}'.format(mu_g))
-print('Std: {}'.format(std_g))
+    print('Mean: {}'.format(mu_g))
+    print('Std: {}'.format(std_g))
 
-print ('## Saving postprocessing data: ')
-with open(os.path.join(args.output_folder, OUTPUTFILE), 'w') as fi:
-    print(', '.join(map(str, list(mu_g))), file=fi)
-    print(', '.join(map(str, list(std_g))), file=fi)
+    print ('## Saving postprocessing data: ')
+    with open(os.path.join(args.output_folder, OUTPUTFILE), 'w') as fi:
+        print(', '.join(map(str, list(mu_g))), file=fi)
+        print(', '.join(map(str, list(std_g))), file=fi)
+else:
+    print ('## No samples found. No data has been saved')

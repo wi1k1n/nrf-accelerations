@@ -11,11 +11,13 @@ DATA = "rocket_random_png"
 NAME = ""  # postfix for dataset name
 RENDER_OUTPUT = "output"  # output if empty
 RES = "256x256"
-RENDER_PATH_LIGHT = False  # True - light source is moving, false - camera is moving
-NUM_FRAMES = '100'
+RENDER_PATH_LIGHT = True  # True - light source is moving, false - camera is moving
+NUM_FRAMES = '180'
+TARGETS_PATH = '/home/mazlov/documents/thesis/codes/blender/' + DATA + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
+DRY_RUN = False  # only create camera/light positions and do not evaluate model
 
 CHUNK_SIZE = '256'
-RENDER_BEAM = '1'
+RENDER_BEAM = '4'  # should be an even divisor of NUM_FRAMES TODO: fix it
 
 WITH_LIGHT = True
 ARCH = "mlnrf_base"# ARCH = "nsvf_base"
@@ -27,14 +29,14 @@ MODEL = ARCH + SUFFIX
 MODEL_PATH = SAVE + '/' + MODEL + '/checkpoint_last.pt'
 
 ## Rocket
-RENDER_PATH_ARGS = '{\'radius\':2.5,\'h\':4,\'o\':(-0.1,0.05,1.25)}'
+RENDER_PATH_ARGS = '{\'radius\':1.5,\'h\':3,\'o\':(-0.1,0.05,1.25)}'
 RENDER_AT_VECTOR = '"(-0.1,0.05,1.25)"'
 ## Guitar
 # RENDER_PATH_ARGS = '{\'radius\':0.8,\'h\':1.0,\'o\':(0,-0.06,0.5)}'
 # RENDER_AT_VECTOR = '"(0, -0.06, 0.575)"'
 
 RENDER_PATH_STYLE = 'circle'
-RENDER_SPEED = '3'
+RENDER_SPEED = '2'
 
 
 RAYMARCHING_TOLERANCE = '0.01'
@@ -67,6 +69,10 @@ if WITH_LIGHT:
 	if RENDER_PATH_LIGHT:
 		parameters += '\n--render-path-light'
 parameters += '\n--render-num-frames ' + NUM_FRAMES
+if TARGETS_PATH:
+	parameters += '\n--targets-path ' + TARGETS_PATH
+if DRY_RUN:
+	parameters += '\n--render-dry-run'
 
 # parameters += '\n--model-overrides \'{"chunk_size":'+CHUNK_SIZE+',"raymarching_tolerance":0.01}\''
 parameters += '\n--render-beam ' + RENDER_BEAM
@@ -76,7 +82,7 @@ if len(MODELARGS):
 	parameters += '\n--model-overrides ' + MODELARGS
 parameters += '\n--render-resolution ' + RES
 # parameters += '\n--render-output ' + SAVE + '/' + ARCH + '/output'
-parameters += '\n--render-output-types "color" "depth" "voxel" "normal"'
+parameters += '\n--render-output-types ' + ('"target"' if TARGETS_PATH else '') + ' "color" "depth" "voxel" "normal"'
 parameters += '\n--render-combine-output --log-format "simple"'
 # parameters += '\n--initial-boundingbox ' + DATASET + '/bbox.txt'
 if NUM_WORKERS:
