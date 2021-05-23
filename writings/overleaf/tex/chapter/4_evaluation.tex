@@ -1,0 +1,149 @@
+
+\chapter{Evaluation}
+\label{chap:evaluation}
+
+This is some test area for new mathematical helper macros to nicely visualize mathematical formulas.
+
+\section{Numbers}
+\begin{align}
+    \mathbb{C}
+    \qquad
+    \mathbb{R}
+    \qquad
+    \mathbb{Q}
+    \qquad
+    \mathbb{Z}
+    \qquad
+    \mathbb{N}
+\end{align}
+
+\section{Numbers with physical units}
+\begin{align}
+    \SI{1.23}{\meter\per\second}
+\end{align}
+\begin{align}
+    \si{\meter\per\second}
+\end{align}
+\begin{align}
+    \SI{1.23\pm0.45}{\meter\per\second}
+\end{align}
+\begin{align}
+    \SI{3e8}{\meter\per\second}
+\end{align}
+\begin{align}
+    \SI{32}{\giga\byte} = \SI{32e9}{\byte}
+\end{align}
+\begin{align}
+    \SI{32}{\gibi\byte} = \SI[exponent-base=2]{32e30}{\byte}
+\end{align}
+
+\section{Norm, Dot, Abs, Interval}
+\begin{align}
+    \pi = \const
+\end{align}
+\begin{align}
+    1 \in \interval{0}{2}
+\end{align}
+\begin{align}
+    1 \in \order{n}
+\end{align}
+\begin{align}
+    \evalat{ \frac{\partial f}{\partial x} }{ x = 0 }
+\end{align}
+\begin{align}
+    \norm{p} \qquad \norm{\frac{p}{2}}
+\end{align}
+\begin{align}
+    \abs{p} \qquad \abs{\frac{p}{2}}
+\end{align}
+\begin{align}
+    \dotproduct{p}{q} \qquad \dotproduct{\frac{p}{2}}{q}
+\end{align}
+\begin{align}
+    \crossproduct{p}{q} \qquad \crossproduct{\frac{p}{2}}{q}
+\end{align}
+
+\section{Vector, Matrix}
+\begin{align}
+    \vec{p} \qquad \vecarrow{p}
+\end{align}
+\begin{align}
+    \vec{p}^{\transposed}
+\end{align}
+\begin{align}
+    \gradient{\vec{p}}
+\end{align}
+\begin{align}
+    \divergence{\mat{A}}
+\end{align}
+\begin{align}
+    \laplacian{\mat{A}}
+\end{align}
+\begin{align}
+    \mat{A}
+\end{align}
+\begin{align}
+    \set{K} , K
+    \qquad
+    \set{N} , N
+\end{align}
+\begin{align}
+    \neighborhood{\vec{p}} = \left\{ \vec{q} \mid \norm{\vec{p} - \vec{q}} < \epsilon \right\}
+\end{align}
+
+\section{Set operations}
+\begin{align}
+    A \intersect B
+\end{align}
+\begin{align}
+    A \union B
+\end{align}
+\begin{align}
+    A \difference B
+\end{align}
+
+\section{Derivative, Integral, Sum, Probability}
+\begin{align}
+    \int_H x \, dx
+\end{align}
+\begin{align}
+    \sum_H x
+\end{align}
+\begin{align}
+    \probability{x}
+\end{align}
+\begin{align}
+    \probabilitygiven{x}{y}
+\end{align}
+\begin{align}
+    \expectation{x}
+\end{align}
+\begin{align}
+    \deviation{x}
+\end{align}
+\begin{align}
+    \variance{x}
+\end{align}
+
+
+\section{Lemma, Theorem, Corollary}
+\begin{lemma}
+    This is a lemma.
+\end{lemma}
+\begin{proof}
+    Proof of lemma.
+\end{proof}
+
+\begin{theorem}
+    This is a theorem.
+\end{theorem}
+\begin{proof}
+    Proof of theorem.
+\end{proof}
+
+\begin{corollary}
+    This is a corollary.
+\end{corollary}
+\begin{proof}
+    Proof of corollary.
+\end{proof}

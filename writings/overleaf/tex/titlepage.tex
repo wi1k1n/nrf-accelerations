@@ -1,0 +1,126 @@
+
+
+
+{
+	% New spacing
+	\onehalfspacing
+	
+    \setlength{\parskip}{0cm}
+	
+	\begin{titlepage}
+        %\fbox{
+        \begin{minipage}[c][0.3\textheight][t]{\textwidth}
+            %\fbox{
+            \begin{minipage}[c][0.05\textheight][t]{\textwidth}
+                
+                
+                % Kind of thesis
+                \begin{center}
+                    \Large\textsc{\thesisType}
+                \end{center}
+                
+                
+            \end{minipage}
+            %}
+            \par\nointerlineskip % remove space between boxes
+            %\fbox{
+            \begin{minipage}[c][0.20\textheight][c]{\textwidth}
+                
+                % Use second minipage to force rule to be inside the first minipage
+                \begin{minipage}[c][0.20\textheight][c]{\textwidth}
+                    \rule{\linewidth}{0.4pt}
+                    %\fbox{
+                    \begin{center}
+                        \LARGE\@title
+                    \end{center}
+                    %}
+                    \rule{\linewidth}{0.4pt}
+                \end{minipage}
+                
+            \end{minipage}
+            %}
+            \par\nointerlineskip % remove space between boxes
+            %\fbox{
+            \begin{minipage}[c][0.05\textheight][b]{\textwidth}
+                
+                
+                % Author
+                \begin{center}
+                    \Large\@author
+                \end{center}
+                
+                
+            \end{minipage}
+            %}
+            \par\nointerlineskip % remove space between boxes
+        \end{minipage}
+        \par\nointerlineskip % remove space between boxes
+        %}
+        %\fbox{
+        \begin{minipage}[c][0.4\textheight][c]{\textwidth}
+            
+            
+            \begin{center}
+               \includegraphics[height = 0.275\textheight, keepaspectratio]{logo_white.jpg}
+            \end{center}
+            
+            
+        \end{minipage}
+        \par\nointerlineskip % remove space between boxes
+        %}
+        %\fbox{
+		\begin{minipage}[c][0.3\textheight][t]{\textwidth}
+            %\fbox{
+            \begin{minipage}[c][0.1\textheight][t]{\textwidth}
+                
+                
+                \begin{center}
+        			% Institute
+        			\textsc{Institute of Computer Science II - Computer Graphics \\
+        					University of Bonn} \\[1.5cm]
+                \end{center}
+                
+                
+   			\end{minipage}
+   			%}
+            \par\nointerlineskip % remove space between boxes
+            %\fbox{
+            \begin{minipage}[c][0.1\textheight][c]{\textwidth}
+                
+                
+                \begin{center}
+                    % Reviewer
+                    \begin{tabular}{rl}
+                        First Reviewer:   & \firstReviewer \\
+                        Second Reviewer:  & \secondReviewer \\
+                    \end{tabular}
+                \end{center}
+                
+                
+            \end{minipage}
+            %}
+            \par\nointerlineskip % remove space between boxes
+            %\fbox{
+            \begin{minipage}[c][0.1\textheight][b]{\textwidth}
+                
+                
+                \begin{center}
+                    % Date
+                    \large\@date
+                \end{center}
+                
+                
+            \end{minipage}
+            %}
+            \par\nointerlineskip % remove space between boxes
+		\end{minipage}
+    	%}
+	\end{titlepage}
+}
+
+
+% back page blank
+\cleardoublepage
+
+
+

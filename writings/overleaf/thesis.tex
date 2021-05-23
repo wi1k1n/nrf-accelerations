@@ -1,0 +1,188 @@
+\RequirePackage{fix-cm}                                     % Fix font with siunitx
+\documentclass[english, a4paper, twoside, openright, 12pt]{report}	% Document type
+%\usepackage{emptypage}                                      % Empty pages
+\RequirePackage[l2tabu, orthodox]{nag}                      % Detect deprecated packages, commands, etc.
+\usepackage[all,error]{onlyamsmath}                         % Error on deprecated math commands like $$ $$.
+\AtBeginDocument{\catcode`$=3 }                             % Workaround for tikz
+\usepackage{fixmath}                                        % Fix non ISO behaviour with capital greek letters
+%\usepackage{refcheck}                                       % Display warning on unused references
+%\ignoreunlbld                                               % Ignore equations in refcheck
+\usepackage{todonotes}                                      % TODO
+
+\usepackage{lipsum}                                         % Generate random text (ONLY FOR TEST PURPOSES)
+
+
+% --- Mathematical packages ---
+\usepackage{amsmath}                                        % Math
+\usepackage{amsthm}                                         % Theorems and proofs
+\usepackage{amssymb}                                        % Math symbols
+\usepackage{bm}												% Bold math
+\usepackage[per-mode=fraction,
+            exponent-product=\cdot,
+            separate-uncertainty=true
+           ]{siunitx}                                       % Physical units
+%\usepackage{mathtools}                                      % Math tools
+
+
+% --- Typographical packages ---
+% - Bases -
+\usepackage[utf8]{inputenc}                                 % UTF-8 Encoding
+\usepackage[T1]{fontenc}                                    % Font encoding
+\usepackage{babel}                                          % Translation
+\usepackage[babel]{csquotes}                                % Quotes
+\usepackage{comment}                                        % Comments
+% - Font -
+\usepackage{newtxtext,newtxmath}                            % Times font
+\usepackage[toctitles,compact,explicit]{titlesec}           % Custom chapter headings
+\usepackage{microtype}                                      % Typographical improvements
+\usepackage{ellipsis}                                       % Whitespace correction
+% - Shape -
+\usepackage[hyphens]{url}                                   % Hyphens in URLs
+\usepackage{varioref}
+\usepackage{hyperref}                                       % Clickable references
+\usepackage[noabbrev]{cleveref}
+\usepackage[backend=biber,					% Backend
+            bibencoding=utf8,				% File encoding (BibTex = ASCII, Biber = UTF8)
+            bibstyle=authoryear,		    % Reference style
+            citestyle=authoryear,           % Citation style
+            bibwarn=true,                   % Enable warnings
+            natbib=true,					% Natbib compatibility
+            maxcitenames=2,					% Cite : > 2 name = et al.
+            maxbibnames=99,					% Bib  : show all names
+            sortcites=true,					% Sorting
+            block=space,					% Space between citations
+            giveninits=true,				% Compress first names
+            uniquename=init,				% Compatible with 'giveninits=true'
+            isbn=false,                     % Disable ISBN
+            doi=false                       % Disable DOI
+           ]{biblatex}
+\usepackage{fancyhdr}                                       % Custom head- and foot-lines
+\usepackage{setspace}                                       % Spacing between lines
+\usepackage[titles]{tocloft}                                % Spacing in table of contents
+%\usepackage{abstract}                                       % Abstract
+\usepackage{geometry}                                       % Geometry of a page
+
+% --- Graphical packages ---
+\usepackage{float}                                          % float environment settings
+\usepackage{graphicx}                                       % Figures
+\usepackage{caption}                                        % Figures and captions
+\usepackage{subcaption}                                     % Figures and captions (side-by-side)
+\usepackage{booktabs}                                       % Improved tables
+\usepackage{multirow}                                       % Multirow
+
+
+\usepackage{pbox}
+% Disable underfull box warnings when breaking URLs
+\usepackage{etoolbox}
+\apptocmd{\sloppy}{\hbadness 10000\relax}{}{}
+
+
+% The literature file
+\addbibresource{tex/literature.bib}
+
+
+
+\include{tex/style}
+
+
+\include{tex/macros}
+
+
+\graphicspath{{./figures/}}
+
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\newcommand{\thesisType}{Thesis}
+
+\title{Accelerations for Training and Rendering Neural Reflectance and Radiance Fields}
+
+\author{Ilia Mazlov}
+
+\newcommand{\firstReviewer}{Prof. Dr. Reinhard Klein}
+\newcommand{\secondReviewer}{Dr. Michael Weinmann}
+
+\date{\today}
+
+
+% Generate author and title
+\makeatletter
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+
+
+\begin{document}
+    % Start with roman page numbers
+    \pagenumbering{Roman}
+
+
+	% Title page
+	\include{tex/titlepage}
+
+
+    % Statutory declaration
+	\include{tex/statutoryDeclaration}
+
+
+	% Abstract / summary
+	\include{tex/abstract}
+
+
+    % Acknowledgement
+    \include{tex/acknowledgment}
+
+
+	% Table of contents
+	\tableofcontents
+
+	%\newpage
+
+    % List of figures
+	%\listoffigures
+
+    % List of tables
+	%\listoftables
+
+    % List of algorithms
+    %\listofalgorithms
+
+    %\newpage
+
+
+    % Regular page numbers
+    \cleardoublepage
+    \pagenumbering{arabic}
+
+
+    % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+    \include{tex/chapter/1_introduction} % Introduction
+
+    % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+    \include{tex/chapter/2_related_work} % Related work
+
+    % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+    \include{tex/chapter/3_method} % Proposed method/solution
+
+    % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+    \include{tex/chapter/4_evaluation} % Evaluation
+
+    % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+    \include{tex/chapter/5_conclusion} % Evaluation
+
+    % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+    %\nocite{*}
+
+	% Bibliography
+    \cleardoublepage
+    \printbibliography[heading = bibintoc]
+
+
+\end{document}

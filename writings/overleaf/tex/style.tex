@@ -1,0 +1,180 @@
+
+
+% --- Style ---
+
+
+
+% Fix für strange spacing in left right environments
+\let\originalleft\left
+\let\originalright\right
+\renewcommand{\left}{\mathopen{}\mathclose\bgroup\originalleft}
+\renewcommand{\right}{\aftergroup\egroup\originalright}
+
+
+
+% Penalties for paragrpahs starting or ending at a page
+%\clubpenalty         = 10000
+%\widowpenalty        = 10000
+%\displaywidowpenalty = 10000
+
+
+% The geometry of the page
+\newlength{\bindingOffset}
+\setlength{\bindingOffset}{0mm}
+
+\geometry{a4paper,
+    	  twoside,
+          bindingoffset = \bindingOffset,
+          top = 35mm, bottom = 35mm,
+          inner = 25mm, outer = 25mm - \bindingOffset,
+          headheight = 15pt,
+          headsep = 15pt,
+          footskip = \headheight + \headsep + 3pt
+          %showframe
+         }
+
+
+% Spacing between lines
+\setstretch{1.125}
+
+
+
+% Spacing of paragraphs
+\parskip   = 0.5\baselineskip \advance\parskip by 0pt plus 2pt
+\parindent = 0pt
+
+
+% Column separtation size
+\setlength{\columnsep}{0.05\textwidth}
+
+
+% Bibligraphy item separation size
+\setlength\bibitemsep{1.5\itemsep}
+
+
+
+
+% Head- and foot-lines
+\fancypagestyle{plain}
+{
+    \fancyhf{}
+    \fancyfoot[C]{\thepage}
+    \renewcommand{\headrulewidth}{0pt}
+    \renewcommand{\footrulewidth}{0.4pt}
+}
+
+\fancypagestyle{plainline}
+{
+    \fancyhf{}
+    \fancyfoot[C]{\thepage}
+    \renewcommand{\headrulewidth}{0.4pt}
+    \renewcommand{\footrulewidth}{0.4pt}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[CE]{\rightmark}
+\fancyhead[CO]{\leftmark}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+
+
+
+% Empty pages
+\makeatletter
+\def\cleardoublepage{\clearpage%
+    \if@twoside
+    \ifodd\c@page\else
+        \begin{minipage}[c][\textheight][c]{\textwidth}
+            \begin{center}
+                %This page intentionally left blank.
+            \end{center}
+        \end{minipage}
+        \vfill
+        \thispagestyle{plainline}
+        \newpage
+    \if@twocolumn\hbox{}\newpage\fi
+    \fi
+    \fi
+}
+\makeatother
+
+
+
+
+
+% Chapter headings
+\newlength\chapnumb
+\setlength\chapnumb{4cm}
+
+\newlength\chapnumbfontsize
+\setlength\chapnumbfontsize{80pt}
+
+\titleformat{\chapter}[block]
+{\normalfont %\sffamily
+}{}{0pt}
+{\parbox[b]{\chapnumb}{%
+        \fontsize{\chapnumbfontsize}{0}\selectfont\thechapter}%
+    \parbox[b]{\dimexpr\textwidth-\chapnumb\relax}{%
+        \raggedleft%
+        \hfill{\Huge\textbf{#1}}\\
+        \rule{\dimexpr\textwidth-\chapnumb\relax}{0.4pt}}}
+\titleformat{name=\chapter,numberless}[block]
+{\normalfont %\sffamily
+}{}{0pt}
+{\parbox[b]{\chapnumb}{%
+        \fontsize{\chapnumbfontsize}{0}\selectfont\color{white}0}%
+    \hspace{-\chapnumb}\parbox[b]{\dimexpr\textwidth\relax}{%
+        \raggedleft%
+        \hfill{\Huge\textbf{#1}}\\
+        \rule{\dimexpr\textwidth\relax}{0.4pt}}}
+
+
+
+
+% Hyperref settings
+\hypersetup{colorlinks    = true,                                                                % Color links
+            linkcolor     = black      , citecolor = black, filecolor = black, urlcolor = black, % Link ad URL colors
+            pdfauthor     = {\@author} , pdftitle = {\@title},                                   % Author und Title
+            pdfpagelayout = TwoPageRight%                                                        % double-sided view
+           }
+
+
+% Only show contents up to section level
+\setcounter{tocdepth}{1}
+
+
+% Spacing in table of contents
+\setlength{\cftbeforechapskip}{4.75mm}
+\setlength{\cftbeforesecskip}{-1.5mm}
+\setlength{\cftbeforesubsecskip}{-2.0mm}
+
+
+% Force table to be set at given position
+\restylefloat{table}
+
+% Spacing in tables
+\newcommand{\setArraystrech}[1]{\renewcommand{\arraystretch}{#1}}
+
+
+% SI settings
+\sisetup{
+    locale = DE,
+    binary-units = true,
+    output-decimal-marker = {,},
+    group-digits = true,
+    group-separator = {\,},
+    per-mode = symbol
+}
+\DeclareSIUnit{\bit}{Bit}
+
+
+% Subcaption settings
+\captionsetup{subrefformat=parens}
+
+
+% Fix comment environment
+\renewenvironment{comment}{}{}
+
