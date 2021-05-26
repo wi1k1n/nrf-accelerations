@@ -85,8 +85,6 @@ class SingleObjRenderingTask(FairseqTask):
         parser.add_argument("--pruning-rerun-train-set", action='store_true',
                             help="only works when --pruning-with-train-stats is also set.")
         parser.add_argument("--output-valid", type=str, default=None)
-        parser.add_argument('--with-point-light', action='store_true',
-                            help='texture field uses point light data')
 
     def __init__(self, args):
         super().__init__(args)
@@ -167,7 +165,7 @@ class SingleObjRenderingTask(FairseqTask):
         """
         Load a given dataset split (train, valid, test)
         """
-        self.datasets[split] = ShapeViewLightDataset(
+        self.datasets[split] = ShapeViewDataset(
             self.train_data if split == 'train' else \
                 self.val_data if split == 'valid' else self.test_data,
             views=self.train_views if split == 'train' else \
@@ -212,50 +210,26 @@ class SingleObjRenderingTask(FairseqTask):
         """
         build a neural renderer for visualization
         """
-        if (args.with_point_light):
-            return LightNeuralRenderer(
-                beam=args.render_beam,
-                resolution=args.render_resolution,
-                frames=args.render_num_frames,
-                speed=args.render_angular_speed,
-                raymarching_steps=args.render_raymarching_steps,
-                path_gen=get_trajectory(args.render_path_style)(
-                    **eval(args.render_path_args)
-                ),
-                moving_light=args.render_path_light,
-                targets_path=args.targets_path,
-                at=eval(args.render_at_vector),
-                up=eval(args.render_up_vector),
-                fps=getattr(args, "render_save_fps", 24),
-                output_dir=args.render_output if args.render_output is not None
-                    else os.path.join(args.path, "output"),
-                output_type=args.render_output_types,
-                test_camera_poses=getattr(args, "render_camera_poses", None),
-                test_camera_intrinsics=getattr(args, "render_camera_intrinsics", None),
-                test_camera_views=getattr(args, "render_views", None),
-                dry_run=args.render_dry_run
-            )
-        else:
-            return NeuralRenderer(
-                beam=args.render_beam,
-                resolution=args.render_resolution,
-                frames=args.render_num_frames,
-                speed=args.render_angular_speed,
-                raymarching_steps=args.render_raymarching_steps,
-                path_gen=get_trajectory(args.render_path_style)(
-                    **eval(args.render_path_args)
-                ),
-                at=eval(args.render_at_vector),
-                up=eval(args.render_up_vector),
-                fps=getattr(args, "render_save_fps", 24),
-                output_dir=args.render_output if args.render_output is not None
-                    else os.path.join(args.path, "output"),
-                output_type=args.render_output_types,
-                test_camera_poses=getattr(args, "render_camera_poses", None),
-                test_camera_intrinsics=getattr(args, "render_camera_intrinsics", None),
-                test_camera_views=getattr(args, "render_views", None),
-                dry_run=getattr(args.dry_run)
-            )
+        return NeuralRenderer(
+            beam=args.render_beam,
+            resolution=args.render_resolution,
+            frames=args.render_num_frames,
+            speed=args.render_angular_speed,
+            raymarching_steps=args.render_raymarching_steps,
+            path_gen=get_trajectory(args.render_path_style)(
+                **eval(args.render_path_args)
+            ),
+            at=eval(args.render_at_vector),
+            up=eval(args.render_up_vector),
+            fps=getattr(args, "render_save_fps", 24),
+            output_dir=args.render_output if args.render_output is not None
+                else os.path.join(args.path, "output"),
+            output_type=args.render_output_types,
+            test_camera_poses=getattr(args, "render_camera_poses", None),
+            test_camera_intrinsics=getattr(args, "render_camera_intrinsics", None),
+            test_camera_views=getattr(args, "render_views", None),
+            dry_run=getattr(args.dry_run)
+        )
 
     def setup_trainer(self, trainer):
         # give the task ability to access the global trainer functions
@@ -366,3 +340,88 @@ class SingleObjRenderingTask(FairseqTask):
         if sample is None:
             sample = self._dummy_batch
         return sample
+
+
+@register_task("single_object_light_rendering")
+class SingleObjLightRenderingTask(SingleObjRenderingTask):
+    @staticmethod
+    def add_args(parser):
+        super(SingleObjLightRenderingTask, SingleObjLightRenderingTask).add_args(parser)
+
+        # parser.add_argument('--with-point-light', action='store_true',
+        #                     help='texture field uses point light data')
+
+
+    def load_dataset(self, split, **kwargs):
+        """
+        Load a given dataset split (train, valid, test)
+        """
+        self.datasets[split] = ShapeViewLightDataset(
+            self.train_data if split == 'train' else \
+                self.val_data if split == 'valid' else self.test_data,
+            views=self.train_views if split == 'train' else \
+                self.valid_views if split == 'valid' else self.test_views,
+            num_view=self.args.view_per_batch if split == 'train' else \
+                self.args.valid_view_per_batch if split == 'valid' else 1,
+            resolution=self.args.view_resolution if split == 'train' else \
+                getattr(self.args, "valid_view_resolution", self.args.view_resolution) if split == 'valid' else \
+                    getattr(self.args, "render_resolution", self.args.view_resolution),
+            subsample_valid=self.args.subsample_valid if split == 'valid' else -1,
+            train=(split=='train'),
+            load_depth=self.args.load_depth and (split!='test'),
+            load_mask=self.args.load_mask and (split!='test'),
+            repeat=self.repeat_dataset(split),
+            preload=(not getattr(self.args, "no_preload", False)) and (split!='test'),
+            binarize=(not getattr(self.args, "no_load_binary", False)) and (split!='test'),
+            bg_color=getattr(self.args, "transparent_background", "1,1,1"),
+            min_color=getattr(self.args, "min_color", -1),
+            preprocess=getattr(self.args, "preprocess", 'none'),
+            ids=self.object_ids
+        )
+
+        # The following is the copy-pasta from SingleObjRenderingTask
+        if split == 'train':
+            max_step = getattr(self.args, "virtual_epoch_steps", None)
+            if max_step is not None:
+                total_num_models = max_step * self.args.distributed_world_size * self.args.max_sentences
+            else:
+                total_num_models = 10000000
+
+            if getattr(self.args, "pruning_rerun_train_set", False):
+                self._unique_trainset = ShapeViewStreamDataset(copy.deepcopy(self.datasets[split]))  # backup
+                self._unique_trainitr = self.get_batch_iterator(
+                    self._unique_trainset, max_sentences=self.args.max_sentences_valid, seed=self.args.seed,
+                    num_shards=self.args.distributed_world_size, shard_id=self.args.distributed_rank,
+                    num_workers=self.args.num_workers)
+            self.datasets[split] = InfiniteDataset(self.datasets[split], total_num_models)
+
+        if split == 'valid':
+            self.datasets[split] = ShapeViewStreamDataset(self.datasets[split])
+
+
+    def build_generator(self, args):
+        """
+        build a neural renderer for visualization
+        """
+        return LightNeuralRenderer(
+            beam=args.render_beam,
+            resolution=args.render_resolution,
+            frames=args.render_num_frames,
+            speed=args.render_angular_speed,
+            raymarching_steps=args.render_raymarching_steps,
+            path_gen=get_trajectory(args.render_path_style)(
+                **eval(args.render_path_args)
+            ),
+            moving_light=args.render_path_light,
+            targets_path=args.targets_path,
+            at=eval(args.render_at_vector),
+            up=eval(args.render_up_vector),
+            fps=getattr(args, "render_save_fps", 24),
+            output_dir=args.render_output if args.render_output is not None
+                else os.path.join(args.path, "output"),
+            output_type=args.render_output_types,
+            test_camera_poses=getattr(args, "render_camera_poses", None),
+            test_camera_intrinsics=getattr(args, "render_camera_intrinsics", None),
+            test_camera_views=getattr(args, "render_views", None),
+            dry_run=args.render_dry_run
+        )

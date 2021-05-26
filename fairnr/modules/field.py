@@ -123,18 +123,11 @@ class RaidanceField(Field):
 
     def build_texture_renderer(self, args):
         tex_input_dim = sum(self.tex_input_dims)
-        if not getattr(args, "with_point_light", False):
-            self.renderer = TextureField(
-                tex_input_dim, args.texture_embed_dim,
-                args.texture_layers + 2 if not self.nerf_style else 2,
-                with_ln=self.with_ln if not self.nerf_style else False,
-                spec_init=True if not self.nerf_style else False)
-        else:
-            self.renderer = LightTextureField(
-                tex_input_dim, args.texture_embed_dim,
-                args.texture_layers + 2 if not self.nerf_style else 2,
-                with_ln=self.with_ln if not self.nerf_style else False,
-                spec_init=True if not self.nerf_style else False)
+        self.renderer = TextureField(
+            tex_input_dim, args.texture_embed_dim,
+            args.texture_layers + 2 if not self.nerf_style else 2,
+            with_ln=self.with_ln if not self.nerf_style else False,
+            spec_init=True if not self.nerf_style else False)
 
     def parse_inputs(self, arguments):
         def fillup(p):
@@ -287,6 +280,21 @@ class RaidanceField(Field):
                 inputs['texture'] = torch.sigmoid(inputs['texture'])
             
         return inputs
+
+
+
+
+@register_field('radiance_light_field')
+class RaidanceLightField(RaidanceField):
+    def build_texture_renderer(self, args):
+        tex_input_dim = sum(self.tex_input_dims)
+        self.renderer = LightTextureField(
+            tex_input_dim, args.texture_embed_dim,
+            args.texture_layers + 2 if not self.nerf_style else 2,
+            with_ln=self.with_ln if not self.nerf_style else False,
+            spec_init=True if not self.nerf_style else False)
+
+
 
 
 @register_field('sdf_radiance_field')

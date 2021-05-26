@@ -9,24 +9,26 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "rocket_random_png"
+DATA = "rocket_static_png"
 NAME = "test"  # postfix for dataset name
-RES = "128x128"
+RES = "64x64"
 PIXELS_PER_VIEW = '80'#'80'  # should be powers of 2 (?)
-VIEW_PER_BATCH = '2'
+VIEW_PER_BATCH = '8'
 SCENE_SCALE = '1.0'
 
 USE_OCTREE = True
 USE_CPU = False  # WARNING: does not work on CPU
 CHUNK_SIZE = '256'#'256'  # > 1 to save memory to time
-LR = '0.0005'  # 0.001
+LR = '0.001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
-WITH_LIGHT = True
-ARCH = "mlnrf_base"# ARCH = "nsvf_base"
+ARCH = "mlnrf_base"
+TASK = 'single_object_light_rendering'
+# ARCH = "nsvf_base"
+# TASK = 'single_object_rendering'
 
 SUFFIX = "v1"
-DATASET = "/home/mazlov/documents/thesis/codes/blender/" + DATA  # "data/Synthetic_NeRF/" + DATA
+DATASET = "datasets/" + DATA  # "data/Synthetic_NeRF/" + DATA
 SAVE = "checkpoint/" + DATA + (('_' + NAME) if NAME else '')
 MODEL = ARCH + SUFFIX
 #TODO: VOXEL_NUM & VOXEL_SIZE might not work as intended!
@@ -53,11 +55,11 @@ NUM_BACKUPS = 10
 # create configuration file
 parameters = ''
 parameters += DATASET
-if WITH_LIGHT:
-	parameters += '\n--with-point-light'
-	parameters += '\n--inputs-to-texture "feat:0:256,ray:4,light:4,lightd:0:1"'
+# if WITH_LIGHT:
+# 	parameters += '\n--with-point-light'
+# 	parameters += '\n--inputs-to-texture "feat:0:256,ray:4,light:4,lightd:0:1"'
 parameters += '\n--user-dir fairnr'
-parameters += '\n--task single_object_rendering'
+parameters += '\n--task ' + TASK
 parameters += '\n--train-views "0..100"'
 parameters += '\n--chunk-size '+CHUNK_SIZE
 if 'VOXEL_NUM' in locals():
@@ -122,28 +124,3 @@ if COPY2CLIPBOARD:
 
 if INJECT_PYCHARM:
 	inject_pycharm_config('train', XML_PATH, parameters, NUM_BACKUPS)
-	# tree = ET.parse(op.abspath(XML_PATH))
-	# all_configs = tree.findall('configuration')
-	# for config in all_configs:
-	# 	if not ('name' in config.attrib) or config.get('name') != 'train': continue
-	# 	for option in config.findall('option'):
-	# 		if not ('name' in option.attrib) or option.get('name') != 'PARAMETERS': continue
-	# 		assert ('value' in option.attrib), 'Theres no VALUE attribute in this configuration! Please check!'
-	# 		option.set('value', parameters)
-	# 		break
-	# 	break
-	#
-	# # Create backup
-	# xmlDir = op.dirname(XML_PATH)
-	# backups = [int(op.splitext(f)[0].split('.')[-1]) for f in os.listdir(xmlDir) if f.endswith('.backup') and op.isfile(op.join(xmlDir, f))]
-	# lastBackup, firstBackup = (max(backups), min(backups)) if any(backups) else (0, None)
-	#
-	# copyfile(op.abspath(XML_PATH), op.abspath(XML_PATH + '.' + str(lastBackup + 1) + '.backup'))
-	#
-	# for rpt in range(2):
-	# 	tree.write(op.abspath(XML_PATH))
-	# 	time.sleep(0.5)
-	#
-	# # Delete the oldest backup
-	# if len(backups) >= NUM_BACKUPS:
-	# 	os.remove(op.abspath(XML_PATH + '.' + str(firstBackup) + '.backup'))

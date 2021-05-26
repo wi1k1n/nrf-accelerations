@@ -24,11 +24,11 @@ from fairnr.data.geometry import compute_normal_map, fill_in
 from fairnr.models.nsvf import NSVFModel
 
 
-@register_model('mlnrf')
+@register_model('mlnrfex')
 class MLNRFModel(NSVFModel):
 	READER = 'image_reader'
 	ENCODER = 'sparsevoxel_light_encoder'
-	FIELD = 'radiance_light_field'
+	FIELD = 'radiance_field'
 	RAYMARCHER = 'light_volume_renderer'
 
 	@classmethod
@@ -75,7 +75,7 @@ class MLNRFModel(NSVFModel):
 		super().clean_caches()
 
 
-@register_model_architecture("mlnrf", "mlnrf_base")
+@register_model_architecture("mlnrfex", "mlnrfex_base")
 def base_architecture(args):
 	# parameter needs to be changed
 	args.voxel_size = getattr(args, "voxel_size", None)
@@ -90,7 +90,7 @@ def base_architecture(args):
 
 	# field
 	args.inputs_to_density = getattr(args, "inputs_to_density", "emb:6:32")
-	args.inputs_to_texture = getattr(args, "inputs_to_texture", "feat:0:256,ray:4,light:4,lightd:0:1")
+	args.inputs_to_texture = getattr(args, "inputs_to_texture", "feat:0:256, ray:4")
 	args.feature_embed_dim = getattr(args, "feature_embed_dim", 256)
 	args.density_embed_dim = getattr(args, "density_embed_dim", 128)
 	args.texture_embed_dim = getattr(args, "texture_embed_dim", 256)
