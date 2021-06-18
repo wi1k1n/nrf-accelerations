@@ -726,6 +726,48 @@ class SparseVoxelLightEncoder(SparseVoxelEncoder):
     def __init__(self, args, voxel_path=None, bbox_path=None, shared_values=None):
         super().__init__(args, voxel_path, bbox_path, shared_values)
 
+
+    def light_ray_intersect(self, ray_start, ray_dir, encoder_states):
+        # almost the same as SparseVoxelEncoder.ray_intersect, except for few dimensional changes
+        point_feats = encoder_states['voxel_vertex_idx']
+        point_xyz = encoder_states['voxel_center_xyz']
+        S, V, P, _ = ray_dir.size()
+        H, D = point_feats.size()
+
+        # ray-voxel intersection
+        ray_start = ray_start.expand_as(ray_dir).contiguous().view(S, V * P, 3).contiguous()
+        ray_dir = ray_dir.reshape(S, V * P, 3).contiguous()
+
+        if self.use_octree:  # ray-voxel intersection with SVO
+            flatten_centers = encoder_states['voxel_octree_center_xyz'].unsqueeze(0)
+            flatten_children = encoder_states['voxel_octree_children_idx'].unsqueeze(0)
+            pts_idx, min_depth, max_depth = svo_ray_intersect(
+                self.voxel_size, self.max_hits, flatten_centers, flatten_children,
+                ray_start, ray_dir)
+        else:  # ray-voxel intersection with all voxels
+            pts_idx, min_depth, max_depth = aabb_ray_intersect(
+                self.voxel_size, self.max_hits, point_xyz, ray_start, ray_dir)
+
+        # sort the depths
+        min_depth.masked_fill_(pts_idx.eq(-1), MAX_DEPTH)
+        max_depth.masked_fill_(pts_idx.eq(-1), MAX_DEPTH)
+        min_depth, sorted_idx = min_depth.sort(dim=-1)
+        max_depth = max_depth.gather(-1, sorted_idx)
+        pts_idx = pts_idx.gather(-1, sorted_idx)
+        hits = pts_idx.ne(-1).any(-1)  # remove all points that completely miss the object
+
+        if S > 1:  # extend the point-index to multiple shapes (just in case)
+            pts_idx = (pts_idx + H * torch.arange(S,
+                                                  device=pts_idx.device, dtype=pts_idx.dtype)[:, None, None]
+                       ).masked_fill_(pts_idx.eq(-1), -1)
+
+        intersection_outputs = {
+            "min_depth": min_depth,
+            "max_depth": max_depth,
+            "intersected_voxel_idx": pts_idx
+        }
+        return ray_start, ray_dir, intersection_outputs, hits
+
     def forward(self, samples, encoder_states):
         inputs = super().forward(samples, encoder_states)
         if 'point_light_xyz' in samples:

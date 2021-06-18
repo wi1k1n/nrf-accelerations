@@ -9,11 +9,11 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "rocket_static_png"
+DATA = "rocket_random_png"
 NAME = "test"  # postfix for dataset name
 RES = "64x64"
-PIXELS_PER_VIEW = '80'#'80'  # should be powers of 2 (?)
-VIEW_PER_BATCH = '8'
+PIXELS_PER_VIEW = '80'
+VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
 SCENE_SCALE = '1.0'
 
 USE_OCTREE = True
@@ -22,7 +22,9 @@ CHUNK_SIZE = '256'#'256'  # > 1 to save memory to time
 LR = '0.001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
-ARCH = "mlnrf_base"
+# ARCH = "mlnrf_base"
+# TASK = 'single_object_light_rendering'
+ARCH = "mlnrfex_base"
 TASK = 'single_object_light_rendering'
 # ARCH = "nsvf_base"
 # TASK = 'single_object_rendering'

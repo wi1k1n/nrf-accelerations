@@ -95,6 +95,51 @@ class VolumeRenderer(Renderer):
         samples['sampled_point_xyz'] = sampled_xyz
         samples['sampled_point_ray_direction'] = sampled_dir
 
+        outputs = {'sample_mask': sample_mask}
+
+        ######### <LIGHT_RAYS>
+        # need to intersect light rays with the octree here first
+
+        # probably move it out to child method definition (only if the light transmittance is not used in forward pass)
+        point_light_xyz = samples['point_light_xyz']
+        light_dirs = point_light_xyz - sampled_xyz
+        light_start = sampled_xyz
+        # [shapes x views x rays x xyz]
+        light_start, light_dirs, light_intersection_outputs, light_hits = \
+            input_fn.light_ray_intersect(light_start.unsqueeze(0),
+                                         light_dirs.unsqueeze(0), encoder_states)
+
+        # [views*rays x sample_points x light_ray_voxel_intersections]
+        light_intersection_outputs = {
+            name: outs.reshape(*sampled_xyz.size()[:-1], -1) for name, outs in light_intersection_outputs.items()}
+        light_start, light_dirs = light_start.reshape(*sampled_xyz.size()), light_dirs.reshape(*sampled_xyz.size())
+        light_hits = light_hits.reshape(*sampled_xyz.size()[:2])
+
+        light_min_depth = light_intersection_outputs['min_depth']
+        light_max_depth = light_intersection_outputs['max_depth']
+        light_voxel_idx = light_intersection_outputs['intersected_voxel_idx']
+        light_mask = light_voxel_idx.ne(-1)
+
+        # voxel_size_norm = self.voxel_size * torch.sqrt(3.0)
+        # voxel_size_norm = -1.5 * torch.sqrt(3.0)
+
+        transmittances = torch.zeros(sampled_xyz.size()[:2])
+        for i, ray_hits in enumerate(light_hits):
+            for j, hit in enumerate(ray_hits):
+                if not hit: continue
+                mask = light_mask[0, 0, :]
+                min_d, max_d, idcs = light_min_depth[i, j, mask], \
+                                        light_max_depth[i, j, mask], \
+                                        light_voxel_idx[i, j, mask]
+                # transmittances[i, j] = torch.sum((max_d - min_d) / voxel_size_norm * self.voxel_sigma)
+                transmittances[i, j] = torch.exp(-torch.sum((max_d - min_d) * self.voxel_sigma))
+
+
+
+        outputs['light_transmittance'] = light_intersection_outputs['max_depth'][...,0] - light_intersection_outputs['min_depth'][...,0]
+
+        ######### </LIGHT_RAYS>
+
         # apply mask
         samples = {name: s[sample_mask] for name, s in samples.items()}# if s.shape[:2] == sample_mask.shape[:2]}
         # get encoder features as inputs
@@ -103,7 +148,6 @@ class VolumeRenderer(Renderer):
 
         # forward implicit fields
         field_outputs = field_fn(field_inputs, outputs=output_types)
-        outputs = {'sample_mask': sample_mask}
         
         def masked_scatter(mask, x):
             B, K = mask.size()
@@ -125,6 +169,8 @@ class VolumeRenderer(Renderer):
             outputs['sdf'] = masked_scatter(sample_mask, field_outputs['sdf'])
         if 'texture' in field_outputs:
             outputs['texture'] = masked_scatter(sample_mask, field_outputs['texture'])
+        # if 'R' in field_outputs:
+        #     outputs['R'] = masked_scatter(sample_mask, field_outputs['R'])
         if 'normal' in field_outputs:
             outputs['normal'] = masked_scatter(sample_mask, field_outputs['normal'])
         if 'feat_n2' in field_outputs:
@@ -213,7 +259,11 @@ class VolumeRenderer(Renderer):
             results['z'] = (original_depth * probs).sum(-1)
 
         if 'texture' in outputs:
-            results['colors'] = (outputs['texture'] * probs.unsqueeze(-1)).sum(-2)
+            # results['colors'] = (outputs['texture'] * probs.unsqueeze(-1)).sum(-2)
+            results['colors'] = probs.unsqueeze(-1).view(outputs['texture'].shape)
+
+        # if 'R' in outputs:
+        #     results['colors'] = (outputs['R'] * probs.unsqueeze(-1)).sum(-2)
         
         if 'normal' in outputs:
             results['normal'] = (outputs['normal'] * probs.unsqueeze(-1)).sum(-2)
@@ -241,7 +291,7 @@ class VolumeRenderer(Renderer):
                     {name: s[i: i+chunk_size] for name, s in samples.items()}, *args, **kwargs)
                 for i in range(0, ray_start.size(0), chunk_size)
             ]
-            results = {name: torch.cat([r[name] for r in results], 0) 
+            results = {name: torch.cat([r[name] for r in results], 0)
                         if results[0][name].dim() > 0 else sum([r[name] for r in results])
                     for name in results[0]}
 
@@ -251,6 +301,10 @@ class VolumeRenderer(Renderer):
 
 @register_renderer('light_volume_renderer')
 class LightVolumeRenderer(VolumeRenderer):
+    def __init__(self, args):
+        super().__init__(args)
+        self.voxel_sigma = getattr(args, "voxel_sigma", -0.5)
+
     def forward(self, input_fn, field_fn, ray_start, ray_dir, samples, *args, **kwargs):
         viewsN = kwargs['view'].shape[-1]
         pixelsPerView = int(kwargs['hits'].shape[-1] / viewsN)
@@ -267,6 +321,124 @@ class LightVolumeRenderer(VolumeRenderer):
 
         results = super().forward(input_fn, field_fn, ray_start, ray_dir, samples, *args, **kwargs)
         return results
+
+    def forward_chunk(self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+            gt_depths=None, output_types=['sigma', 'texture'], global_weights=None, **kwargs):
+        return super().forward_chunk(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+            gt_depths, output_types, global_weights, **kwargs)
+
+        # need to intersect light rays with the octree here first
+        # input_fn.ray_intersect(ray_start, ray_dir, encoder_states)
+
+
+        # this is the same code as in VolumeRenderer
+        if self.trace_normal:
+            output_types += ['normal']
+
+        sampled_depth = samples['sampled_point_depth']
+        sampled_idx = samples['sampled_point_voxel_idx'].long()
+        original_depth = samples.get('original_point_depth', None)
+
+        tolerance = self.raymarching_tolerance
+        chunk_size = self.chunk_size if self.training else self.valid_chunk_size
+        early_stop = None
+        if tolerance > 0:
+            tolerance = -math.log(tolerance)
+
+        hits = sampled_idx.ne(-1).long()
+        outputs = defaultdict(lambda: [])
+        size_so_far, start_step = 0, 0
+        accumulated_free_energy = 0
+        accumulated_evaluations = 0
+        for i in range(hits.size(1) + 1):
+            if ((i == hits.size(1)) or (size_so_far + hits[:, i].sum() > chunk_size)) and (i > start_step):
+                _outputs, _evals = self.forward_once(
+                    input_fn, field_fn,
+                    ray_start, ray_dir,
+                    {name: s[:, start_step: i]
+                     for name, s in samples.items()},
+                    encoder_states,
+                    early_stop=early_stop,
+                    output_types=output_types)
+                if _outputs is not None:
+                    accumulated_evaluations += _evals
+
+                    if 'free_energy' in _outputs:
+                        accumulated_free_energy += _outputs['free_energy'].sum(1)
+                        if tolerance > 0:
+                            early_stop = accumulated_free_energy > tolerance
+                            hits[early_stop] *= 0
+
+                    for key in _outputs:
+                        outputs[key] += [_outputs[key]]
+                else:
+                    for key in outputs:
+                        outputs[key] += [outputs[key][-1].new_zeros(
+                            outputs[key][-1].size(0),
+                            sampled_depth[:, start_step: i].size(1),
+                            *outputs[key][-1].size()[2:]
+                        )]
+                start_step, size_so_far = i, 0
+
+            if (i < hits.size(1)):
+                size_so_far += hits[:, i].sum()
+
+        outputs = {key: torch.cat(outputs[key], 1) for key in outputs}
+        results = {}
+
+        if 'free_energy' in outputs:
+            free_energy = outputs['free_energy']
+            shifted_free_energy = torch.cat([free_energy.new_zeros(sampled_depth.size(0), 1), free_energy[:, :-1]],
+                                            dim=-1)  # shift one step
+            a = 1 - torch.exp(-free_energy.float())  # probability of it is not empty here
+            b = torch.exp(
+                -torch.cumsum(shifted_free_energy.float(), dim=-1))  # probability of everything is empty up to now
+            probs = (a * b).type_as(free_energy)  # probability of the ray hits something here
+        else:
+            probs = outputs['sample_mask'].type_as(sampled_depth) / sampled_depth.size(
+                -1)  # assuming a uniform distribution
+
+        if global_weights is not None:
+            probs = probs * global_weights
+
+        depth = (sampled_depth * probs).sum(-1)
+        missed = 1 - probs.sum(-1)
+
+        results.update({
+            'probs': probs, 'depths': depth,
+            'max_depths': sampled_depth.masked_fill(hits.eq(0), -1).max(1).values,
+            'min_depths': sampled_depth.min(1).values,
+            'missed': missed, 'ae': accumulated_evaluations
+        })
+        if original_depth is not None:
+            results['z'] = (original_depth * probs).sum(-1)
+
+        if 'texture' in outputs:
+            # results['colors'] = (outputs['texture'] * probs.unsqueeze(-1)).sum(-2)
+            results['colors'] = probs.unsqueeze(-1).view(outputs['texture'].shape)
+
+        # if 'R' in outputs:
+        #     results['colors'] = (outputs['R'] * probs.unsqueeze(-1)).sum(-2)
+
+        if 'normal' in outputs:
+            results['normal'] = (outputs['normal'] * probs.unsqueeze(-1)).sum(-2)
+            if not self.trace_normal:
+                results['eikonal-term'] = (outputs['normal'].norm(p=2, dim=-1) - 1) ** 2
+            else:
+                results['eikonal-term'] = torch.log((outputs['normal'] ** 2).sum(-1) + 1e-6)
+            results['eikonal-term'] = results['eikonal-term'][sampled_idx.ne(-1)]
+
+        if 'feat_n2' in outputs:
+            results['feat_n2'] = (outputs['feat_n2'] * probs).sum(-1)
+            results['regz-term'] = outputs['feat_n2'][sampled_idx.ne(-1)]
+
+        return results
+
+    def forward_once(
+        self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+        early_stop=None, output_types=['sigma', 'texture']):
+        return super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+        early_stop, output_types)
 
 @register_renderer('surface_volume_rendering')
 class SurfaceVolumeRenderer(VolumeRenderer):

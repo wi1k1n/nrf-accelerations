@@ -152,6 +152,19 @@ class LightTextureField(ImplicitField):
         super().__init__(in_dim, out_dim, hidden_dim, num_layers,
             outmost_linear=True, with_ln=with_ln, spec_init=spec_init)
 
+class ExplicitLightTextureField(ImplicitField):
+    """
+    Pixel generator based on 1x1 conv networks
+    """
+    def __init__(self, in_dim, hidden_dim, num_layers,
+                with_ln=True, spec_init=True):
+        out_dim = 4
+        super().__init__(in_dim, out_dim, hidden_dim, num_layers,
+            outmost_linear=True, with_ln=with_ln, spec_init=spec_init)
+
+    def forward(self, x):
+        y = super().forward(x)
+        return y
 
 # ------------------ #
 # helper functions   #

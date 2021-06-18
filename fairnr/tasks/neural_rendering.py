@@ -228,7 +228,7 @@ class SingleObjRenderingTask(FairseqTask):
             test_camera_poses=getattr(args, "render_camera_poses", None),
             test_camera_intrinsics=getattr(args, "render_camera_intrinsics", None),
             test_camera_views=getattr(args, "render_views", None),
-            dry_run=getattr(args.dry_run)
+            dry_run=args.render_dry_run
         )
 
     def setup_trainer(self, trainer):

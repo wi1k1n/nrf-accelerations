@@ -12,7 +12,7 @@ import torch.nn.functional as F
 from torch.autograd import grad
 from collections import OrderedDict
 from fairnr.modules.implicit import (
-    ImplicitField, SignedDistanceField, LightTextureField,
+    ImplicitField, SignedDistanceField, LightTextureField, ExplicitLightTextureField,
     TextureField, HyperImplicitField, BackgroundField
 )
 from fairnr.modules.module_utils import NeRFPosEmbLinear
@@ -294,6 +294,47 @@ class RaidanceLightField(RaidanceField):
             with_ln=self.with_ln if not self.nerf_style else False,
             spec_init=True if not self.nerf_style else False)
 
+@register_field('radiance_explicit_light_field')
+class RaidanceExplicitLightField(RaidanceField):
+    def __init__(self, args):
+        super().__init__(args)
+        self.bg_color = BackgroundField(out_dim=4, bg_color=self.trans_bg, min_color=self.min_color, stop_grad=self.sgbg)
+
+    def build_texture_renderer(self, args):
+        tex_input_dim = sum(self.tex_input_dims)
+        self.renderer = ExplicitLightTextureField(
+            tex_input_dim, args.texture_embed_dim,
+            args.texture_layers + 2 if not self.nerf_style else 2,
+            with_ln=self.with_ln if not self.nerf_style else False,
+            spec_init=True if not self.nerf_style else False)
+
+    @torch.enable_grad()  # tracking the gradient in case we need to have normal at testing time.
+    def forward(self, inputs, outputs=['sigma', 'texture']):
+        texInOutputs = 'texture' in outputs
+        if texInOutputs:
+            outputs.remove('texture')
+        inputs = super().forward(inputs, outputs)
+
+        # This should probably be placed in super().forward() and the whole BRDF thing
+        # is implemented in ExplicitLightTextureField.forward(x) (but how to handle l,v,n arguments?)
+        if texInOutputs:
+            filtered_inputs = []
+            if self.zero_z == 1:
+                inputs['feat'] = inputs['feat'] * 0.0  # zero-out latent feature
+            inputs['feat_n2'] = (inputs['feat'] ** 2).sum(-1)
+
+            for i, name in enumerate(self.tex_filters):
+                d_in, func = self.tex_ori_dims[i], self.tex_filters[name]
+                assert (name in inputs), "the encoder must contain target inputs"
+                filtered_inputs += [func(inputs[name])] if name != 'sigma' else [func(inputs[name].unsqueeze(-1))]
+
+            filtered_inputs = torch.cat(filtered_inputs, -1)
+            inputs['texture'] = self.renderer(filtered_inputs)
+
+            if self.min_color == 0:
+                inputs['texture'] = torch.sigmoid(inputs['texture'])
+
+        return inputs
 
 
 

@@ -34,11 +34,6 @@ class MLNRFModel(NSVFModel):
 	@classmethod
 	def add_args(cls, parser):
 		super().add_args(parser)
-		# parser.add_argument('--fine-num-sample-ratio', type=float, default=0,
-		# 					help='raito of samples compared to the first pass')
-		# parser.add_argument('--inverse-distance-coarse-sampling', type=str,
-		# 					choices=['none', 'camera', 'origin'], default='none',
-		# 					help='if set, we do not sample points uniformly through voxels.')
 
 	def intersecting(self, ray_start, ray_dir, encoder_states, **kwargs):
 		return super().intersecting(ray_start, ray_dir, encoder_states, **kwargs)

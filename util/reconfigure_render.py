@@ -9,27 +9,31 @@ SAVE_FILE = True
 
 DATA = "rocket_random_png"
 NAME = ""  # postfix for dataset name
-RENDER_OUTPUT = "output"  # output if empty
+RENDER_OUTPUT = "output_test"  # output if empty
 RES = "256x256"
-RENDER_PATH_LIGHT = True  # True - light source is moving, false - camera is moving
+RENDER_PATH_LIGHT = False  # True - light source is moving, false - camera is moving
 NUM_FRAMES = '180'
-TARGETS_PATH = '/home/mazlov/documents/thesis/codes/blender/' + DATA + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
+TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/' + DATA + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
 DRY_RUN = False  # only create camera/light positions and do not evaluate model
 
 CHUNK_SIZE = '256'
 RENDER_BEAM = '4'  # should be an even divisor of NUM_FRAMES TODO: fix it
 
-WITH_LIGHT = True
-ARCH = "mlnrf_base"# ARCH = "nsvf_base"
+# WITH_LIGHT = True
+ARCH = "mlnrf_base"
+TASK = 'single_object_light_rendering'
+# ARCH = "nsvf_base"
+# TASK = 'single_object_rendering'
 
 SUFFIX = "v1"
-DATASET = "/home/mazlov/documents/thesis/codes/blender/" + DATA  # "data/Synthetic_NeRF/" + DATA
+DATASET = "datasets/" + DATA  # "data/Synthetic_NeRF/" + DATA
 SAVE = "checkpoint/" + DATA + (('_' + NAME) if NAME else '')
 MODEL = ARCH + SUFFIX
 MODEL_PATH = SAVE + '/' + MODEL + '/checkpoint_last.pt'
 
 ## Rocket
-RENDER_PATH_ARGS = '{\'radius\':1.5,\'h\':3,\'o\':(-0.1,0.05,1.25)}'
+# RENDER_PATH_ARGS = '{\'radius\':1.5,\'h\':3,\'o\':(-0.1,0.05,1.25)}'  # top diagonal view
+RENDER_PATH_ARGS = '{\'radius\':4.5,\'h\':0.0,\'o\':(-0.1,0.05,1.25)}'
 RENDER_AT_VECTOR = '"(-0.1,0.05,1.25)"'
 ## Guitar
 # RENDER_PATH_ARGS = '{\'radius\':0.8,\'h\':1.0,\'o\':(0,-0.06,0.5)}'
@@ -58,16 +62,17 @@ NUM_BACKUPS = 10
 parameters = ''
 parameters += DATASET
 parameters += '\n--path ' + MODEL_PATH
+parameters += '\n--task ' + TASK
 if not RENDER_OUTPUT: RENDER_OUTPUT = "output"
 parameters += '\n--render-output ' + SAVE + '/' + ARCH + '/' + RENDER_OUTPUT + ('_light' if RENDER_PATH_LIGHT else '_cam')
 parameters += '\n--render-path-style ' + RENDER_PATH_STYLE
 parameters += '\n--render-path-args ' + RENDER_PATH_ARGS
 parameters += '\n--render-at-vector ' + RENDER_AT_VECTOR
 parameters += '\n--render-angular-speed ' + RENDER_SPEED
-if WITH_LIGHT:
-	parameters += '\n--with-point-light'
-	if RENDER_PATH_LIGHT:
-		parameters += '\n--render-path-light'
+# if WITH_LIGHT:
+# 	parameters += '\n--with-point-light'
+if RENDER_PATH_LIGHT:
+	parameters += '\n--render-path-light'
 parameters += '\n--render-num-frames ' + NUM_FRAMES
 if TARGETS_PATH:
 	parameters += '\n--targets-path ' + TARGETS_PATH

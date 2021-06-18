@@ -25,27 +25,22 @@ from fairnr.models.nsvf import NSVFModel
 
 
 @register_model('mlnrfex')
-class MLNRFModel(NSVFModel):
+class MLNRFExModel(NSVFModel):
 	READER = 'image_reader'
 	ENCODER = 'sparsevoxel_light_encoder'
-	FIELD = 'radiance_field'
+	FIELD = 'radiance_explicit_light_field'
 	RAYMARCHER = 'light_volume_renderer'
 
 	@classmethod
 	def add_args(cls, parser):
 		super().add_args(parser)
-		# parser.add_argument('--fine-num-sample-ratio', type=float, default=0,
-		# 					help='raito of samples compared to the first pass')
-		# parser.add_argument('--inverse-distance-coarse-sampling', type=str,
-		# 					choices=['none', 'camera', 'origin'], default='none',
-		# 					help='if set, we do not sample points uniformly through voxels.')
 
 	def intersecting(self, ray_start, ray_dir, encoder_states, **kwargs):
 		return super().intersecting(ray_start, ray_dir, encoder_states, **kwargs)
 
 	def raymarching(self, ray_start, ray_dir, intersection_outputs, encoder_states, fine=False, **kwargs):
-		return super().raymarching(ray_start, ray_dir, intersection_outputs, encoder_states, fine, **kwargs)
-		return None
+		return super().raymarching(ray_start, ray_dir, intersection_outputs, encoder_states, fine,
+									output_types=['sigma', 'texture'], **kwargs)
 
 	def prepare_hierarchical_sampling(self, intersection_outputs, samples, all_results):
 		return super().prepare_hierarchical_sampling(intersection_outputs, samples, all_results)

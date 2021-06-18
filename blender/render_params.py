@@ -37,11 +37,11 @@ options_render = {
 
 	"PATH_MODEL": 'models/rocket.blend',
 	"DATASET_NAME": 'rocket_random_png',
-	"MOVING_TYPE": 'light',
-	# "MOVING_TYPE": 'cam',
+	# "MOVING_TYPE": 'light',
+	"MOVING_TYPE": 'cam',
 
 	"OUTPUT_DIR": '%DATASET_NAME%_target_%MOVING_TYPE%',
-	"PRESET_VIEWS_FOLDER": 'checkpoints/%DATASET_NAME%/mlnrf_base/output_%MOVING_TYPE%',
+	"PRESET_VIEWS_FOLDER": 'checkpoints/%DATASET_NAME%/mlnrf_base/output_middle_%MOVING_TYPE%',
 	"VIEWS_PATH": '%PRESET_VIEWS_FOLDER%/pose',
 	"LIGHTS_PATH": '%PRESET_VIEWS_FOLDER%/pose_pl',
 
