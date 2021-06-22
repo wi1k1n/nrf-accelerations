@@ -8,16 +8,16 @@ INJECT_PYCHARM = True
 SAVE_FILE = True
 
 DATA = "rocket_random_png"
-NAME = ""  # postfix for dataset name
+NAME = "test"  # postfix for dataset name
 RENDER_OUTPUT = "output_test"  # output if empty
-RES = "256x256"
+RES = "128x128"
 RENDER_PATH_LIGHT = False  # True - light source is moving, false - camera is moving
 NUM_FRAMES = '180'
 TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/' + DATA + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
 DRY_RUN = False  # only create camera/light positions and do not evaluate model
 
 CHUNK_SIZE = '256'
-RENDER_BEAM = '4'  # should be an even divisor of NUM_FRAMES TODO: fix it
+RENDER_BEAM = '2'  # should be an even divisor of NUM_FRAMES TODO: fix it
 
 # WITH_LIGHT = True
 ARCH = "mlnrf_base"

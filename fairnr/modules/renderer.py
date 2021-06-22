@@ -13,6 +13,9 @@ import torch.nn.functional as F
 from fairnr.modules.module_utils import FCLayer
 from fairnr.data.geometry import ray
 
+import logging
+logger = logging.getLogger(__name__)
+
 MAX_DEPTH = 10000.0
 RENDERER_REGISTRY = {}
 
@@ -112,31 +115,27 @@ class VolumeRenderer(Renderer):
         # [views*rays x sample_points x light_ray_voxel_intersections]
         light_intersection_outputs = {
             name: outs.reshape(*sampled_xyz.size()[:-1], -1) for name, outs in light_intersection_outputs.items()}
-        light_start, light_dirs = light_start.reshape(*sampled_xyz.size()), light_dirs.reshape(*sampled_xyz.size())
-        light_hits = light_hits.reshape(*sampled_xyz.size()[:2])
+        # light_start, light_dirs = light_start.reshape(*sampled_xyz.size()), light_dirs.reshape(*sampled_xyz.size())
+        # light_hits = light_hits.reshape(*sampled_xyz.size()[:2])
 
         light_min_depth = light_intersection_outputs['min_depth']
         light_max_depth = light_intersection_outputs['max_depth']
         light_voxel_idx = light_intersection_outputs['intersected_voxel_idx']
         light_mask = light_voxel_idx.ne(-1)
 
-        # voxel_size_norm = self.voxel_size * torch.sqrt(3.0)
-        # voxel_size_norm = -1.5 * torch.sqrt(3.0)
+        # transmittances = torch.zeros(sampled_xyz.size()[:2]).to(sampled_xyz.device)
+        # for i, ray_hits in enumerate(light_hits):
+        #     for j, hit in enumerate(ray_hits):
+        #         if not hit: continue
+        #         mask = light_mask[0, 0, :]
+        #         min_d, max_d, idcs = light_min_depth[i, j, mask], \
+        #                                 light_max_depth[i, j, mask], \
+        #                                 light_voxel_idx[i, j, mask]
+        #         # transmittances[i, j] = torch.sum((max_d - min_d) / voxel_size_norm * self.voxel_sigma)
+        #         transmittances[i, j] = torch.exp(-torch.sum((max_d - min_d) * self.voxel_sigma))
+        # outputs['light_transmittance'] = transmittances
 
-        transmittances = torch.zeros(sampled_xyz.size()[:2])
-        for i, ray_hits in enumerate(light_hits):
-            for j, hit in enumerate(ray_hits):
-                if not hit: continue
-                mask = light_mask[0, 0, :]
-                min_d, max_d, idcs = light_min_depth[i, j, mask], \
-                                        light_max_depth[i, j, mask], \
-                                        light_voxel_idx[i, j, mask]
-                # transmittances[i, j] = torch.sum((max_d - min_d) / voxel_size_norm * self.voxel_sigma)
-                transmittances[i, j] = torch.exp(-torch.sum((max_d - min_d) * self.voxel_sigma))
-
-
-
-        outputs['light_transmittance'] = light_intersection_outputs['max_depth'][...,0] - light_intersection_outputs['min_depth'][...,0]
+        outputs['light_transmittance'] = torch.exp(-torch.sum((light_max_depth - light_min_depth) * self.voxel_sigma, axis=-1))
 
         ######### </LIGHT_RAYS>
 
@@ -158,7 +157,8 @@ class VolumeRenderer(Renderer):
         
         # post processing
         if 'sigma' in field_outputs:
-            sigma, sampled_dists= field_outputs['sigma'], field_inputs['dists']
+            sigma, sampled_dists = field_outputs['sigma'], field_inputs['dists']
+            # logger.info("Sigmas: {0}...{1}; <{2}>".format(sigma.min(), sigma.max(), sigma.mean()))
             noise = 0 if not self.discrete_reg and (not self.training) else torch.zeros_like(sigma).normal_()  
             free_energy = torch.relu(noise + sigma) * sampled_dists   
             free_energy = free_energy * 7.0  # ? [debug] 
@@ -259,11 +259,10 @@ class VolumeRenderer(Renderer):
             results['z'] = (original_depth * probs).sum(-1)
 
         if 'texture' in outputs:
-            # results['colors'] = (outputs['texture'] * probs.unsqueeze(-1)).sum(-2)
-            results['colors'] = probs.unsqueeze(-1).view(outputs['texture'].shape)
-
-        # if 'R' in outputs:
-        #     results['colors'] = (outputs['R'] * probs.unsqueeze(-1)).sum(-2)
+            compClr = outputs['texture'] * probs.unsqueeze(-1)
+            if 'light_transmittance' in outputs:
+                compClr = compClr * outputs['light_transmittance'].unsqueeze(-1)
+            results['colors'] = compClr.sum(-2)
         
         if 'normal' in outputs:
             results['normal'] = (outputs['normal'] * probs.unsqueeze(-1)).sum(-2)
@@ -303,7 +302,7 @@ class VolumeRenderer(Renderer):
 class LightVolumeRenderer(VolumeRenderer):
     def __init__(self, args):
         super().__init__(args)
-        self.voxel_sigma = getattr(args, "voxel_sigma", -0.5)
+        self.voxel_sigma = getattr(args, "voxel_sigma", 0.5)
 
     def forward(self, input_fn, field_fn, ray_start, ray_dir, samples, *args, **kwargs):
         viewsN = kwargs['view'].shape[-1]

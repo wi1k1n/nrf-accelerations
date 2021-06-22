@@ -22,10 +22,10 @@ CHUNK_SIZE = '256'#'256'  # > 1 to save memory to time
 LR = '0.001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
-# ARCH = "mlnrf_base"
-# TASK = 'single_object_light_rendering'
-ARCH = "mlnrfex_base"
+ARCH = "mlnrf_base"
 TASK = 'single_object_light_rendering'
+# ARCH = "mlnrfex_base"
+# TASK = 'single_object_light_rendering'
 # ARCH = "nsvf_base"
 # TASK = 'single_object_rendering'
 

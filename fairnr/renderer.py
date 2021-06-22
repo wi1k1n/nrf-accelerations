@@ -314,7 +314,7 @@ class LightNeuralRenderer(NeuralRenderer):
         imgs = []
         if self.targets_path:
             curImgFilename = os.path.join(self.targets_path, image_name + '.png')
-            if not os.path.exists(curImgFilename):
+            if not self.dry_run and not os.path.exists(curImgFilename):
                 raise FileNotFoundError('The --targets-path option is specified, but there is no ' + curImgFilename + ' file')
             imgs.append(curImgFilename)
         return imgs
