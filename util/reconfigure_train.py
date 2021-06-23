@@ -22,12 +22,17 @@ CHUNK_SIZE = '256'#'256'  # > 1 to save memory to time
 LR = '0.001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
-ARCH = "mlnrf_base"
-TASK = 'single_object_light_rendering'
-# ARCH = "mlnrfex_base"
-# TASK = 'single_object_light_rendering'
-# ARCH = "nsvf_base"
+# ARCH = "nsvf_base"  # Original NSVF from facebook
 # TASK = 'single_object_rendering'
+
+# ARCH = "mlnrf_base"  # Implicit model with ignoring light interaction
+# TASK = 'single_object_light_rendering'
+
+# ARCH = "mlnrfiva_base"  # Implicit model with InVoxelApproximation light interaction
+# TASK = 'single_object_light_rendering'
+
+ARCH = "mlnrfex_base"  # Explicit model with ignoring light interaction
+TASK = 'single_object_light_rendering'
 
 SUFFIX = "v1"
 DATASET = "datasets/" + DATA  # "data/Synthetic_NeRF/" + DATA

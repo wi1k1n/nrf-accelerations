@@ -16,6 +16,7 @@ from fairnr.modules.implicit import (
     TextureField, HyperImplicitField, BackgroundField
 )
 from fairnr.modules.module_utils import NeRFPosEmbLinear
+from fairnr.modules.brdf import Microfacet
 
 FIELD_REGISTRY = {}
 
@@ -308,6 +309,8 @@ class RaidanceExplicitLightField(RaidanceField):
             with_ln=self.with_ln if not self.nerf_style else False,
             spec_init=True if not self.nerf_style else False)
 
+        self.brdf = Microfacet(default_rough=0.3, lambert_only=False, f0=0.91)
+
     @torch.enable_grad()  # tracking the gradient in case we need to have normal at testing time.
     def forward(self, inputs, outputs=['sigma', 'texture']):
         texInOutputs = 'texture' in outputs
@@ -329,7 +332,8 @@ class RaidanceExplicitLightField(RaidanceField):
                 filtered_inputs += [func(inputs[name])] if name != 'sigma' else [func(inputs[name].unsqueeze(-1))]
 
             filtered_inputs = torch.cat(filtered_inputs, -1)
-            inputs['texture'] = self.renderer(filtered_inputs)
+            brdf_params = self.renderer(filtered_inputs)
+            inputs['texture'] = self.brdf(None, None, None, None)
 
             if self.min_color == 0:
                 inputs['texture'] = torch.sigmoid(inputs['texture'])

@@ -222,7 +222,7 @@ class VolumeRenderer(Renderer):
         if 'texture' in outputs:
             compClr = outputs['texture'] * probs.unsqueeze(-1)
             if 'light_transmittance' in outputs:
-                compClr = compClr * outputs['light_transmittance'].unsqueeze(-1)
+                compClr = compClr * (outputs['light_transmittance'] * samples['point_light_intensity']).unsqueeze(-1)
             results['colors'] = compClr.sum(-2)
         
         if 'normal' in outputs:
@@ -263,7 +263,7 @@ class VolumeRenderer(Renderer):
 class LightVolumeRenderer(VolumeRenderer):
     def __init__(self, args):
         super().__init__(args)
-        self.voxel_sigma = getattr(args, "voxel_sigma", 0.5)
+        self.light_intensity = torch.Tensor([2]).to(self.args.device_id)
 
     def forward(self, input_fn, field_fn, ray_start, ray_dir, samples, *args, **kwargs):
         viewsN = kwargs['view'].shape[-1]
@@ -277,7 +277,8 @@ class LightVolumeRenderer(VolumeRenderer):
 
         plXYZExpanded = torch.repeat_interleave(plXYZ[0, :, :, 0], pixelsPerView, 0)[:, None, :3].expand(-1, voxelsN, -1)
         # plCYZExpanded.shape: viewsN * pixelsPerView x voxelsN x 3
-        samples.update({'point_light_xyz': plXYZExpanded[None, ...][kwargs['hits']]})
+        samples.update({'point_light_xyz': plXYZExpanded[None, ...][kwargs['hits']],
+                        'point_light_intensity': self.light_intensity.expand(samples['sampled_point_distance'].shape)})
 
         results = super().forward(input_fn, field_fn, ray_start, ray_dir, samples, *args, **kwargs)
         return results
@@ -290,7 +291,25 @@ class LightVolumeRenderer(VolumeRenderer):
     def forward_once(
         self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
         early_stop=None, output_types=['sigma', 'texture']):
+        outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+                                                early_stop, output_types)
+        return outputs, _evals
 
+
+@register_renderer('light_iva_volume_renderer')
+class LightIVAVolumeRenderer(LightVolumeRenderer):
+    def __init__(self, args):
+        super().__init__(args)
+        self.voxel_sigma = getattr(args, "voxel_sigma", 0.5)
+
+    def forward_chunk(self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+            gt_depths=None, output_types=['sigma', 'texture'], global_weights=None, **kwargs):
+        return super().forward_chunk(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+            gt_depths, output_types, global_weights, **kwargs)
+
+    def forward_once(
+            self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+            early_stop=None, output_types=['sigma', 'texture']):
         ######### <LIGHT_RAYS>
         # need to intersect light rays with the octree here first
         sampled_xyz = ray(ray_start.unsqueeze(1), ray_dir.unsqueeze(1), samples['sampled_point_depth'].unsqueeze(2))
@@ -322,7 +341,7 @@ class LightVolumeRenderer(VolumeRenderer):
         #         if not hit: continue
         #         mask = light_mask[0, 0, :]
         #         min_d, max_d = light_min_depth[i, j, mask], \
-#                                 light_max_depth[i, j, mask]
+        #                                 light_max_depth[i, j, mask]
         #         # transmittances[i, j] = torch.sum((max_d - min_d) / voxel_size_norm * self.voxel_sigma)
         #         transmittances[i, j] = torch.exp(-torch.sum((max_d - min_d) * self.voxel_sigma))
         # outputs['light_transmittance'] = transmittances
@@ -330,12 +349,11 @@ class LightVolumeRenderer(VolumeRenderer):
         ######### </LIGHT_RAYS>
 
         outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
-                                                early_stop, output_types)
+                                               early_stop, output_types)
 
         outputs['light_transmittance'] = transmittances
 
         return outputs, _evals
-
 
 @register_renderer('surface_volume_rendering')
 class SurfaceVolumeRenderer(VolumeRenderer):
