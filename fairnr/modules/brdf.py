@@ -40,19 +40,22 @@ class Microfacet:
 		g = self._get_g(pts2c, h, normal, alpha=alpha)  # NxL
 		l_dot_n = torch.einsum('ijk,ik->ij', pts2l, normal)
 		v_dot_n = torch.einsum('ij,ij->i', pts2c, normal)
-		denom = 4 * torch.abs(l_dot_n) * torch.abs(v_dot_n)[:, None]
+		denom = 4 * torch.threshold(l_dot_n, 1e-3, 1e-3) * torch.threshold(v_dot_n, 1e-3, 1e-3)[:, None]
 		microfacet = divide_no_nan(f * g * d, denom)  # NxL
 		brdf_glossy = microfacet[:, :, None].repeat(1, 1, 3)  # NxLx3
 		# Diffuse
 		lambert = albedo / np.pi  # Nx3
 		# brdf_diffuse = torch.broadcast_to(lambert[:, None, :], brdf_glossy.shape)  # NxLx3
-		brdf_diffuse = lambert[:, None, :]
+		brdf_diffuse = lambert[:, None, :] + torch.zeros_like(brdf_glossy)
 		# Mix two shaders
 		if self.lambert_only:
 			brdf = brdf_diffuse
 		else:
 			brdf = brdf_glossy + brdf_diffuse  # TODO: energy conservation?
-		return brdf  # NxLx3
+
+		mask = torch.logical_or((l_dot_n < 1e-7), (v_dot_n < 1e-7))
+		brdf[mask] = 0
+		return brdf * torch.clamp(l_dot_n, 0., 1.)  # NxLx3
 
 	@staticmethod
 	def _get_g(v, m, n, alpha=0.1):
@@ -62,7 +65,7 @@ class Microfacet:
 		cos_theta = torch.einsum('ijk,ik->ij', m, v)
 		denom = cos_theta_v[:, None]
 		div = divide_no_nan(cos_theta, denom)
-		chi = torch.where(div > 0, torch.Tensor([1.]), torch.Tensor([0.]))
+		chi = torch.where(div > 0, torch.Tensor([1.]).to(m.device), torch.Tensor([0.]).to(m.device))
 		cos_theta_v_sq = cos_theta_v ** 2
 		cos_theta_v_sq = torch.clamp(cos_theta_v_sq, 0., 1.)
 		denom = cos_theta_v_sq
@@ -77,7 +80,7 @@ class Microfacet:
 		"""Microfacet distribution (GGX).
 		"""
 		cos_theta_m = torch.einsum('ijk,ik->ij', m, n)
-		chi = torch.where(cos_theta_m > 0, torch.Tensor([1.]), torch.Tensor([0.]))
+		chi = torch.where(cos_theta_m > 0, torch.Tensor([1.]).to(m.device), torch.Tensor([0.]).to(m.device))
 		cos_theta_m_sq = cos_theta_m ** 2
 		denom = cos_theta_m_sq
 		tan_theta_m_sq = divide_no_nan(1 - cos_theta_m_sq, denom)
@@ -95,8 +98,8 @@ class Microfacet:
 
 
 def safe_l2_normalize(x, axis=None, eps=1e-6):
-	return x / (torch.norm(x, p=2, dim=axis, keepdim=True) + eps)
+	return x / torch.norm(x, p=2, dim=axis, keepdim=True)
 
 def divide_no_nan(a, b, eps=1e-6):
-	return torch.where(b < eps, torch.zeros_like(a), torch.div(a, b))
+	return torch.where(b < eps, torch.zeros_like(a).to(a.device), torch.div(a, b))
 	# return torch.nan_to_num(torch.div(a, b), nan=0, posinf=0, neginf=0)

@@ -9,7 +9,7 @@ import torch
 import imageio
 import numpy as np
 from collections import defaultdict
-from torchvision.utils import save_image
+# from torchvision.utils import save_image
 from argparse import Namespace
 
 from fairseq.tasks import FairseqTask, register_task

@@ -21,6 +21,7 @@ USE_CPU = False  # WARNING: does not work on CPU
 CHUNK_SIZE = '256'#'256'  # > 1 to save memory to time
 LR = '0.001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
+TRACE_NORMAL = False
 
 # ARCH = "nsvf_base"  # Original NSVF from facebook
 # TASK = 'single_object_rendering'
@@ -33,6 +34,7 @@ VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
 ARCH = "mlnrfex_base"  # Explicit model with ignoring light interaction
 TASK = 'single_object_light_rendering'
+TRACE_NORMAL = True
 
 SUFFIX = "v1"
 DATASET = "datasets/" + DATA  # "data/Synthetic_NeRF/" + DATA
@@ -73,6 +75,8 @@ if 'VOXEL_NUM' in locals():
 	parameters += '\n--voxel-num ' + locals()['VOXEL_NUM']
 elif 'VOXEL_SIZE' in locals():
 	parameters += '\n--voxel-size ' + locals()['VOXEL_SIZE']
+if TRACE_NORMAL:
+	parameters += '\n--trace-normal'
 parameters += '\n--scene-scale ' + SCENE_SCALE
 parameters += '\n--view-resolution ' + RES
 parameters += '\n--max-sentences 1'

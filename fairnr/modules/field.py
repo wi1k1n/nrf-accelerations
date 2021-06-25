@@ -299,7 +299,7 @@ class RaidanceLightField(RaidanceField):
 class RaidanceExplicitLightField(RaidanceField):
     def __init__(self, args):
         super().__init__(args)
-        self.bg_color = BackgroundField(out_dim=4, bg_color=self.trans_bg, min_color=self.min_color, stop_grad=self.sgbg)
+        self.bg_color = BackgroundField(out_dim=3, bg_color=self.trans_bg, min_color=self.min_color, stop_grad=self.sgbg)
 
     def build_texture_renderer(self, args):
         tex_input_dim = sum(self.tex_input_dims)
@@ -314,9 +314,14 @@ class RaidanceExplicitLightField(RaidanceField):
     @torch.enable_grad()  # tracking the gradient in case we need to have normal at testing time.
     def forward(self, inputs, outputs=['sigma', 'texture']):
         texInOutputs = 'texture' in outputs
-        if texInOutputs:
-            outputs.remove('texture')
+        # normInOutputs = 'normal' in outputs
+        if texInOutputs: outputs.remove('texture')
+        # if not normInOutputs: outputs += ['normal']
+
         inputs = super().forward(inputs, outputs)
+
+        if texInOutputs: outputs += ['texture']
+        # if not normInOutputs: outputs.remove('normal')
 
         # This should probably be placed in super().forward() and the whole BRDF thing
         # is implemented in ExplicitLightTextureField.forward(x) (but how to handle l,v,n arguments?)
@@ -332,8 +337,13 @@ class RaidanceExplicitLightField(RaidanceField):
                 filtered_inputs += [func(inputs[name])] if name != 'sigma' else [func(inputs[name].unsqueeze(-1))]
 
             filtered_inputs = torch.cat(filtered_inputs, -1)
-            brdf_params = self.renderer(filtered_inputs)
-            inputs['texture'] = self.brdf(None, None, None, None)
+            R = self.renderer(filtered_inputs)
+            # albedo = torch.sigmoid(R[:, :3])
+            # roughness = torch.threshold(R[:, 3], 0.3, 0.3).unsqueeze(-1)
+            albedo = R[:, :3]
+            roughness = torch.clamp(R[:, 3], 1e-3, 1.).unsqueeze(-1)
+            clr = self.brdf(inputs['light'].unsqueeze(1), inputs['ray'], inputs['normal'], albedo, roughness)
+            inputs['texture'] = clr.squeeze()
 
             if self.min_color == 0:
                 inputs['texture'] = torch.sigmoid(inputs['texture'])
