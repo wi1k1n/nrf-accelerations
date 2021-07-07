@@ -30,6 +30,8 @@ from fairnr.modules.reader import get_reader
 from fairnr.data.geometry import ray, compute_normal_map
 from fairnr.data.data_utils import recover_image
 
+from fairnr.data.data_utils import Preprocessor
+
 logger = logging.getLogger(__name__)
 
 
@@ -214,7 +216,9 @@ class BaseModel(BaseFairseqModel):
         return new_output
 
     @torch.no_grad()
-    def visualize(self, sample, output=None, shape=0, view=0, **kwargs):
+    def visualize(self, sample, output=None, shape=0, view=0, pprc=None, **kwargs):
+        pprc = pprc if pprc else Preprocessor()
+
         width = int(sample['size'][shape, view][1].item())
         img_id = '{}_{}'.format(sample['shape'][shape], sample['view'][shape, view])
         
@@ -228,9 +232,16 @@ class BaseModel(BaseFairseqModel):
         images = self._visualize(images, sample, sample, [img_id, shape, view, width, 'target'])
         if 'coarse' in output:  # hierarchical sampling
             images = self._visualize(images, sample, output['coarse'], [img_id, shape, view, width, 'coarse'])
-        
+
+        # undo the preprocessing only for color outputs (render/target colors) using preprocessor used for sampling dataset
+        for tag in images.keys():
+            if not 'color' in tag:
+                continue
+            images[tag]['img'] = pprc.preprocessInverse(images[tag]['img'].cpu())
+
+        # here pass identity preprocessor since preprocessInverse has already been applied
         images = {
-            tag: recover_image(width=width, **images[tag]) 
+            tag: recover_image(width=width, pprc=None, gamma=float(self.args.gamma_correction), **images[tag])
                 for tag in images if images[tag] is not None
         }
         return images
@@ -283,8 +294,8 @@ class BaseModel(BaseFairseqModel):
         for s in range(predicts.size(0)):
             for v in range(predicts.size(1)):
                 width = int(sample['size'][s, v][1])
-                p = recover_image(predicts[s, v], width=width, min_val=float(self.args.min_color))
-                t = recover_image(targets[s, v],  width=width, min_val=float(self.args.min_color))
+                p = recover_image(predicts[s, v], width=width, min_val=float(self.args.min_color), pprc=criterion.task.datasets['valid'].dataset.preprocessor, gamma=float(self.args.gamma_correction))
+                t = recover_image(targets[s, v],  width=width, min_val=float(self.args.min_color), pprc=criterion.task.datasets['valid'].dataset.preprocessor, gamma=float(self.args.gamma_correction))
                 pn, tn = p.numpy(), t.numpy()
                 p, t = p.to(predicts.device), t.to(targets.device)
 

@@ -195,9 +195,11 @@ class ShapeViewDataset(ShapeDataset):
             pprc = data_utils.load_postprocessing_data(_pprc[0])
         # create preprocessor for dataset
         if preprocess.lower() == 'mstd':
-            self.preprocessor = data_utils.MSTDPreprocessor(None)
+            self.preprocessor = data_utils.MSTDPreprocessor(pprc)
         elif preprocess.lower() == 'minmax':
             self.preprocessor = data_utils.MinMaxPreprocessor(pprc)
+        elif preprocess.lower() == 'log':
+            self.preprocessor = data_utils.LogPreprocessor(pprc)
         else:
             self.preprocessor = data_utils.Preprocessor()
 

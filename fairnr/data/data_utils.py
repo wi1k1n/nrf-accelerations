@@ -77,6 +77,7 @@ def load_rgb(
 
     # If input files are EXR-files
     if OpenEXR.isOpenExrFile(path):
+        interpolation = 'linear'
         exr = OpenEXR.InputFile(path)
         hdr = exr.header()
         dw = hdr['dataWindow']
@@ -117,6 +118,7 @@ def load_rgb(
     if (h < H) or (w < W):
         if interpolation.lower() == 'area': intp = cv2.INTER_AREA
         elif interpolation.lower() == 'nearest': intp = cv2.INTER_NEAREST
+        elif interpolation.lower() == 'linear': intp = cv2.INTER_LINEAR
         else: raise NotImplemented('Given interpolation type \'{0}\' is not implemented'.format(interpolation))
         img = cv2.resize(img, (w, h), interpolation=intp).astype('float32')
 
@@ -132,7 +134,7 @@ def load_rgb(
     img[:, :, :3] = img[:, :, :3] * img[:, :, 3:] + np.asarray(bg_color)[None, None, :] * (1 - img[:, :, 3:])
     img[:, :, 3] = img[:, :, 3] * (img[:, :, :3] != np.asarray(bg_color)[None, None, :]).any(-1)
     img = img.transpose(2, 0, 1)
-    
+
     return img, uv, ratio
 
 def load_depth(path, resolution=None, depth_plane=5):
@@ -216,6 +218,8 @@ def load_postprocessing_data(filepath):
         'std': None,
         'min': None,
         'max': None,
+        'prcntmin': None,
+        'prcntmax': None,
     }
     try:
         with open(filepath, 'r') as file:
@@ -227,6 +231,10 @@ def load_postprocessing_data(filepath):
             if len(l) > 0: postprocessing.update({'min': np.fromstring(l, sep=', ')})
             l = file.readline()
             if len(l) > 0: postprocessing.update({'max': np.fromstring(l, sep=', ')})
+            l = file.readline()
+            if len(l) > 0: postprocessing.update({'prcntmin': np.fromstring(l, sep=', ')})
+            l = file.readline()
+            if len(l) > 0: postprocessing.update({'prcntmax': np.fromstring(l, sep=', ')})
     except ValueError:
         pass
 
@@ -321,8 +329,12 @@ def colormap(dz):
     # return plt.cm.gray(dz)
 
 
-def recover_image(img, min_val=-1, max_val=1, width=512, bg=None, weight=None, raw=False):
+def recover_image(img, min_val=-1, max_val=1.0, width=512, bg=None, weight=None, raw=False, pprc=None, gamma=1.):
     if raw: return img
+
+    pprc = pprc if pprc else Preprocessor()
+    if 'prcntmax' in pprc.preprocess_data:
+        max_val = torch.Tensor(pprc.preprocess_data['prcntmax'])[:img.size()[-1]]
 
     sizes = img.size()
     height = sizes[0] // width
@@ -331,7 +343,10 @@ def recover_image(img, min_val=-1, max_val=1, width=512, bg=None, weight=None, r
     if len(sizes) == 1 and (bg is not None):
         bg_mask = img.eq(bg)[:, None].type_as(img)
 
+    img = pprc.preprocessInverse(img)
+    img = img ** (1. / gamma)
     img = ((img - min_val) / (max_val - min_val)).clamp(min=0, max=1)
+
     if len(sizes) == 1:
         img = torch.from_numpy(colormap(img.numpy())[:, :3])
     if weight is not None:
@@ -429,6 +444,7 @@ class GPUTimer(object):
 
 
 class Preprocessor:
+    def __init__(self): self.preprocess_data = {}
     def preprocess(self, img): return img
     def preprocessInverse(self, img): return img
 
@@ -436,13 +452,15 @@ class MinMaxPreprocessor(Preprocessor):
     _percentileMin = 0
     _percentileMax = 99.9
     def __init__(self, preprocess_data = None):
-        preprocess_data = {} if preprocess_data is None else preprocess_data
+        raise NotImplemented('Need to check implementation first!')
+        self.preprocess_data = {} if preprocess_data is None else preprocess_data
         self.min = preprocess_data.get('min', None)
         self.max = preprocess_data.get('max', None)
         self.tmin = preprocess_data.get('tmin', -1)
         self.tmax = preprocess_data.get('tmax', 1)
 
     def preprocess(self, img):
+        raise NotImplemented('Should the percentiles be here? does it make any sense?')
         if self.min is None or self.max is None:
             rgbimg = img[..., 0:3]
             rgbimg = rgbimg[rgbimg < np.percentile(rgbimg, MinMaxPreprocessor._percentileMax, axis=None)]
@@ -462,9 +480,9 @@ class MinMaxPreprocessor(Preprocessor):
 
 class MSTDPreprocessor(Preprocessor):
     def __init__(self, preprocess_data = None):
-        preprocess_data = {} if preprocess_data is None else preprocess_data
-        self.mean = preprocess_data.get('mean', None)
-        self.std = preprocess_data.get('std', None)
+        self.preprocess_data = {} if preprocess_data is None else preprocess_data
+        self.mean = preprocess_data.get('mean', None)[:3]
+        self.std = preprocess_data.get('std', None)[:3]
         self.axis = 0 if preprocess_data.get('channelwise', None) else None
 
     def preprocess(self, img):
@@ -481,4 +499,16 @@ class MSTDPreprocessor(Preprocessor):
         if self.mean is None or self.std is None:
             raise ValueError('mean or std are not calculated. call preprocess() first to create them')
         img[..., 0:3] = img[..., 0:3] * self.std + self.mean
+        return img
+
+class LogPreprocessor(Preprocessor):
+    def __init__(self, preprocess_data = None):
+        self.preprocess_data = {} if preprocess_data is None else preprocess_data
+
+    def preprocess(self, img):
+        img[..., 0:3] = np.log(img[..., 0:3] + 1.)
+        return img
+
+    def preprocessInverse(self, img):
+        img[..., 0:3] = np.exp(img[..., 0:3]) - 1
         return img

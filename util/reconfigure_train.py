@@ -9,32 +9,47 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "rocket_random_png"
-NAME = "test"  # postfix for dataset name
+DATA = "rocket_static_png"
+NAME = ""  # postfix for dataset name
 RES = "64x64"
 PIXELS_PER_VIEW = '80'
+GAMMA_CORRECTION = '1'
 VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
 SCENE_SCALE = '1.0'
 
 USE_OCTREE = True
 USE_CPU = False  # WARNING: does not work on CPU
-CHUNK_SIZE = '256'#'256'  # > 1 to save memory to time
+CHUNK_SIZE = '16'#'256'  # > 1 to save memory to time
 LR = '0.001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
+
+COLOR_WEIGHT = '512.0'#'256.0'
+ALPHA_WEIGHT = '1.0'
+
 TRACE_NORMAL = False
+LAMBERT_ONLY = False
 
-# ARCH = "nsvf_base"  # Original NSVF from facebook
-# TASK = 'single_object_rendering'
+# <!-- Original NSVF from facebook -->
+ARCH = "nsvf_base"
+TASK = 'single_object_rendering'
+# <!/-- Original NSVF from facebook -->
 
-# ARCH = "mlnrf_base"  # Implicit model with ignoring light interaction
+# # <!-- Implicit model with ignoring light interaction -->
+# ARCH = "mlnrf_base"
 # TASK = 'single_object_light_rendering'
+# # <!/-- Implicit model with ignoring light interaction -->
 
-# ARCH = "mlnrfiva_base"  # Implicit model with InVoxelApproximation light interaction
+# # <!-- Implicit model with InVoxelApproximation light interaction -->
+# ARCH = "mlnrfiva_base"
 # TASK = 'single_object_light_rendering'
+# # <!/-- Implicit model with InVoxelApproximation light interaction -->
 
-ARCH = "mlnrfex_base"  # Explicit model with ignoring light interaction
-TASK = 'single_object_light_rendering'
-TRACE_NORMAL = True
+# # <!-- Explicit model with ignoring light interaction -->
+# ARCH = "mlnrfex_base"
+# TASK = 'single_object_light_rendering'
+# TRACE_NORMAL = True
+# LAMBERT_ONLY = False
+# # <!/-- Explicit model with ignoring light interaction -->
 
 SUFFIX = "v1"
 DATASET = "datasets/" + DATA  # "data/Synthetic_NeRF/" + DATA
@@ -48,10 +63,12 @@ HALF_VOXEL_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
 PRUNNING_EVERY_STEPS = '5500'
 SAVE_INTERVAL_UPDATES = '500'#'750'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
+TRAIN_VIEWS = '0..100'  # '0..100'
+VALID_VIEWS = '100..200'  # '100..200
 
-PREPROCESS = 'none'  # none/mstd/minmax
-MIN_COLOR = '-1'  # '-1'
-BG_COLOR = '1.0,1.0,1.0'  # '1.0,1.0,1.0'
+PREPROCESS = 'none'  # none/mstd/minmax/log
+MIN_COLOR = '0'  # '-1'
+BG_COLOR = '1.0,1.0,1.0'  # '0.0,0.0,0.0'
 
 
 XML_PATH = '.run/train.run.xml'
@@ -69,14 +86,19 @@ parameters += DATASET
 # 	parameters += '\n--inputs-to-texture "feat:0:256,ray:4,light:4,lightd:0:1"'
 parameters += '\n--user-dir fairnr'
 parameters += '\n--task ' + TASK
-parameters += '\n--train-views "0..100"'
+parameters += '\n--train-views "' + TRAIN_VIEWS + '"'
 parameters += '\n--chunk-size '+CHUNK_SIZE
+parameters += '\n--valid-chunk-size '+CHUNK_SIZE
 if 'VOXEL_NUM' in locals():
 	parameters += '\n--voxel-num ' + locals()['VOXEL_NUM']
 elif 'VOXEL_SIZE' in locals():
 	parameters += '\n--voxel-size ' + locals()['VOXEL_SIZE']
 if TRACE_NORMAL:
 	parameters += '\n--trace-normal'
+if LAMBERT_ONLY:
+	parameters += '\n--lambert-only'
+if GAMMA_CORRECTION:
+	parameters += '\n--gamma-correction ' + GAMMA_CORRECTION
 parameters += '\n--scene-scale ' + SCENE_SCALE
 parameters += '\n--view-resolution ' + RES
 parameters += '\n--max-sentences 1'
@@ -86,7 +108,7 @@ parameters += '\n--no-preload'
 parameters += '\n--sampling-on-mask 1.0'
 parameters += '\n--no-sampling-at-reader'
 parameters += '\n--valid-view-resolution ' + RES
-parameters += '\n--valid-views "100..200"'
+parameters += '\n--valid-views "' + VALID_VIEWS + '"'
 parameters += '\n--valid-view-per-batch 1'
 parameters += '\n--transparent-background "' + BG_COLOR + '"'
 # parameters += '\n--no-background-loss'
@@ -99,8 +121,8 @@ if USE_OCTREE:
 if USE_CPU:
 	parameters += '\n--cpu'
 parameters += '\n--discrete-regularization'
-parameters += '\n--color-weight 128.0'
-parameters += '\n--alpha-weight 1.0'
+parameters += '\n--color-weight ' + COLOR_WEIGHT
+parameters += '\n--alpha-weight ' + ALPHA_WEIGHT
 parameters += '\n--min-color ' + MIN_COLOR
 parameters += '\n--preprocess ' + PREPROCESS
 parameters += '\n--optimizer "adam"'

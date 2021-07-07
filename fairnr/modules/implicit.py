@@ -157,8 +157,8 @@ class ExplicitLightTextureField(ImplicitField):
     Pixel generator based on 1x1 conv networks
     """
     def __init__(self, in_dim, hidden_dim, num_layers,
-                with_ln=True, spec_init=True):
-        out_dim = 4
+                with_ln=True, spec_init=True, r_dim=4):
+        out_dim = r_dim
         super().__init__(in_dim, out_dim, hidden_dim, num_layers,
             outmost_linear=True, with_ln=with_ln, spec_init=spec_init)
 

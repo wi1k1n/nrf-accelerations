@@ -24,9 +24,9 @@ class Microfacet:
 		rough: Nx1
 		"""
 		if albedo is None:
-			albedo = torch.ones((pts2c.shape[0], 3), dtype=torch.float32)
+			albedo = torch.ones((pts2c.shape[0], 3), dtype=torch.float32).to(pts2l.device)
 		if rough is None:
-			rough = self.default_rough * torch.ones((pts2c.shape[0], 1), dtype=torch.float32)
+			rough = self.default_rough * torch.ones((pts2c.shape[0], 1), dtype=torch.float32).to(pts2l.device)
 		# Normalize directions and normals
 		pts2l = safe_l2_normalize(pts2l, axis=2)
 		pts2c = safe_l2_normalize(pts2c, axis=1)
@@ -53,9 +53,12 @@ class Microfacet:
 		else:
 			brdf = brdf_glossy + brdf_diffuse  # TODO: energy conservation?
 
-		mask = torch.logical_or((l_dot_n < 1e-7), (v_dot_n < 1e-7))
+		# mask = torch.logical_or((l_dot_n < 1e-7), (v_dot_n < 1e-7))
+		mask_l = l_dot_n < 1e-7
+		mask_v = v_dot_n < 1e-7
+		mask = (mask_l.squeeze(-1) + mask_v.squeeze(-1)).unsqueeze(1)
 		brdf[mask] = 0
-		return brdf * torch.clamp(l_dot_n, 0., 1.)  # NxLx3
+		return brdf * torch.clamp(l_dot_n, 0., 1.).unsqueeze(-1)  # NxLx3
 
 	@staticmethod
 	def _get_g(v, m, n, alpha=0.1):
@@ -101,5 +104,6 @@ def safe_l2_normalize(x, axis=None, eps=1e-6):
 	return x / torch.norm(x, p=2, dim=axis, keepdim=True)
 
 def divide_no_nan(a, b, eps=1e-6):
-	return torch.where(b < eps, torch.zeros_like(a).to(a.device), torch.div(a, b))
+	return torch.div(a, torch.where(b < eps, torch.Tensor([np.inf]).to(a.device), b))
+	# return torch.where(b < eps, torch.zeros_like(a).to(a.device), torch.div(a, b))
 	# return torch.nan_to_num(torch.div(a, b), nan=0, posinf=0, neginf=0)

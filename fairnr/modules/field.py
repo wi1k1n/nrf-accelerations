@@ -298,8 +298,15 @@ class RaidanceLightField(RaidanceField):
 @register_field('radiance_explicit_light_field')
 class RaidanceExplicitLightField(RaidanceField):
     def __init__(self, args):
+        self.lambert_only = getattr(args, 'lambert_only', False)
         super().__init__(args)
         self.bg_color = BackgroundField(out_dim=3, bg_color=self.trans_bg, min_color=self.min_color, stop_grad=self.sgbg)
+
+    @staticmethod
+    def add_args(parser):
+        super(RaidanceExplicitLightField, RaidanceExplicitLightField).add_args(parser)
+        parser.add_argument('--lambert-only', action='store_true',
+                            help='if set, the brdf will only model fully diffuse appearance')
 
     def build_texture_renderer(self, args):
         tex_input_dim = sum(self.tex_input_dims)
@@ -307,9 +314,10 @@ class RaidanceExplicitLightField(RaidanceField):
             tex_input_dim, args.texture_embed_dim,
             args.texture_layers + 2 if not self.nerf_style else 2,
             with_ln=self.with_ln if not self.nerf_style else False,
-            spec_init=True if not self.nerf_style else False)
+            spec_init=True if not self.nerf_style else False,
+            r_dim=3 if self.lambert_only else 4)
 
-        self.brdf = Microfacet(default_rough=0.3, lambert_only=False, f0=0.91)
+        self.brdf = Microfacet(default_rough=0.3, lambert_only=self.lambert_only, f0=0.91)
 
     @torch.enable_grad()  # tracking the gradient in case we need to have normal at testing time.
     def forward(self, inputs, outputs=['sigma', 'texture']):
@@ -341,7 +349,7 @@ class RaidanceExplicitLightField(RaidanceField):
             # albedo = torch.sigmoid(R[:, :3])
             # roughness = torch.threshold(R[:, 3], 0.3, 0.3).unsqueeze(-1)
             albedo = R[:, :3]
-            roughness = torch.clamp(R[:, 3], 1e-3, 1.).unsqueeze(-1)
+            roughness = None if self.lambert_only else torch.clamp(R[:, 3], 1e-3, 1.).unsqueeze(-1)
             clr = self.brdf(inputs['light'].unsqueeze(1), inputs['ray'], inputs['normal'], albedo, roughness)
             inputs['texture'] = clr.squeeze()
 

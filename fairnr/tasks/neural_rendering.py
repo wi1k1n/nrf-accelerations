@@ -61,9 +61,11 @@ class SingleObjRenderingTask(FairseqTask):
                             help="width for the squared image. downsampled from the original.")    
         parser.add_argument('--valid-view-resolution', type=str, default=None,
                             help="if not set, if valid view resolution will be train view resolution")   
-        parser.add_argument("--min-color", choices=(0, -1), default=-1, type=int,
+        parser.add_argument("--min-color", default=-1.0, type=float,
                             help="RGB range used in the model. conventionally used -1 ~ 1")
-        parser.add_argument("--preprocess", choices=('none', 'mstd', 'minmax'), default='none', type=str,
+        parser.add_argument("--gamma-correction", default=1, type=float,
+                            help="gamma correction to be applied in visualization purposes")
+        parser.add_argument("--preprocess", choices=('none', 'mstd', 'minmax', 'log'), default='none', type=str,
                             help="preprocess the images before training. mstd - mean/std, minmax - (-1, 1). none - does nothing")
         parser.add_argument("--virtual-epoch-steps", type=int, default=None,
                             help="virtual epoch used in Infinite Dataset. if None, set max-update")
@@ -314,7 +316,7 @@ class SingleObjRenderingTask(FairseqTask):
         loss, sample_size, logging_output = super().valid_step(sample, model, criterion)
         model.add_eval_scores(logging_output, sample, model.cache, criterion, outdir=self.output_valid)
         if self.writer is not None:
-            images = model.visualize(sample, shape=0, view=0)
+            images = model.visualize(sample, shape=0, view=0, pprc=self.datasets['valid'].dataset.preprocessor)
             if images is not None:
                 write_images(self.writer, images, self._num_updates['step'])
                 self.writer.flush()
