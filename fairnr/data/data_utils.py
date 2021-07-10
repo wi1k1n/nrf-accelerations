@@ -196,8 +196,8 @@ def load_intrinsics(filepath, resized_width=None, invert_y=False):
 
     # Get camera intrinsics
     with open(filepath, 'r') as file:
-        
         f, cx, cy, _ = map(float, file.readline().split())
+
     fx = f
     if invert_y:
         fy = -f
@@ -344,8 +344,9 @@ def recover_image(img, min_val=-1, max_val=1.0, width=512, bg=None, weight=None,
         bg_mask = img.eq(bg)[:, None].type_as(img)
 
     img = pprc.preprocessInverse(img)
+    img = (img - min_val) / (max_val - min_val)
     img = img ** (1. / gamma)
-    img = ((img - min_val) / (max_val - min_val)).clamp(min=0, max=1)
+    img = img.clamp(min=0, max=1)
 
     if len(sizes) == 1:
         img = torch.from_numpy(colormap(img.numpy())[:, :3])

@@ -63,6 +63,8 @@ class SingleObjRenderingTask(FairseqTask):
                             help="if not set, if valid view resolution will be train view resolution")   
         parser.add_argument("--min-color", default=-1.0, type=float,
                             help="RGB range used in the model. conventionally used -1 ~ 1")
+        parser.add_argument("--max-color", default=1.0, type=float,
+                            help="RGB range used in the model. conventionally used -1 ~ 1")
         parser.add_argument("--gamma-correction", default=1, type=float,
                             help="gamma correction to be applied in visualization purposes")
         parser.add_argument("--preprocess", choices=('none', 'mstd', 'minmax', 'log'), default='none', type=str,

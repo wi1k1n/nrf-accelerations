@@ -5,7 +5,8 @@ import plotly.graph_objects as go
 
 MODEL = 'rocket_test'
 PATH = 'D:\\edu\\UniBonn\\Study\\thesis\\codes\\blender\\datasets\\' + MODEL
-CAM_ICONS = False
+PATH = 'D:\\edu\\UniBonn\\Study\\thesis\\codes\\realdata\\flower_dome\\dataset\\zoom_0'
+CAM_ICONS = True
 
 
 
@@ -109,7 +110,9 @@ if mesh is not None:
 
 # camera icon sizes
 # camScale = 1.5 * 0.01
-camScale = 1e-2 * np.array((bbox[3]-bbox[0], bbox[4]-bbox[1], bbox[5]-bbox[2])).mean()
+camScale = 1
+if bbox is not None:
+	camScale = 1e-2 * np.array((bbox[3]-bbox[0], bbox[4]-bbox[1], bbox[5]-bbox[2])).mean()
 if CAM_ICONS:
 	bw, bh, bt, lw, lh, lt = 1, 1, 3, 4.5, 4.5, 2.5
 
@@ -135,4 +138,12 @@ for ind, dir in enumerate(dirs):
 fig = go.Figure(data=plotData)
 print('Saving to {0}'.format(os.path.abspath('visualize_cam_light.html')))
 fig.write_html('visualize_cam_light.html', auto_open=True)
-print('Saved. File size: {0} bytes'.format(os.path.getsize('visualize_cam_light.html')))
+
+
+def sizeof_fmt(num, suffix='B'):
+	for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+		if abs(num) < 1024.0:
+			return "%3.1f%s%s" % (num, unit, suffix)
+		num /= 1024.0
+	return "%.1f%s%s" % (num, 'Yi', suffix)
+print('Saved. File size: {0}'.format(sizeof_fmt(os.path.getsize('visualize_cam_light.html'))))

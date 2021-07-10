@@ -9,21 +9,21 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "rocket_static_png"
+DATA = "flower_z0_static_png"
 NAME = ""  # postfix for dataset name
 RES = "64x64"
 PIXELS_PER_VIEW = '80'
-GAMMA_CORRECTION = '1'
+GAMMA_CORRECTION = '1.0'
 VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
 SCENE_SCALE = '1.0'
 
 USE_OCTREE = True
 USE_CPU = False  # WARNING: does not work on CPU
 CHUNK_SIZE = '16'#'256'  # > 1 to save memory to time
-LR = '0.001'  # 0.001
+LR = '0.0001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
-COLOR_WEIGHT = '512.0'#'256.0'
+COLOR_WEIGHT = '64.0'#'256.0'
 ALPHA_WEIGHT = '1.0'
 
 TRACE_NORMAL = False
@@ -60,15 +60,17 @@ MODEL = ARCH + SUFFIX
 
 REDUCE_STEP_SIZE_AT = '2250,8500,35000'  # '5000,25000,75000'
 HALF_VOXEL_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
-PRUNNING_EVERY_STEPS = '5500'
-SAVE_INTERVAL_UPDATES = '500'#'750'  # '100'
+PRUNNING_EVERY_STEPS = '1000'
+SAVE_INTERVAL_UPDATES = '200'#'750'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
-TRAIN_VIEWS = '0..100'  # '0..100'
-VALID_VIEWS = '100..200'  # '100..200
+TRAIN_VIEWS = '0..45'  # '0..100'
+VALID_VIEWS = '45..61'  # '100..200
+NUM_WORKERS = '4'  # '0'
 
 PREPROCESS = 'none'  # none/mstd/minmax/log
-MIN_COLOR = '0'  # '-1'
-BG_COLOR = '1.0,1.0,1.0'  # '0.0,0.0,0.0'
+MIN_COLOR = '0.0'  # '-1' # normalizes data into -1~1 interval if == -1
+MAX_COLOR = '1.0'
+BG_COLOR = '1.0,1.0,1.0'  # '0.25,0.25,0.25'
 
 
 XML_PATH = '.run/train.run.xml'
@@ -124,15 +126,17 @@ parameters += '\n--discrete-regularization'
 parameters += '\n--color-weight ' + COLOR_WEIGHT
 parameters += '\n--alpha-weight ' + ALPHA_WEIGHT
 parameters += '\n--min-color ' + MIN_COLOR
+parameters += '\n--max-color ' + MAX_COLOR
 parameters += '\n--preprocess ' + PREPROCESS
 parameters += '\n--optimizer "adam"'
 parameters += '\n--adam-betas "(0.9, 0.999)"'
 parameters += '\n--lr-scheduler "polynomial_decay"'
 parameters += '\n--total-num-update ' + TOTAL_NUM_UPDATE
+parameters += '\n--end-learning-rate ' + str(float(LR) * 1e-2)
 parameters += '\n--lr ' + LR
 parameters += '\n--clip-norm 0.0'  # 0.01
 parameters += '\n--criterion "srn_loss"'
-parameters += '\n--num-workers 0'
+parameters += '\n--num-workers ' + NUM_WORKERS
 parameters += '\n--seed 2'
 parameters += '\n--save-interval-updates ' + SAVE_INTERVAL_UPDATES
 parameters += '\n--max-update 150000'

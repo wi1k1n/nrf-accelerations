@@ -238,10 +238,12 @@ class BaseModel(BaseFairseqModel):
             if not 'color' in tag:
                 continue
             images[tag]['img'] = pprc.preprocessInverse(images[tag]['img'].cpu())
+            images[tag]['gamma'] = float(self.args.gamma_correction)
+            images[tag]['max_val'] = float(self.args.max_color)
 
         # here pass identity preprocessor since preprocessInverse has already been applied
         images = {
-            tag: recover_image(width=width, pprc=None, gamma=float(self.args.gamma_correction), **images[tag])
+            tag: recover_image(width=width, pprc=None, **images[tag])
                 for tag in images if images[tag] is not None
         }
         return images
@@ -294,8 +296,12 @@ class BaseModel(BaseFairseqModel):
         for s in range(predicts.size(0)):
             for v in range(predicts.size(1)):
                 width = int(sample['size'][s, v][1])
-                p = recover_image(predicts[s, v], width=width, min_val=float(self.args.min_color), pprc=criterion.task.datasets['valid'].dataset.preprocessor, gamma=float(self.args.gamma_correction))
-                t = recover_image(targets[s, v],  width=width, min_val=float(self.args.min_color), pprc=criterion.task.datasets['valid'].dataset.preprocessor, gamma=float(self.args.gamma_correction))
+                p = recover_image(predicts[s, v], width=width, min_val=float(self.args.min_color),
+                                  max_val=float(self.args.max_color), gamma=float(self.args.gamma_correction),
+                                  pprc=criterion.task.datasets['valid'].dataset.preprocessor)
+                t = recover_image(targets[s, v],  width=width, min_val=float(self.args.min_color),
+                                  max_val=float(self.args.max_color), gamma=float(self.args.gamma_correction),
+                                  pprc=criterion.task.datasets['valid'].dataset.preprocessor)
                 pn, tn = p.numpy(), t.numpy()
                 p, t = p.to(predicts.device), t.to(targets.device)
 
