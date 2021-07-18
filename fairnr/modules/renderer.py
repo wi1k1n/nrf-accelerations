@@ -120,12 +120,14 @@ class VolumeRenderer(Renderer):
         if 'sigma' in field_outputs:
             sigma, sampled_dists = field_outputs['sigma'], field_inputs['dists']
             # logger.info("Sigmas: {0}...{1}; <{2}>".format(sigma.min(), sigma.max(), sigma.mean()))
-            noise = 0 if not self.discrete_reg and (not self.training) else torch.zeros_like(sigma).normal_()  
-            free_energy = torch.relu(noise + sigma) * sampled_dists   
-            free_energy = free_energy * 7.0  # ? [debug] 
+            noise = 0 if not self.discrete_reg and (not self.training) else torch.zeros_like(sigma).normal_()
+            # noise = 0
+            free_energy = torch.relu(noise + sigma) * sampled_dists
+            # free_energy = free_energy * 7.0  # ? [debug]
             # (optional) free_energy = (F.elu(sigma - 3, alpha=1) + 1) * dists
             # (optional) free_energy = torch.abs(sigma) * sampled_dists  ## ??
             outputs['free_energy'] = masked_scatter(sample_mask, free_energy)
+            outputs['free_energy_nf'] = masked_scatter(sample_mask, torch.relu(sigma) * sampled_dists)
         if 'sdf' in field_outputs:
             outputs['sdf'] = masked_scatter(sample_mask, field_outputs['sdf'])
         if 'texture' in field_outputs:
@@ -263,7 +265,7 @@ class VolumeRenderer(Renderer):
 class LightVolumeRenderer(VolumeRenderer):
     def __init__(self, args):
         super().__init__(args)
-        self.light_intensity = torch.Tensor([2]).to(self.args.device_id)
+        self.light_intensity = torch.Tensor([1]).to(self.args.device_id)
 
     def forward(self, input_fn, field_fn, ray_start, ray_dir, samples, *args, **kwargs):
         viewsN = kwargs['view'].shape[-1]

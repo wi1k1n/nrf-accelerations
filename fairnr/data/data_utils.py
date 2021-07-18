@@ -108,8 +108,16 @@ def load_rgb(
 
         img = skimage.img_as_float32(img).astype('float32')
 
+
         if img.shape[-1] == 3:
-            img = np.concatenate([img, np.ones((img.shape[0], img.shape[1], 1))], -1).astype('float32')
+            mask = np.ones((img.shape[0], img.shape[1], 1))
+
+            # h, w, _ = img.shape
+            # circle_img = np.zeros((h, w), np.uint8)
+            # cv2.circle(circle_img, (w // 2, h // 2), min(w, h) // 2, 1, thickness=-1)
+            # mask = cv2.bitwise_and(mask, mask, mask=circle_img)[...,None]
+
+            img = np.concatenate([img, mask], -1).astype('float32')
 
     H, W, D = img.shape
     h, w = resolution
@@ -125,12 +133,14 @@ def load_rgb(
     if preprocessor:
         img = preprocessor.preprocess(img)
 
-    if min_rgb == -1:  # 0, 1  --> -1, 1
-        img[:, :, :3] -= 0.5
-        img[:, :, :3] *= 2.
+    # this part is now in preprocessor with option 'nsvf'
+    # if min_rgb == -1:  # 0, 1  --> -1, 1
+    #     img[:, :, :3] -= 0.5
+    #     img[:, :, :3] *= 2.
 
     # img[...,:3] = np.interp(img[...,:3], (img[...,:3].min(), np.percentile(img[...,:3], 99.9)), (-1, 1))
 
+    # background blending
     img[:, :, :3] = img[:, :, :3] * img[:, :, 3:] + np.asarray(bg_color)[None, None, :] * (1 - img[:, :, 3:])
     img[:, :, 3] = img[:, :, 3] * (img[:, :, :3] != np.asarray(bg_color)[None, None, :]).any(-1)
     img = img.transpose(2, 0, 1)
@@ -512,4 +522,17 @@ class LogPreprocessor(Preprocessor):
 
     def preprocessInverse(self, img):
         img[..., 0:3] = np.exp(img[..., 0:3]) - 1
+        return img
+
+class NSVFPreprocessor(Preprocessor):
+    # original normalization -1~1. should be used with min_color = -1!!!
+    def __init__(self, preprocess_data = None):
+        self.preprocess_data = {} if preprocess_data is None else preprocess_data
+
+    def preprocess(self, img):
+        img[:, :, :3] -= 0.5
+        img[:, :, :3] *= 2.
+        return img
+
+    def preprocessInverse(self, img):
         return img

@@ -6,16 +6,16 @@ SendMode Input  ; Recommended for new scripts due to its superior speed and reli
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Reconfigure train and debug ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-^!+q::
-; Run reconfiguration script and then train
-ReconfigureTrain()
-Train(1500)
-return
+;^!+q::
+;; Run reconfiguration script and then train
+;ReconfigureTrain()
+;Train(1500)
+;return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Reconfigure train ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
-^!+w::
+^!+t::
 ; Only run reconfiguration script
 ReconfigureTrain()
 return
@@ -23,7 +23,7 @@ return
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Reconfigure render ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
-^!+e::
+^!+r::
 ; Only run reconfiguration script
 ReconfigureRender()
 return

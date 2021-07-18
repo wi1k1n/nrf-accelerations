@@ -9,30 +9,28 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "flower_z0_static_png"
+DATA = "brdf_sphere_random_exr"
 NAME = ""  # postfix for dataset name
 RES = "64x64"
 PIXELS_PER_VIEW = '80'
 GAMMA_CORRECTION = '1.0'
 VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
-SCENE_SCALE = '1.0'
 
 USE_OCTREE = True
-USE_CPU = False  # WARNING: does not work on CPU
 CHUNK_SIZE = '16'#'256'  # > 1 to save memory to time
 LR = '0.0001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
-COLOR_WEIGHT = '64.0'#'256.0'
+COLOR_WEIGHT = '1000.0'  #'256.0'
 ALPHA_WEIGHT = '1.0'
 
 TRACE_NORMAL = False
 LAMBERT_ONLY = False
 
-# <!-- Original NSVF from facebook -->
-ARCH = "nsvf_base"
-TASK = 'single_object_rendering'
-# <!/-- Original NSVF from facebook -->
+# # <!-- Original NSVF from facebook -->
+# ARCH = "nsvf_base"
+# TASK = 'single_object_rendering'
+# # <!/-- Original NSVF from facebook -->
 
 # # <!-- Implicit model with ignoring light interaction -->
 # ARCH = "mlnrf_base"
@@ -44,12 +42,13 @@ TASK = 'single_object_rendering'
 # TASK = 'single_object_light_rendering'
 # # <!/-- Implicit model with InVoxelApproximation light interaction -->
 
-# # <!-- Explicit model with ignoring light interaction -->
-# ARCH = "mlnrfex_base"
-# TASK = 'single_object_light_rendering'
-# TRACE_NORMAL = True
-# LAMBERT_ONLY = False
-# # <!/-- Explicit model with ignoring light interaction -->
+# <!-- Explicit model with ignoring light interaction -->
+ARCH = "mlnrfex_base"
+TASK = 'single_object_light_rendering'
+TRACE_NORMAL = True
+LAMBERT_ONLY = False
+TEXTURE_LAYERS = '4'
+# <!/-- Explicit model with ignoring light interaction -->
 
 SUFFIX = "v1"
 DATASET = "datasets/" + DATA  # "data/Synthetic_NeRF/" + DATA
@@ -57,22 +56,23 @@ SAVE = "checkpoint/" + DATA + (('_' + NAME) if NAME else '')
 MODEL = ARCH + SUFFIX
 #TODO: VOXEL_NUM & VOXEL_SIZE might not work as intended!
 
-
-REDUCE_STEP_SIZE_AT = '2250,8500,35000'  # '5000,25000,75000'
+REDUCE_STEP_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
 HALF_VOXEL_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
-PRUNNING_EVERY_STEPS = '1000'
-SAVE_INTERVAL_UPDATES = '200'#'750'  # '100'
+PRUNNING_EVERY_STEPS = '5000'
+SAVE_INTERVAL_UPDATES = '500'#'750'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
-TRAIN_VIEWS = '0..45'  # '0..100'
-VALID_VIEWS = '45..61'  # '100..200
-NUM_WORKERS = '4'  # '0'
+TRAIN_VIEWS = '0..150'  # '0..100'
+VALID_VIEWS = '150..200'  # '100..200
+NUM_WORKERS = '8'  # '0'
 
-PREPROCESS = 'none'  # none/mstd/minmax/log
-MIN_COLOR = '0.0'  # '-1' # normalizes data into -1~1 interval if == -1
+PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
+MIN_COLOR = '0.0'  #
 MAX_COLOR = '1.0'
-BG_COLOR = '1.0,1.0,1.0'  # '0.25,0.25,0.25'
+BG_COLOR = '0.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
 
 
+# USE_CPU = False  # WARNING: does not work on CPU
+# SCENE_SCALE = '1.0'
 XML_PATH = '.run/train.run.xml'
 NUM_BACKUPS = 10
 
@@ -87,6 +87,7 @@ parameters += DATASET
 # 	parameters += '\n--with-point-light'
 # 	parameters += '\n--inputs-to-texture "feat:0:256,ray:4,light:4,lightd:0:1"'
 parameters += '\n--user-dir fairnr'
+# parameters += '\n--background-stop-gradient'
 parameters += '\n--task ' + TASK
 parameters += '\n--train-views "' + TRAIN_VIEWS + '"'
 parameters += '\n--chunk-size '+CHUNK_SIZE
@@ -101,7 +102,7 @@ if LAMBERT_ONLY:
 	parameters += '\n--lambert-only'
 if GAMMA_CORRECTION:
 	parameters += '\n--gamma-correction ' + GAMMA_CORRECTION
-parameters += '\n--scene-scale ' + SCENE_SCALE
+# parameters += '\n--scene-scale ' + SCENE_SCALE
 parameters += '\n--view-resolution ' + RES
 parameters += '\n--max-sentences 1'
 parameters += '\n--view-per-batch ' + VIEW_PER_BATCH
@@ -120,8 +121,10 @@ parameters += '\n--initial-boundingbox ' + DATASET + '/bbox.txt'
 parameters += '\n--raymarching-stepsize-ratio 0.125'
 if USE_OCTREE:
 	parameters += '\n--use-octree'
-if USE_CPU:
-	parameters += '\n--cpu'
+if 'TEXTURE_LAYERS' in locals():
+	parameters += '\n--texture-layers ' + TEXTURE_LAYERS
+# if USE_CPU:
+# 	parameters += '\n--cpu'
 parameters += '\n--discrete-regularization'
 parameters += '\n--color-weight ' + COLOR_WEIGHT
 parameters += '\n--alpha-weight ' + ALPHA_WEIGHT
