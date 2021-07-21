@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 
 MODEL = 'rocket_test'
 PATH = 'D:\\edu\\UniBonn\\Study\\thesis\\codes\\blender\\datasets\\' + MODEL
-PATH = 'D:\\edu\\UniBonn\\Study\\thesis\\codes\\realdata\\flower_dome\\dataset\\zoom_0'
+PATH = 'D:\\edu\\UniBonn\\Study\\thesis\\codes\\realdata\\flower_dome\\dataset\\zoom_-1'
 CAM_ICONS = True
 
 
@@ -125,7 +125,7 @@ if CAM_ICONS:
 
 	cam_pts = np.array([p for p in zip(pts_x[conseq], pts_y[conseq], pts_z[conseq], np.ones(len(conseq)))])
 else:
-	cam_pts = np.array([[0, 0, 0, 1], [0, 0, -10 * camScale, 1]])
+	cam_pts = np.array([[0, 0, 0, 1], [0, 0, 10 * camScale, 1]])
 
 # add camera positions
 for ind, dir in enumerate(dirs):

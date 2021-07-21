@@ -9,8 +9,8 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "brdf_sphere_random_exr"
-NAME = ""  # postfix for dataset name
+DATA = "brdf_sphere_coloc_exr"
+NAME = "test"  # postfix for dataset name
 RES = "64x64"
 PIXELS_PER_VIEW = '80'
 GAMMA_CORRECTION = '1.0'
@@ -21,7 +21,7 @@ CHUNK_SIZE = '16'#'256'  # > 1 to save memory to time
 LR = '0.0001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
-COLOR_WEIGHT = '1000.0'  #'256.0'
+COLOR_WEIGHT = '10000.0'  #'256.0'
 ALPHA_WEIGHT = '1.0'
 
 TRACE_NORMAL = False
@@ -61,9 +61,9 @@ HALF_VOXEL_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
 PRUNNING_EVERY_STEPS = '5000'
 SAVE_INTERVAL_UPDATES = '500'#'750'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
-TRAIN_VIEWS = '0..150'  # '0..100'
-VALID_VIEWS = '150..200'  # '100..200
-NUM_WORKERS = '8'  # '0'
+TRAIN_VIEWS = '0..180'  # '0..100'
+VALID_VIEWS = '180..200'  # '100..200
+NUM_WORKERS = '0'  # '0'
 
 PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #

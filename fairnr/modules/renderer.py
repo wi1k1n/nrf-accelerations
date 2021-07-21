@@ -123,11 +123,11 @@ class VolumeRenderer(Renderer):
             noise = 0 if not self.discrete_reg and (not self.training) else torch.zeros_like(sigma).normal_()
             # noise = 0
             free_energy = torch.relu(noise + sigma) * sampled_dists
-            # free_energy = free_energy * 7.0  # ? [debug]
+            free_energy = free_energy * 7.0  # ? [debug]
             # (optional) free_energy = (F.elu(sigma - 3, alpha=1) + 1) * dists
             # (optional) free_energy = torch.abs(sigma) * sampled_dists  ## ??
             outputs['free_energy'] = masked_scatter(sample_mask, free_energy)
-            outputs['free_energy_nf'] = masked_scatter(sample_mask, torch.relu(sigma) * sampled_dists)
+            # outputs['free_energy_nf'] = masked_scatter(sample_mask, torch.relu(sigma) * sampled_dists)
         if 'sdf' in field_outputs:
             outputs['sdf'] = masked_scatter(sample_mask, field_outputs['sdf'])
         if 'texture' in field_outputs:
@@ -203,12 +203,20 @@ class VolumeRenderer(Renderer):
             a = 1 - torch.exp(-free_energy.float())                             # probability of it is not empty here
             b = torch.exp(-torch.cumsum(shifted_free_energy.float(), dim=-1))   # probability of everything is empty up to now
             probs = (a * b).type_as(free_energy)                                # probability of the ray hits something here
+
+            # fenf = outputs['free_energy_nf'] # noise free
+            # sfenf = torch.cat([fenf.new_zeros(sampled_depth.size(0), 1), fenf[:, :-1]], dim=-1)
+            # anf = 1 - torch.exp(-fenf.float())
+            # bnf = torch.exp(-torch.cumsum(sfenf.float(), dim=-1))
+            # probsnf = (anf * bnf).type_as(fenf)
         else:
             probs = outputs['sample_mask'].type_as(sampled_depth) / sampled_depth.size(-1)  # assuming a uniform distribution
+            # probsnf = probs
 
         if global_weights is not None:
             probs = probs * global_weights
 
+        # depth = (sampled_depth * probs).sum(-1)
         depth = (sampled_depth * probs).sum(-1)
         missed = 1 - probs.sum(-1)
         
