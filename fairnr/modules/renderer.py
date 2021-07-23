@@ -232,7 +232,12 @@ class VolumeRenderer(Renderer):
         if 'texture' in outputs:
             compClr = outputs['texture'] * probs.unsqueeze(-1)
             if 'light_transmittance' in outputs:
-                compClr = compClr * (outputs['light_transmittance'] * samples['point_light_intensity']).unsqueeze(-1)
+                # NRF paper, using same sample points as for view ray
+                if not len(outputs['light_transmittance']):
+                    compClr = compClr * a.unsqueeze(-1).type_as(free_energy)
+                # light_transmittance values are provided by child-class
+                else:
+                    compClr = compClr * (outputs['light_transmittance'] * samples['point_light_intensity']).unsqueeze(-1)
             results['colors'] = compClr.sum(-2)
         
         if 'normal' in outputs:
@@ -273,7 +278,7 @@ class VolumeRenderer(Renderer):
 class LightVolumeRenderer(VolumeRenderer):
     def __init__(self, args):
         super().__init__(args)
-        self.light_intensity = torch.Tensor([1]).to(self.args.device_id)
+        self.light_intensity = torch.Tensor([1.]).to(self.args.device_id)
 
     def forward(self, input_fn, field_fn, ray_start, ray_dir, samples, *args, **kwargs):
         viewsN = kwargs['view'].shape[-1]
@@ -363,6 +368,18 @@ class LightIVAVolumeRenderer(LightVolumeRenderer):
 
         outputs['light_transmittance'] = transmittances
 
+        return outputs, _evals
+
+
+
+@register_renderer('light_nrf_volume_renderer')
+class LightNRFVolumeRenderer(LightVolumeRenderer):
+    def forward_once(
+            self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+            early_stop=None, output_types=['sigma', 'texture']):
+        outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+                                               early_stop, output_types)
+        outputs['light_transmittance'] = torch.Tensor([])
         return outputs, _evals
 
 @register_renderer('surface_volume_rendering')

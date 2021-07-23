@@ -93,24 +93,25 @@ if (w8forWin2Appear("Save as", 7000) = 0) {
     return
 }
 
-Sleep, 1000
+Sleep, 2000
 
 FormatTime, TimeString,, yyyyMMdd_hhmmss
 archiveName := % "overleaf_" . TimeString
 Send, %archiveName%
 
-Sleep, 250
+Sleep, 1000
 
 Send !d
 
-Sleep, 250
+Sleep, 1000
 
 archiveDir := "D:\edu\UniBonn\Study\thesis\codes\backup\overleaf"
 
 Send, %archiveDir%
+Sleep, 500
 Send, {Enter}
 
-Sleep, 1000
+Sleep, 2000
 
 Send, {Enter}
 
@@ -131,13 +132,13 @@ if (i >= 7000) {
 }
 
 Run, % "C:\Program Files\WinRAR\WinRAR.exe " . archivePath
-Sleep, 1000
+Sleep, 2000
 
 Send, !e
-Sleep, 1000
+Sleep, 2000
 
 Send, D:\edu\UniBonn\Study\thesis\codes\NSVF\writings\overleaf
-Sleep, 1000
+Sleep, 2000
 
 Send, {enter}
 

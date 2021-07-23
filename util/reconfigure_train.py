@@ -9,28 +9,44 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "brdf_sphere_coloc_exr"
+DATA = "nerf_materials"
 NAME = "test"  # postfix for dataset name
-RES = "64x64"
+RES = "80x80"
 PIXELS_PER_VIEW = '80'
 GAMMA_CORRECTION = '1.0'
 VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
 
 USE_OCTREE = True
 CHUNK_SIZE = '16'#'256'  # > 1 to save memory to time
-LR = '0.0001'  # 0.001
+LR = '0.001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
-COLOR_WEIGHT = '10000.0'  #'256.0'
+COLOR_WEIGHT = '128.0'  #'256.0'
 ALPHA_WEIGHT = '1.0'
+
+
+REDUCE_STEP_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
+HALF_VOXEL_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
+PRUNNING_EVERY_STEPS = '5000'
+SAVE_INTERVAL_UPDATES = '500'#'750'  # '100'
+TOTAL_NUM_UPDATE = '75000'  # 150000
+TRAIN_VIEWS = '0..150'  # '0..100'
+VALID_VIEWS = '150..200'  # '100..200
+NUM_WORKERS = '0'  # '0'
+
+# PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
+MIN_COLOR = '0.0'  #
+MAX_COLOR = '1.0'
+BG_COLOR = '1.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
+
 
 TRACE_NORMAL = False
 LAMBERT_ONLY = False
 
-# # <!-- Original NSVF from facebook -->
-# ARCH = "nsvf_base"
-# TASK = 'single_object_rendering'
-# # <!/-- Original NSVF from facebook -->
+# <!-- Original NSVF from facebook -->
+ARCH = "nsvf_base"
+TASK = 'single_object_rendering'
+# <!/-- Original NSVF from facebook -->
 
 # # <!-- Implicit model with ignoring light interaction -->
 # ARCH = "mlnrf_base"
@@ -42,33 +58,29 @@ LAMBERT_ONLY = False
 # TASK = 'single_object_light_rendering'
 # # <!/-- Implicit model with InVoxelApproximation light interaction -->
 
-# <!-- Explicit model with ignoring light interaction -->
-ARCH = "mlnrfex_base"
-TASK = 'single_object_light_rendering'
-TRACE_NORMAL = True
-LAMBERT_ONLY = False
-TEXTURE_LAYERS = '4'
-# <!/-- Explicit model with ignoring light interaction -->
+# # <!-- Explicit model with ignoring light interaction -->
+# ARCH = "mlnrfex_base"
+# TASK = 'single_object_light_rendering'
+# TRACE_NORMAL = True
+# LAMBERT_ONLY = False
+# TEXTURE_LAYERS = '4'
+# # <!/-- Explicit model with ignoring light interaction -->
+
+# # <!-- Explicit model with NRF (colocated!) light interaction -->
+# ARCH = "mlnrfnrf_base"
+# TASK = 'single_object_light_rendering'
+# TRACE_NORMAL = True
+# LAMBERT_ONLY = False
+# TEXTURE_LAYERS = '4'
+# # <!/-- Explicit model with ignoring light interaction -->
+
+
 
 SUFFIX = "v1"
 DATASET = "datasets/" + DATA  # "data/Synthetic_NeRF/" + DATA
 SAVE = "checkpoint/" + DATA + (('_' + NAME) if NAME else '')
 MODEL = ARCH + SUFFIX
 #TODO: VOXEL_NUM & VOXEL_SIZE might not work as intended!
-
-REDUCE_STEP_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
-HALF_VOXEL_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
-PRUNNING_EVERY_STEPS = '5000'
-SAVE_INTERVAL_UPDATES = '500'#'750'  # '100'
-TOTAL_NUM_UPDATE = '75000'  # 150000
-TRAIN_VIEWS = '0..180'  # '0..100'
-VALID_VIEWS = '180..200'  # '100..200
-NUM_WORKERS = '0'  # '0'
-
-PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
-MIN_COLOR = '0.0'  #
-MAX_COLOR = '1.0'
-BG_COLOR = '0.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
 
 
 # USE_CPU = False  # WARNING: does not work on CPU
@@ -130,7 +142,8 @@ parameters += '\n--color-weight ' + COLOR_WEIGHT
 parameters += '\n--alpha-weight ' + ALPHA_WEIGHT
 parameters += '\n--min-color ' + MIN_COLOR
 parameters += '\n--max-color ' + MAX_COLOR
-parameters += '\n--preprocess ' + PREPROCESS
+if 'PREPROCESS' in locals():
+	parameters += '\n--preprocess ' + PREPROCESS
 parameters += '\n--optimizer "adam"'
 parameters += '\n--adam-betas "(0.9, 0.999)"'
 parameters += '\n--lr-scheduler "polynomial_decay"'

@@ -18,7 +18,9 @@ OUTPUT_FOLDER = '../realdata/flower_dome/dataset_png/'
 
 EXTENSION = 'png'  # 'jpg'
 # PROCESS_IMAGES = True
-
+BBOX = [-0.75, -0.75, -1.5, 0.75, 0.75, -0.5]
+# ROTATE = [0, -1, -1]
+UNDO_CV1 = True
 
 print('Processing measurements at path:')
 print(RAW_DATA_FOLDER)
@@ -151,6 +153,10 @@ for zoomIdx, cameras in zoomLevels.items():
 	os.makedirs(pathPose, exist_ok=True)
 	os.makedirs(pathPosePL, exist_ok=True)
 
+	adjust_ext = np.eye(4)
+	if 'UNDO_CV1' in locals() and UNDO_CV1:
+		adjust_ext = np.linalg.inv(cameras['1']['extrinsics'])
+
 	json_data = {'frames': []}
 	camPoints = []
 	for camIdx, cam in cameras.items():
@@ -178,7 +184,25 @@ for zoomIdx, cameras in zoomLevels.items():
 								cam['translation'][:, None],), axis=1),
 				np.r_[0, 0, 0, 1][None]), axis=0)
 
-		camPoints.append((extrinsics @ np.r_[0, 0, 0, 1])[:3])
+		# Invert camera directions
+		# rm = np.eye(3)
+		# rm[2, 2] = -1
+
+		extrinsics = adjust_ext @ extrinsics
+		extrinsics[:3, 3] *= -1
+
+
+
+		# if 'ROTATE' in locals():
+		# 	rotM = np.concatenate((Rot.from_rotvec(ROTATE).as_matrix(), np.r_[0, 0, 1][None]), axis=0)
+		# 	rotM = np.concatenate((rotM, np.zeros(4)[:, None]), axis=1)
+		# 	extrinsics = rotM @ extrinsics
+
+
+		camPoint = (extrinsics @ np.r_[0, 0, 0, 1])[:3]
+		# if 'ROTATE' in locals():
+		# 	camPoint = Rot.from_rotvec(ROTATE).as_matrix() @ camPoint
+		camPoints.append(camPoint)
 
 
 		# Add data for transforms.json file (used for light/cam visualization)
@@ -213,15 +237,22 @@ for zoomIdx, cameras in zoomLevels.items():
 	# Writing intrinsics from the last camera (since it is the same in all cameras)
 	np.savetxt(op.join(curFolder, 'intrinsics.txt'), cam['intrinsic'])
 
-	# Estimate bbox simply by taking min/max coordinates of camera positions
-	camPoints = np.array(camPoints)
-	bbox = camPoints.min(axis=0).tolist() + camPoints.max(axis=0).tolist()
-	# large bbox: 1.4/-0.5/0.66
-	shrinkRate = 0.6
-	bbox = [b * (1 if i % 3 == 2 else shrinkRate) for i, b in enumerate(bbox)]
-	bbox[2] = -bbox[5] * 0.1
-	bbox[5] = bbox[5] * 0.36
-	voxel_size = ((bbox[3]-bbox[0]) * (bbox[4]-bbox[1]) * (bbox[5]-bbox[2]) / VOXEL_NUMS) ** (1/3)
+	if 'BBOX' in locals():
+		bbox = BBOX
+	else:
+		# Estimate bbox simply by taking min/max coordinates of camera positions
+		camPoints = np.array(camPoints)
+		bbox = camPoints.min(axis=0).tolist() + camPoints.max(axis=0).tolist()
+		# large bbox: 1.4/-0.5/0.66
+		shrinkRate = 0.6
+		bbox = [b * (1 if i % 3 == 2 else shrinkRate) for i, b in enumerate(bbox)]
+		bbox[2] = -bbox[5] * 0.1
+		bbox[5] = bbox[5] * 0.36
+	if 'VOXEL_SIZE' in locals():
+		voxel_size = VOXEL_SIZE
+	else:
+		voxel_size = ((bbox[3]-bbox[0]) * (bbox[4]-bbox[1]) * (bbox[5]-bbox[2]) / VOXEL_NUMS) ** (1/3)
+
 	with open(op.join(curFolder, 'bbox.txt'), 'w') as out_file:
 		print(" ".join(['{:.5f}'.format(f) for f in bbox + [voxel_size]]), file=out_file)
 

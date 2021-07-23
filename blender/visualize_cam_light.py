@@ -7,6 +7,7 @@ MODEL = 'rocket_test'
 PATH = 'D:\\edu\\UniBonn\\Study\\thesis\\codes\\blender\\datasets\\' + MODEL
 PATH = 'D:\\edu\\UniBonn\\Study\\thesis\\codes\\realdata\\flower_dome\\dataset\\zoom_-1'
 CAM_ICONS = True
+INVERT_CAMERA_Z = True
 
 
 
@@ -120,12 +121,14 @@ if CAM_ICONS:
 	tt = bt + lt
 	pts_x = np.array([-bw, -bw, bw, bw, -bw, -bw, bw, bw, -bw - dw, -bw - dw, bw + dw, bw + dw]) * camScale
 	pts_y = np.array([-bh, bh, bh, -bh, -bh, bh, bh, -bh, -bh - dh, bh + dh, bh + dh, -bh - dh]) * camScale
-	pts_z = -np.array([-bt, -bt, -bt, -bt, 0, 0, 0, 0, lt, lt, lt, lt]) * camScale
+	pts_z = np.array([-bt, -bt, -bt, -bt, 0, 0, 0, 0, lt, lt, lt, lt]) * camScale
+	if INVERT_CAMERA_Z:
+		pts_z *= -1
 	conseq = [0, 1, 2, 3, 0, 4, 5, 1, 5, 6, 2, 6, 7, 3, 7, 4, 8, 9, 5, 9, 10, 6, 10, 11, 7, 11, 8]
 
 	cam_pts = np.array([p for p in zip(pts_x[conseq], pts_y[conseq], pts_z[conseq], np.ones(len(conseq)))])
 else:
-	cam_pts = np.array([[0, 0, 0, 1], [0, 0, 10 * camScale, 1]])
+	cam_pts = np.array([[0, 0, 0, 1], [0, 0, 10 * camScale * (-1 if INVERT_CAMERA_Z else 1), 1]])
 
 # add camera positions
 for ind, dir in enumerate(dirs):
