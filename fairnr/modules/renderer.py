@@ -138,6 +138,15 @@ class VolumeRenderer(Renderer):
             outputs['normal'] = masked_scatter(sample_mask, field_outputs['normal'])
         if 'feat_n2' in field_outputs:
             outputs['feat_n2'] = masked_scatter(sample_mask, field_outputs['feat_n2'])
+
+        if 'lightd' in field_inputs:
+            outputs['lightd'] = masked_scatter(sample_mask, field_inputs['lightd'].squeeze())
+        if 'albedo' in field_inputs:
+            outputs['albedo'] = masked_scatter(sample_mask, field_inputs['albedo'].squeeze())
+        if 'roughness' in field_inputs:
+            outputs['roughness'] = masked_scatter(sample_mask, field_inputs['roughness'].squeeze())
+        if 'normal_brdf' in field_inputs:
+            outputs['normal_brdf'] = masked_scatter(sample_mask, field_inputs['normal_brdf'].squeeze())
         return outputs, sample_mask.sum()
 
     def forward_chunk(
@@ -232,12 +241,19 @@ class VolumeRenderer(Renderer):
         if 'texture' in outputs:
             compClr = outputs['texture'] * probs.unsqueeze(-1)
             if 'light_transmittance' in outputs:
+                # carefully divide even though this almost only happens in masked elements
+                lightdmask = (outputs['lightd'] <= 1e-6)
+                outputs['lightd'][lightdmask] = 1.
+                fatt = (outputs['light_radius'] ** 2) / outputs['lightd']  # torch handles zero division with inf values
+                fatt[lightdmask] = 1.
+                Ll = samples['point_light_intensity'] * fatt
                 # NRF paper, using same sample points as for view ray
                 if not len(outputs['light_transmittance']):
-                    compClr = compClr * a.unsqueeze(-1).type_as(free_energy)
+                    tau = a.type_as(free_energy)
                 # light_transmittance values are provided by child-class
                 else:
-                    compClr = compClr * (outputs['light_transmittance'] * samples['point_light_intensity']).unsqueeze(-1)
+                    tau = outputs['light_transmittance']
+                compClr = compClr * (tau * Ll).unsqueeze(-1)
             results['colors'] = compClr.sum(-2)
         
         if 'normal' in outputs:
@@ -251,6 +267,13 @@ class VolumeRenderer(Renderer):
         if 'feat_n2' in outputs:
             results['feat_n2'] = (outputs['feat_n2'] * probs).sum(-1)
             results['regz-term'] = outputs['feat_n2'][sampled_idx.ne(-1)]
+
+        if 'albedo' in outputs:
+            results['albedo'] = (outputs['albedo'] * probs.unsqueeze(-1)).sum(-2)
+        if 'normal_brdf' in outputs:
+            results['normal_brdf'] = (outputs['normal_brdf'] * probs.unsqueeze(-1)).sum(-2)
+        if 'roughness' in outputs:
+            results['roughness'] = (outputs['roughness'] * probs).sum(-1)
             
         return results
 
@@ -278,7 +301,16 @@ class VolumeRenderer(Renderer):
 class LightVolumeRenderer(VolumeRenderer):
     def __init__(self, args):
         super().__init__(args)
-        self.light_intensity = torch.Tensor([1.]).to(self.args.device_id)
+        self.light_intensity = torch.Tensor([args.light_intensity]).to(self.args.device_id)
+        self.light_radius = torch.Tensor([args.light_radius]).to(self.args.device_id)
+
+    @staticmethod
+    def add_args(parser):
+        super(LightVolumeRenderer, LightVolumeRenderer).add_args(parser)
+
+        parser.add_argument('--light-intensity', type=float, default=1.)
+        parser.add_argument('--light-radius', type=float, default=0.1)
+
 
     def forward(self, input_fn, field_fn, ray_start, ray_dir, samples, *args, **kwargs):
         viewsN = kwargs['view'].shape[-1]
@@ -293,7 +325,9 @@ class LightVolumeRenderer(VolumeRenderer):
         plXYZExpanded = torch.repeat_interleave(plXYZ[0, :, :, 0], pixelsPerView, 0)[:, None, :3].expand(-1, voxelsN, -1)
         # plCYZExpanded.shape: viewsN * pixelsPerView x voxelsN x 3
         samples.update({'point_light_xyz': plXYZExpanded[None, ...][kwargs['hits']],
-                        'point_light_intensity': self.light_intensity.expand(samples['sampled_point_distance'].shape)})
+                        'point_light_intensity': self.light_intensity.expand(samples['sampled_point_distance'].shape),
+                        'point_light_radius': self.light_radius.expand(samples['sampled_point_distance'].shape)
+                        })
 
         results = super().forward(input_fn, field_fn, ray_start, ray_dir, samples, *args, **kwargs)
         return results
@@ -380,6 +414,7 @@ class LightNRFVolumeRenderer(LightVolumeRenderer):
         outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
                                                early_stop, output_types)
         outputs['light_transmittance'] = torch.Tensor([])
+        outputs['light_radius'] = self.light_radius.expand_as(outputs['sample_mask'])
         return outputs, _evals
 
 @register_renderer('surface_volume_rendering')

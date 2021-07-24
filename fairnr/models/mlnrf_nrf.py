@@ -21,14 +21,14 @@ from fairseq.models import (
 )
 from fairseq.utils import item
 from fairnr.data.geometry import compute_normal_map, fill_in
-from fairnr.models.nsvf import NSVFModel
+from fairnr.models.mlnrf_ex import MLNRFExModel
 
 
 @register_model('mlnrfnrf')
-class MLNRFIvaModel(NSVFModel):
+class MLNRFNRFModel(MLNRFExModel):
 	READER = 'image_reader'
 	ENCODER = 'sparsevoxel_light_encoder'
-	FIELD = 'radiance_light_field'
+	FIELD = 'radiance_explicit_light_field'
 	RAYMARCHER = 'light_nrf_volume_renderer'
 
 	@classmethod

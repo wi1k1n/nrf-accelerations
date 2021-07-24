@@ -46,13 +46,46 @@ class MLNRFExModel(NSVFModel):
 		return super().prepare_hierarchical_sampling(intersection_outputs, samples, all_results)
 
 	def postprocessing(self, ray_start, ray_dir, all_results, hits, sizes):
-		return super().postprocessing(ray_start, ray_dir, all_results, hits, sizes)
+		all_results = super().postprocessing(ray_start, ray_dir, all_results, hits, sizes)
+
+		S, V, P = sizes
+		fullsize = S * V * P
+		if 'albedo' in all_results:
+			all_results['albedo'] = fill_in((fullsize, 3), hits, all_results['colors'], 0.0).view(S, V, P, 3)
+		if 'roughness' in all_results:
+			all_results['roughness'] = fill_in((fullsize, ), hits, all_results['depths'], 0.0).view(S, V, P)
+		if 'normal_brdf' in all_results:
+			all_results['normal_brdf'] = fill_in((fullsize, 3), hits, all_results['normal_brdf'], 0.0).view(S, V, P, 3)
+		return all_results
 
 	def add_other_logs(self, all_results):
 		return super().add_other_logs(all_results)
 
 	def _visualize(self, images, sample, output, state, **kwargs):
-		return super()._visualize(images, sample, output, state, **kwargs)
+		img_id, shape, view, width, name = state
+		images = super()._visualize(images, sample, output, state, **kwargs)
+		if 'normal_brdf' in output and output['normal_brdf'] is not None:
+			# MLP normals visualization
+			images['{}_normal_brdf/{}:HWC'.format(name, img_id)] = {
+				'img': output['normal_brdf'][shape, view].float(),
+				'min_val': -1,
+				'max_val': 1
+			}
+
+		if 'albedo' in output and output['albedo'] is not None:
+			images['{}_albedo/{}:HWC'.format(name, img_id)] = {
+				'img': output['albedo'][shape, view].float(),
+				'min_val': 0,
+				'max_val': 1
+			}
+
+		if 'roughness' in output and output['roughness'] is not None:
+			images['{}_roughness/{}:HWC'.format(name, img_id)] = {
+				'img': output['roughness'][shape, view].float(),
+				'min_val': 0,
+				'max_val': 1
+			}
+		return images
 
 	@torch.no_grad()
 	def prune_voxels(self, th=0.5, train_stats=False):

@@ -9,9 +9,9 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "nerf_materials"
+DATA = "brdf_sphere_coloc_exr"
 NAME = "test"  # postfix for dataset name
-RES = "80x80"
+RES = "64x64"
 PIXELS_PER_VIEW = '80'
 GAMMA_CORRECTION = '1.0'
 VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
@@ -21,7 +21,7 @@ CHUNK_SIZE = '16'#'256'  # > 1 to save memory to time
 LR = '0.001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
-COLOR_WEIGHT = '128.0'  #'256.0'
+COLOR_WEIGHT = '1000.0'  #'256.0'
 ALPHA_WEIGHT = '1.0'
 
 
@@ -32,21 +32,21 @@ SAVE_INTERVAL_UPDATES = '500'#'750'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
 TRAIN_VIEWS = '0..150'  # '0..100'
 VALID_VIEWS = '150..200'  # '100..200
-NUM_WORKERS = '0'  # '0'
+NUM_WORKERS = '8'  # '0'
 
 # PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #
-MAX_COLOR = '1.0'
-BG_COLOR = '1.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
+MAX_COLOR = '5.0'
+BG_COLOR = '0.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
 
 
 TRACE_NORMAL = False
 LAMBERT_ONLY = False
 
-# <!-- Original NSVF from facebook -->
-ARCH = "nsvf_base"
-TASK = 'single_object_rendering'
-# <!/-- Original NSVF from facebook -->
+# # <!-- Original NSVF from facebook -->
+# ARCH = "nsvf_base"
+# TASK = 'single_object_rendering'
+# # <!/-- Original NSVF from facebook -->
 
 # # <!-- Implicit model with ignoring light interaction -->
 # ARCH = "mlnrf_base"
@@ -64,15 +64,17 @@ TASK = 'single_object_rendering'
 # TRACE_NORMAL = True
 # LAMBERT_ONLY = False
 # TEXTURE_LAYERS = '4'
+# LIGHT_INTENSITY = '1000.0'
 # # <!/-- Explicit model with ignoring light interaction -->
 
-# # <!-- Explicit model with NRF (colocated!) light interaction -->
-# ARCH = "mlnrfnrf_base"
-# TASK = 'single_object_light_rendering'
+# <!-- Explicit model with NRF (colocated!) light interaction -->
+ARCH = "mlnrfnrf_base"
+TASK = 'single_object_light_rendering'
 # TRACE_NORMAL = True
-# LAMBERT_ONLY = False
-# TEXTURE_LAYERS = '4'
-# # <!/-- Explicit model with ignoring light interaction -->
+LAMBERT_ONLY = False
+LIGHT_INTENSITY = '10000.0'
+# TEXTURE_LAYERS = '3'
+# <!/-- Explicit model with ignoring light interaction -->
 
 
 
@@ -108,12 +110,14 @@ if 'VOXEL_NUM' in locals():
 	parameters += '\n--voxel-num ' + locals()['VOXEL_NUM']
 elif 'VOXEL_SIZE' in locals():
 	parameters += '\n--voxel-size ' + locals()['VOXEL_SIZE']
-if TRACE_NORMAL:
+if 'TRACE_NORMAL' in locals():
 	parameters += '\n--trace-normal'
 if LAMBERT_ONLY:
 	parameters += '\n--lambert-only'
 if GAMMA_CORRECTION:
 	parameters += '\n--gamma-correction ' + GAMMA_CORRECTION
+if 'LIGHT_INTENSITY' in locals():
+	parameters += '\n--light-intensity ' + LIGHT_INTENSITY
 # parameters += '\n--scene-scale ' + SCENE_SCALE
 parameters += '\n--view-resolution ' + RES
 parameters += '\n--max-sentences 1'

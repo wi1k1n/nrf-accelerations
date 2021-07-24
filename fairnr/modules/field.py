@@ -315,7 +315,7 @@ class RaidanceExplicitLightField(RaidanceField):
             args.texture_layers + 2 if not self.nerf_style else 2,
             with_ln=self.with_ln if not self.nerf_style else False,
             spec_init=True if not self.nerf_style else False,
-            r_dim=3 if self.lambert_only else 4)
+            r_dim=6 if self.lambert_only else 7)
 
         self.brdf = Microfacet(default_rough=0.3, lambert_only=self.lambert_only, f0=0.91)
 
@@ -349,9 +349,14 @@ class RaidanceExplicitLightField(RaidanceField):
             # albedo = torch.sigmoid(R[:, :3])
             # roughness = torch.threshold(R[:, 3], 0.3, 0.3).unsqueeze(-1)
             albedo = R[:, :3]
-            roughness = None if self.lambert_only else torch.clamp(R[:, 3], 1e-3, 1.).unsqueeze(-1)
-            clr = self.brdf(inputs['light'].unsqueeze(1), inputs['ray'], inputs['normal'], albedo, roughness)
+            normal = R[:, 3:6]
+            roughness = None if self.lambert_only else torch.clamp(R[:, 6], 1e-3, 1.).unsqueeze(-1)
+            # clr = self.brdf(inputs['light'].unsqueeze(1), inputs['ray'], inputs['normal'], albedo, roughness)
+            clr = self.brdf(inputs['light'].unsqueeze(1), inputs['ray'], normal, albedo, roughness)
             inputs['texture'] = clr.squeeze()
+            inputs['albedo'] = albedo
+            inputs['roughness'] = roughness
+            inputs['normal_brdf'] = normal
 
             if self.min_color == 0:
                 inputs['texture'] = torch.sigmoid(inputs['texture'])

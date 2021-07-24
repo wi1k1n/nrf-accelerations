@@ -8,16 +8,20 @@ INJECT_PYCHARM = True
 SAVE_FILE = True
 
 DATA = "brdf_sphere_coloc_exr"
-NAME = ""  # postfix for dataset name
-RENDER_OUTPUT = "output_test"  # output if empty
+NAME = "test"  # postfix for dataset name
+RENDER_OUTPUT = "output"  # output if empty
 RES = "64x64"
-RENDER_PATH_LIGHT = False  # True - light source is moving, false - camera is moving
+RENDER_PATH_LIGHT = True  # True - light source is moving, false - camera is moving
 NUM_FRAMES = '180'
-TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/' + DATA + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
+TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/'\
+			   + DATA + '_' + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
 DRY_RUN = False  # only create camera/light positions and do not evaluate model
 
 CHUNK_SIZE = '256'
 RENDER_BEAM = '2'  # should be an even divisor of NUM_FRAMES TODO: fix it
+
+MIN_COLOR = '0.0'  #
+MAX_COLOR = '5.0'
 
 # WITH_LIGHT = True
 # ARCH = "mlnrf_base"
@@ -41,11 +45,20 @@ RENDER_BEAM = '2'  # should be an even divisor of NUM_FRAMES TODO: fix it
 # TASK = 'single_object_light_rendering'
 # # <!/-- Implicit model with InVoxelApproximation light interaction -->
 
-# <!-- Explicit model with ignoring light interaction -->
-ARCH = "mlnrfex_base"
+# # <!-- Explicit model with ignoring light interaction -->
+# ARCH = "mlnrfex_base"
+# TASK = 'single_object_light_rendering'
+# TRACE_NORMAL = True
+# LAMBERT_ONLY = False
+# # <!/-- Explicit model with ignoring light interaction -->
+
+# <!-- Explicit model with NRF (colocated!) light interaction -->
+ARCH = "mlnrfnrf_base"
 TASK = 'single_object_light_rendering'
 TRACE_NORMAL = True
 LAMBERT_ONLY = False
+# LIGHT_INTENSITY = '10000.0'
+# TEXTURE_LAYERS = '3'
 # <!/-- Explicit model with ignoring light interaction -->
 
 
@@ -53,7 +66,7 @@ DATASET = "datasets/" + DATA  # "data/Synthetic_NeRF/" + DATA
 SAVE = "checkpoint/" + DATA + (('_' + NAME) if NAME else '')
 MODEL = ARCH + "v1"
 # MODEL = 'mlnrfex_basev1_10240_1e-4'
-CHECKPOINT = 'checkpoint_last.pt'  # 'checkpoint_last.pt'
+CHECKPOINT = 'checkpoint2.pt'  # 'checkpoint_last.pt'
 MODEL_PATH = SAVE + '/' + MODEL + '/' + CHECKPOINT
 
 ## Rocket
@@ -108,6 +121,10 @@ if DRY_RUN:
 	parameters += '\n--render-dry-run'
 if 'MIN_COLOR' in locals():
 	parameters += '\n--min-color ' + MIN_COLOR
+if 'MAX_COLOR' in locals():
+	parameters += '\n--max-color ' + MAX_COLOR
+if 'LIGHT_INTENSITY' in locals():
+	parameters += '\n--light-intensity ' + LIGHT_INTENSITY
 
 # parameters += '\n--model-overrides \'{"chunk_size":'+CHUNK_SIZE+',"raymarching_tolerance":0.01}\''
 parameters += '\n--render-beam ' + RENDER_BEAM

@@ -101,6 +101,7 @@ class Microfacet:
 
 
 def safe_l2_normalize(x, axis=None, eps=1e-6):
+	return x / torch.norm(x, p=2, dim=axis, keepdim=True)
 	norm = torch.norm(x, p=2, dim=axis, keepdim=True)
 	mask = norm <= eps
 	norm[mask] = 1
