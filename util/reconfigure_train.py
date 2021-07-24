@@ -9,16 +9,15 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "brdf_sphere_coloc_exr"
+DATA = "rocket_coloc_exr"
 NAME = "test"  # postfix for dataset name
-RES = "64x64"
+RES = "128x128"
 PIXELS_PER_VIEW = '80'
-GAMMA_CORRECTION = '1.0'
 VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
 
 USE_OCTREE = True
 CHUNK_SIZE = '16'#'256'  # > 1 to save memory to time
-LR = '0.001'  # 0.001
+LR = '0.0003'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
 COLOR_WEIGHT = '1000.0'  #'256.0'
@@ -34,9 +33,10 @@ TRAIN_VIEWS = '0..150'  # '0..100'
 VALID_VIEWS = '150..200'  # '100..200
 NUM_WORKERS = '8'  # '0'
 
-# PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
+PREPROCESS = 'log'  # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #
-MAX_COLOR = '5.0'
+MAX_COLOR = '1.0'
+GAMMA_CORRECTION = '1.0'
 BG_COLOR = '0.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
 
 
@@ -72,8 +72,9 @@ ARCH = "mlnrfnrf_base"
 TASK = 'single_object_light_rendering'
 # TRACE_NORMAL = True
 LAMBERT_ONLY = False
-LIGHT_INTENSITY = '10000.0'
-# TEXTURE_LAYERS = '3'
+# LIGHT_INTENSITY = '10000.0'  # sphere_exr -> 1k Watt
+LIGHT_INTENSITY = '250.0'  # rocket_exr -> 5k Watt
+TEXTURE_LAYERS = '5'
 # <!/-- Explicit model with ignoring light interaction -->
 
 
