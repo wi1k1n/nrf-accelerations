@@ -130,23 +130,25 @@ class VolumeRenderer(Renderer):
             # outputs['free_energy_nf'] = masked_scatter(sample_mask, torch.relu(sigma) * sampled_dists)
         if 'sdf' in field_outputs:
             outputs['sdf'] = masked_scatter(sample_mask, field_outputs['sdf'])
-        if 'texture' in field_outputs:
-            outputs['texture'] = masked_scatter(sample_mask, field_outputs['texture'])
-        # if 'R' in field_outputs:
-        #     outputs['R'] = masked_scatter(sample_mask, field_outputs['R'])
-        if 'normal' in field_outputs:
-            outputs['normal'] = masked_scatter(sample_mask, field_outputs['normal'])
-        if 'feat_n2' in field_outputs:
-            outputs['feat_n2'] = masked_scatter(sample_mask, field_outputs['feat_n2'])
 
-        if 'lightd' in field_inputs:
-            outputs['lightd'] = masked_scatter(sample_mask, field_inputs['lightd'].squeeze())
         if 'albedo' in field_inputs:
             outputs['albedo'] = masked_scatter(sample_mask, field_inputs['albedo'].squeeze())
         if 'roughness' in field_inputs:
             outputs['roughness'] = masked_scatter(sample_mask, field_inputs['roughness'].squeeze())
         if 'normal_brdf' in field_inputs:
             outputs['normal_brdf'] = masked_scatter(sample_mask, field_inputs['normal_brdf'].squeeze())
+        if 'texture' in field_outputs:
+            outputs['texture'] = masked_scatter(sample_mask, field_outputs['texture'])
+        if 'normal' in field_outputs:
+            outputs['normal'] = masked_scatter(sample_mask, field_outputs['normal'])
+        if 'feat_n2' in field_outputs:
+            outputs['feat_n2'] = masked_scatter(sample_mask, field_outputs['feat_n2'])
+        if 'lightd' in field_inputs:
+            outputs['lightd'] = masked_scatter(sample_mask, field_inputs['lightd'].squeeze())
+        if 'ray' in field_inputs:
+            outputs['ray'] = masked_scatter(sample_mask, field_inputs['ray'])
+        if 'light' in field_inputs:
+            outputs['light'] = masked_scatter(sample_mask, field_inputs['light'])
         return outputs, sample_mask.sum()
 
     def forward_chunk(
@@ -238,23 +240,53 @@ class VolumeRenderer(Renderer):
         if original_depth is not None:
             results['z'] = (original_depth * probs).sum(-1)
 
-        if 'texture' in outputs:
+
+        if 'albedo' in outputs:
+            results['albedo'] = (outputs['albedo'] * probs.unsqueeze(-1)).sum(-2)
+        if 'normal_brdf' in outputs:
+            results['normal_brdf'] = (outputs['normal_brdf'] * probs.unsqueeze(-1)).sum(-2)
+        if 'roughness' in outputs:
+            results['roughness'] = (outputs['roughness'] * probs).sum(-1)
+        if 'light' in outputs:
+            results['light'] = (outputs['light'] * probs.unsqueeze(-1)).sum(-2)
+        if 'ray' in outputs:
+            results['ray'] = (outputs['ray'] * probs.unsqueeze(-1)).sum(-2)
+
+
+        # simply composite colors
+        if 'texture' in outputs and not 'compClr' in locals():
             compClr = outputs['texture'] * probs.unsqueeze(-1)
-            if 'light_transmittance' in outputs:
-                # carefully divide even though this almost only happens in masked elements
-                lightdmask = (outputs['lightd'] <= 1e-6)
-                outputs['lightd'][lightdmask] = 1.
-                fatt = (outputs['light_radius'] ** 2) / outputs['lightd']  # torch handles zero division with inf values
-                fatt[lightdmask] = 1.
-                Ll = samples['point_light_intensity'] * fatt
-                # NRF paper, using same sample points as for view ray
-                if not len(outputs['light_transmittance']):
-                    tau = a.type_as(free_energy)
-                # light_transmittance values are provided by child-class
-                else:
-                    tau = outputs['light_transmittance']
-                compClr = compClr * (tau * Ll).unsqueeze(-1)
-            results['colors'] = compClr.sum(-2)
+        # or evaluate brdf if needed
+        elif all([k in results for k in ['albedo', 'normal_brdf', 'roughness', 'light']]):
+            compClr = field_fn.brdf(results['light'].unsqueeze(1), results['ray'],
+                            results['normal_brdf'], results['albedo'], results['roughness'].unsqueeze(1))
+            compClr = compClr.squeeze()
+            if field_fn.min_color == 0:
+                compClr = torch.sigmoid(compClr)
+        else:
+            raise Exception('Neither texture nor R is got for compositing')
+        # if light_transmittance has to be considered
+        if 'light_transmittance' in outputs:
+            # carefully divide even though this almost only happens in masked elements
+            lightdmask = (outputs['lightd'] <= 1e-6)
+            outputs['lightd'][lightdmask] = 1.
+            fatt = (outputs['light_radius'] ** 2) / outputs['lightd']  # torch handles zero division with inf values
+            fatt[lightdmask] = 1.
+
+            Ll = samples['point_light_intensity'] * fatt
+            # NRF paper, using same sample points as for view ray
+            if not len(outputs['light_transmittance']):
+                tau = b.type_as(free_energy)
+            # light_transmittance values are provided by child-class
+            else:
+                tau = outputs['light_transmittance']
+            Li = tau * Ll
+            if len(compClr.shape) == 3:
+                compClr = compClr * Li.unsqueeze(-1)
+            else:
+                raise NotImplementedError('This branch of code has not been finished yet')
+        # final summation of compositing colors
+        results['colors'] = compClr.sum(-2)
         
         if 'normal' in outputs:
             results['normal'] = (outputs['normal'] * probs.unsqueeze(-1)).sum(-2)
@@ -267,13 +299,6 @@ class VolumeRenderer(Renderer):
         if 'feat_n2' in outputs:
             results['feat_n2'] = (outputs['feat_n2'] * probs).sum(-1)
             results['regz-term'] = outputs['feat_n2'][sampled_idx.ne(-1)]
-
-        if 'albedo' in outputs:
-            results['albedo'] = (outputs['albedo'] * probs.unsqueeze(-1)).sum(-2)
-        if 'normal_brdf' in outputs:
-            results['normal_brdf'] = (outputs['normal_brdf'] * probs.unsqueeze(-1)).sum(-2)
-        if 'roughness' in outputs:
-            results['roughness'] = (outputs['roughness'] * probs).sum(-1)
             
         return results
 

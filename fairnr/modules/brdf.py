@@ -102,10 +102,11 @@ class Microfacet:
 
 def safe_l2_normalize(x, axis=None, eps=1e-6):
 	return x / torch.norm(x, p=2, dim=axis, keepdim=True)
-	norm = torch.norm(x, p=2, dim=axis, keepdim=True)
-	mask = norm <= eps
-	norm[mask] = 1
-	return torch.div(x, norm)
+	# # The code below is way more correct but produces cuda error on back propagation pass
+	# norm = torch.norm(x, p=2, dim=axis, keepdim=True)
+	# mask = norm <= eps
+	# norm[mask] = 1
+	# return torch.div(x, norm)
 
 # returns 0 if denominator == zero
 def divide_no_nan(a, b, eps=1e-6):

@@ -7,10 +7,10 @@ COPY2CLIPBOARD = False
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "brdf_sphere_coloc_exr"
-NAME = "test"  # postfix for dataset name
+DATA = "rocket_coloc_exr"
+NAME = "test2"  # postfix for dataset name
 RENDER_OUTPUT = "output"  # output if empty
-RES = "64x64"
+RES = "128x128"
 RENDER_PATH_LIGHT = True  # True - light source is moving, false - camera is moving
 NUM_FRAMES = '180'
 TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/'\
@@ -21,7 +21,7 @@ CHUNK_SIZE = '256'
 RENDER_BEAM = '2'  # should be an even divisor of NUM_FRAMES TODO: fix it
 
 MIN_COLOR = '0.0'  #
-MAX_COLOR = '5.0'
+MAX_COLOR = '0.8'
 
 # WITH_LIGHT = True
 # ARCH = "mlnrf_base"
@@ -55,7 +55,6 @@ MAX_COLOR = '5.0'
 # <!-- Explicit model with NRF (colocated!) light interaction -->
 ARCH = "mlnrfnrf_base"
 TASK = 'single_object_light_rendering'
-TRACE_NORMAL = True
 LAMBERT_ONLY = False
 # LIGHT_INTENSITY = '10000.0'
 # TEXTURE_LAYERS = '3'
@@ -65,20 +64,20 @@ LAMBERT_ONLY = False
 DATASET = "datasets/" + DATA  # "data/Synthetic_NeRF/" + DATA
 SAVE = "checkpoint/" + DATA + (('_' + NAME) if NAME else '')
 MODEL = ARCH + "v1"
-# MODEL = 'mlnrfex_basev1_10240_1e-4'
-CHECKPOINT = 'checkpoint2.pt'  # 'checkpoint_last.pt'
+# MODEL = 'mlnrfnrf_basev1_1strocket'
+CHECKPOINT = 'checkpoint12.pt'  # 'checkpoint_last.pt'
 MODEL_PATH = SAVE + '/' + MODEL + '/' + CHECKPOINT
 
-## Rocket
+# Rocket
 # RENDER_PATH_ARGS = '{\'radius\':1.5,\'h\':3,\'o\':(-0.1,0.05,1.25)}'  # top diagonal view
-# RENDER_PATH_ARGS = '{\'radius\':4.5,\'h\':0.0,\'o\':(-0.1,0.05,1.25)}'
-# RENDER_AT_VECTOR = '"(-0.1,0.05,1.25)"'
+RENDER_PATH_ARGS = '{\'radius\':4.5,\'h\':0.0,\'o\':(-0.1,0.05,1.25)}'
+RENDER_AT_VECTOR = '"(-0.1,0.05,1.25)"'
 ## Guitar
 # RENDER_PATH_ARGS = '{\'radius\':0.8,\'h\':1.0,\'o\':(0,-0.06,0.5)}'
 # RENDER_AT_VECTOR = '"(0, -0.06, 0.575)"'
-## BRDF_Sphere
-RENDER_PATH_ARGS = '{\'radius\':4,\'h\':2,\'o\':(0,0,0)}'
-RENDER_AT_VECTOR = '"(0,0,0)"'
+# ## BRDF_Sphere
+# RENDER_PATH_ARGS = '{\'radius\':4,\'h\':2,\'o\':(0,0,0)}'
+# RENDER_AT_VECTOR = '"(0,0,0)"'
 
 RENDER_PATH_STYLE = 'circle'
 RENDER_SPEED = '2'

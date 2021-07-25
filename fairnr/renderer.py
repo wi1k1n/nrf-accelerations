@@ -195,7 +195,9 @@ class NeuralRenderer(object):
                     image_name = "{:04d}".format(k)
 
                     for key in images:
-                        name, type = key.split('/')[0].split('_')
+                        keyname = key.split('/')[0]
+                        name = keyname.split('_')[0]
+                        type = keyname[len(name)+1:]
                         if type in self.output_type:
                             if name == 'coarse':
                                 type = 'coarse-' + type

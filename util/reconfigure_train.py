@@ -10,14 +10,14 @@ INJECT_PYCHARM = True
 SAVE_FILE = True
 
 DATA = "rocket_coloc_exr"
-NAME = "test"  # postfix for dataset name
+NAME = "test2"  # postfix for dataset name
 RES = "128x128"
 PIXELS_PER_VIEW = '80'
 VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
 
 USE_OCTREE = True
 CHUNK_SIZE = '16'#'256'  # > 1 to save memory to time
-LR = '0.0003'  # 0.001
+LR = '0.0002'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
 COLOR_WEIGHT = '1000.0'  #'256.0'
@@ -27,15 +27,16 @@ ALPHA_WEIGHT = '1.0'
 REDUCE_STEP_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
 HALF_VOXEL_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
 PRUNNING_EVERY_STEPS = '5000'
+PRUNNING_TH = '0.5'  # '0.5'
 SAVE_INTERVAL_UPDATES = '500'#'750'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
 TRAIN_VIEWS = '0..150'  # '0..100'
 VALID_VIEWS = '150..200'  # '100..200
-NUM_WORKERS = '8'  # '0'
+NUM_WORKERS = '0'  # '0'
 
 PREPROCESS = 'log'  # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #
-MAX_COLOR = '1.0'
+MAX_COLOR = '0.8'
 GAMMA_CORRECTION = '1.0'
 BG_COLOR = '0.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
 
@@ -70,10 +71,10 @@ LAMBERT_ONLY = False
 # <!-- Explicit model with NRF (colocated!) light interaction -->
 ARCH = "mlnrfnrf_base"
 TASK = 'single_object_light_rendering'
-# TRACE_NORMAL = True
 LAMBERT_ONLY = False
-# LIGHT_INTENSITY = '10000.0'  # sphere_exr -> 1k Watt
-LIGHT_INTENSITY = '250.0'  # rocket_exr -> 5k Watt
+COMPOSITE_R = False  # doesn't work yet
+LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
+# LIGHT_INTENSITY = '250.0'  # rocket_exr -> 5k Watt
 TEXTURE_LAYERS = '5'
 # <!/-- Explicit model with ignoring light interaction -->
 
@@ -111,11 +112,13 @@ if 'VOXEL_NUM' in locals():
 	parameters += '\n--voxel-num ' + locals()['VOXEL_NUM']
 elif 'VOXEL_SIZE' in locals():
 	parameters += '\n--voxel-size ' + locals()['VOXEL_SIZE']
-if 'TRACE_NORMAL' in locals():
+if 'TRACE_NORMAL' in locals() and TRACE_NORMAL:
 	parameters += '\n--trace-normal'
-if LAMBERT_ONLY:
+if 'LAMBERT_ONLY' in locals() and LAMBERT_ONLY:
 	parameters += '\n--lambert-only'
-if GAMMA_CORRECTION:
+if 'COMPOSITE_R' in locals() and COMPOSITE_R:
+	parameters += '\n--composite-r'
+if 'GAMMA_CORRECTION' in locals():
 	parameters += '\n--gamma-correction ' + GAMMA_CORRECTION
 if 'LIGHT_INTENSITY' in locals():
 	parameters += '\n--light-intensity ' + LIGHT_INTENSITY
@@ -166,6 +169,8 @@ parameters += '\n--save-interval 1'
 parameters += '\n--half-voxel-size-at  "' + HALF_VOXEL_SIZE_AT + '"'
 parameters += '\n--reduce-step-size-at "' + REDUCE_STEP_SIZE_AT + '"'
 parameters += '\n--pruning-every-steps ' + PRUNNING_EVERY_STEPS
+if 'PRUNNING_TH' in locals():
+	parameters += '\n--pruning-th ' + PRUNNING_TH
 # '--rendering-every-steps'
 parameters += '\n--keep-interval-updates 5'
 parameters += '\n--log-format simple'

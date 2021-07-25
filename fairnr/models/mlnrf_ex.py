@@ -20,7 +20,7 @@ from fairseq.models import (
 	register_model_architecture
 )
 from fairseq.utils import item
-from fairnr.data.geometry import compute_normal_map, fill_in
+from fairnr.data.geometry import compute_normal_map, fill_in, matmul
 from fairnr.models.nsvf import NSVFModel
 
 
@@ -66,8 +66,19 @@ class MLNRFExModel(NSVFModel):
 		images = super()._visualize(images, sample, output, state, **kwargs)
 		if 'normal_brdf' in output and output['normal_brdf'] is not None:
 			# MLP normals visualization
+			normal = output['normal_brdf'][shape, view].float()
+
+			normalNorm = torch.norm(normal, p=2, dim=1, keepdim=True)
+			normalNorm[normalNorm < 1e-6] = 1.
+
+			normal = torch.div(normal, normalNorm)
+
+			# convert normals from world space to tangent space
+			# extInv = sample['extrinsics'][shape, view].float().inverse()
+			# normal = matmul(extInv[:3, :3], normal.transpose(0, 1)).transpose(0, 1)
+
 			images['{}_normal_brdf/{}:HWC'.format(name, img_id)] = {
-				'img': output['normal_brdf'][shape, view].float(),
+				'img': normal,
 				'min_val': -1,
 				'max_val': 1
 			}

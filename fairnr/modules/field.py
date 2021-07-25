@@ -299,6 +299,7 @@ class RaidanceLightField(RaidanceField):
 class RaidanceExplicitLightField(RaidanceField):
     def __init__(self, args):
         self.lambert_only = getattr(args, 'lambert_only', False)
+        self.composite_r = getattr(args, 'composite_r', False)
         super().__init__(args)
         self.bg_color = BackgroundField(out_dim=3, bg_color=self.trans_bg, min_color=self.min_color, stop_grad=self.sgbg)
 
@@ -307,6 +308,8 @@ class RaidanceExplicitLightField(RaidanceField):
         super(RaidanceExplicitLightField, RaidanceExplicitLightField).add_args(parser)
         parser.add_argument('--lambert-only', action='store_true',
                             help='if set, the brdf will only model fully diffuse appearance')
+        parser.add_argument('--composite-r', action='store_true',
+                            help='if set, brdf evaluation will only be performed after compositing R vector')
 
     def build_texture_renderer(self, args):
         tex_input_dim = sum(self.tex_input_dims)
@@ -351,15 +354,19 @@ class RaidanceExplicitLightField(RaidanceField):
             albedo = R[:, :3]
             normal = R[:, 3:6]
             roughness = None if self.lambert_only else torch.clamp(R[:, 6], 1e-3, 1.).unsqueeze(-1)
-            # clr = self.brdf(inputs['light'].unsqueeze(1), inputs['ray'], inputs['normal'], albedo, roughness)
-            clr = self.brdf(inputs['light'].unsqueeze(1), inputs['ray'], normal, albedo, roughness)
-            inputs['texture'] = clr.squeeze()
             inputs['albedo'] = albedo
             inputs['roughness'] = roughness
             inputs['normal_brdf'] = normal
 
-            if self.min_color == 0:
-                inputs['texture'] = torch.sigmoid(inputs['texture'])
+            # evaluate brdf and composite colors later
+            if not self.composite_r:
+                # clr = self.brdf(inputs['light'].unsqueeze(1), inputs['ray'], inputs['normal'], albedo, roughness)
+                clr = self.brdf(inputs['light'].unsqueeze(1), inputs['ray'], normal, albedo, roughness)
+                inputs['texture'] = clr.squeeze()
+
+                if self.min_color == 0:
+                    # inputs['texture'] = torch.sigmoid(inputs['texture'])
+                    inputs['texture'] = torch.nn.ReLU()(inputs['texture'])
 
         return inputs
 
