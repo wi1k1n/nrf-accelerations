@@ -17,7 +17,7 @@ import imageio
 from torchvision.utils import save_image
 from fairnr.data import trajectory, geometry, data_utils
 from fairseq.meters import StopwatchMeter
-from fairnr.data.data_utils import recover_image, get_uv, parse_views
+from fairnr.data.data_utils import recover_image, get_uv, parse_views, load_rgb, load_exr
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -40,9 +40,15 @@ class NeuralRenderer(object):
                 test_camera_poses=None,
                 test_camera_intrinsics=None,
                 test_camera_views=None,
-                dry_run=None):
+                dry_run=None,
+                min_color=0.0,
+                max_color=1.0,
+                bg=None):
 
         self.dry_run = dry_run
+        self.min_color = min_color
+        self.max_color = max_color
+        self.bg = float(bg)
 
         self.frames = frames
         self.speed = speed
@@ -219,8 +225,8 @@ class NeuralRenderer(object):
                                 save_image(image, os.path.join(prefix, image_name + '.png'), format=None)
                                 image_names.append(os.path.join(prefix, image_name + '.png'))
 
-                    for img in self.save_additional(shape, k, step, _sample, output_path, image_name, **kwargs):
-                        image_names.append(os.path.join(output_path, img))
+                    for imgPath in self.save_additional(shape, k, step, _sample, output_path, image_name, **kwargs):
+                        image_names.append(imgPath)
 
                 step = next_step
 
@@ -306,17 +312,30 @@ class LightNeuralRenderer(NeuralRenderer):
         return sample
 
     def save_additional(self, shape, k, step, sample, output_path, image_name, **kwargs):
-        super().save_additional(shape, k, step, sample, output_path, image_name, **kwargs)
+        imgPathsReturn = super().save_additional(shape, k, step, sample, output_path, image_name, **kwargs)
 
         prefix = os.path.join(output_path, 'pose_pl')
         Path(prefix).mkdir(parents=True, exist_ok=True)
         pose = sample['extrinsics_pl'][shape, k-step].cpu().numpy()
         np.savetxt(os.path.join(prefix, image_name + '.txt'), pose)
 
-        imgs = []
-        if self.targets_path:
-            curImgFilename = os.path.join(self.targets_path, image_name + '.png')
-            if not self.dry_run and not os.path.exists(curImgFilename):
-                raise FileNotFoundError('The --targets-path option is specified, but there is no ' + curImgFilename + ' file')
-            imgs.append(curImgFilename)
-        return imgs
+        if self.targets_path and not self.dry_run:
+            # curImgFilename = os.path.join(self.targets_path, image_name + '.png')
+            # if not self.dry_run and not os.path.exists(curImgFilename):
+            #     raise FileNotFoundError('The --targets-path option is specified, but there is no ' + curImgFilename + ' file')
+            # imgs.append(curImgFilename)
+
+            prefix = os.path.join(output_path, 'target')
+            Path(prefix).mkdir(parents=True, exist_ok=True)
+            targetFiles = glob.glob(os.path.join(self.targets_path, image_name + '.*'))
+            assert len(targetFiles) == 1, 'Error occured while loading target image!'
+            w, h = sample['size'][shape][0][:2].cpu().numpy().astype(np.int)
+            targetRGB, _, _ = load_rgb(targetFiles[0], (w, h))
+            targetRGB = torch.Tensor(targetRGB.transpose(1, 2, 0)).reshape(w * h, -1)
+
+            targetRGB = recover_image(targetRGB, min_val=self.min_color, max_val=self.max_color, width=w).permute(2, 0, 1)
+            savePath = os.path.join(prefix, image_name + '.png')
+            save_image(targetRGB, savePath, format=None)
+            imgPathsReturn.append(savePath)
+
+        return imgPathsReturn

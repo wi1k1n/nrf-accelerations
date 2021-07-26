@@ -427,5 +427,8 @@ class SingleObjLightRenderingTask(SingleObjRenderingTask):
             test_camera_poses=getattr(args, "render_camera_poses", None),
             test_camera_intrinsics=getattr(args, "render_camera_intrinsics", None),
             test_camera_views=getattr(args, "render_views", None),
-            dry_run=args.render_dry_run
+            dry_run=args.render_dry_run,
+			min_color=args.min_color,
+			max_color=args.max_color,
+            bg=args.transparent_background
         )

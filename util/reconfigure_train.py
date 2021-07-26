@@ -11,7 +11,7 @@ SAVE_FILE = True
 
 DATA = "rocket_coloc_exr"
 NAME = "test2"  # postfix for dataset name
-RES = "128x128"
+RES = "64x64"
 PIXELS_PER_VIEW = '80'
 VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
 
@@ -20,8 +20,8 @@ CHUNK_SIZE = '16'#'256'  # > 1 to save memory to time
 LR = '0.0002'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
-COLOR_WEIGHT = '1000.0'  #'256.0'
-ALPHA_WEIGHT = '1.0'
+COLOR_WEIGHT = '1.0'  #'256.0'
+ALPHA_WEIGHT = '0.0'
 
 
 REDUCE_STEP_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'

@@ -65,6 +65,31 @@ def get_uv(H, W, h, w):
     uv[1] = uv[1] * float(H / h)
     return uv, [float(H / h), float(W / w)]
 
+def load_exr(path, with_alpha=True):
+    if not OpenEXR.isOpenExrFile(path):
+        return None
+
+    exr = OpenEXR.InputFile(path)
+    hdr = exr.header()
+    dw = hdr['dataWindow']
+    ch = hdr['channels']
+    if not ('R' in ch and 'G' in ch and 'B' in ch):
+        raise ValueError('Wrong EXR data')
+    if with_alpha and not 'A' in ch:
+        raise ValueError('EXR file doesn\'t have alpha channel')
+    sz = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
+    tps = {Imath.PixelType.UINT: np.uint, Imath.PixelType.HALF: np.half, Imath.PixelType.FLOAT: float}
+
+    r = np.frombuffer(exr.channel('R'), dtype=tps[ch['R'].type.v])
+    g = np.frombuffer(exr.channel('G'), dtype=tps[ch['G'].type.v])
+    b = np.frombuffer(exr.channel('B'), dtype=tps[ch['B'].type.v])
+    if with_alpha:
+        a = np.frombuffer(exr.channel('A'), dtype=tps[ch['A'].type.v])
+        img = np.stack((r, g, b, a)).reshape(4, sz[0]*sz[1]).T
+    else:
+        img = np.stack((r, g, b, np.ones((sz[0], sz[1])))).reshape(3, sz[0]*sz[1]).T
+    img = img.reshape(sz[0], sz[1], -1).astype('float32')
+    return img
 
 def load_rgb(
     path, 
@@ -75,32 +100,13 @@ def load_rgb(
     interpolation='AREA',
     preprocessor=None):
 
-    # If input files are EXR-files
-    if OpenEXR.isOpenExrFile(path):
+    # Try loading EXR file
+    img = load_exr(path, with_alpha)
+    if img is not None:
         interpolation = 'linear'
-        exr = OpenEXR.InputFile(path)
-        hdr = exr.header()
-        dw = hdr['dataWindow']
-        ch = hdr['channels']
-        if not ('R' in ch and 'G' in ch and 'B' in ch):
-            raise ValueError('Wrong EXR data')
-        if with_alpha and not 'A' in ch:
-            raise ValueError('EXR file doesn\'t have alpha channel')
-        sz = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
-        tps = {Imath.PixelType.UINT: np.uint, Imath.PixelType.HALF: np.half, Imath.PixelType.FLOAT: float}
 
-        r = np.frombuffer(exr.channel('R'), dtype=tps[ch['R'].type.v])
-        g = np.frombuffer(exr.channel('G'), dtype=tps[ch['G'].type.v])
-        b = np.frombuffer(exr.channel('B'), dtype=tps[ch['B'].type.v])
-        if with_alpha:
-            a = np.frombuffer(exr.channel('A'), dtype=tps[ch['A'].type.v])
-            img = np.stack((r, g, b, a)).reshape(4, sz[0]*sz[1]).T
-        else:
-            img = np.stack((r, g, b, np.ones((sz[0], sz[1])))).reshape(3, sz[0]*sz[1]).T
-
-        img = img.reshape(sz[0], sz[1], -1).astype('float32')
-    # If input files are PNG-files
-    else:
+    # If it was not EXR, try loading LDR image
+    if img is None:
         if with_alpha:
             img = imageio.imread(path)  # RGB-ALPHA
         else:
@@ -108,16 +114,18 @@ def load_rgb(
 
         img = skimage.img_as_float32(img).astype('float32')
 
+    assert img is not None, 'Input image loading failed!'
 
-        if img.shape[-1] == 3:
-            mask = np.ones((img.shape[0], img.shape[1], 1))
+    # Add alpha channel if required
+    if with_alpha and img.shape[-1] == 3:
+        mask = np.ones((img.shape[0], img.shape[1], 1))
 
-            # h, w, _ = img.shape
-            # circle_img = np.zeros((h, w), np.uint8)
-            # cv2.circle(circle_img, (w // 2, h // 2), min(w, h) // 2, 1, thickness=-1)
-            # mask = cv2.bitwise_and(mask, mask, mask=circle_img)[...,None]
+        # h, w, _ = img.shape
+        # circle_img = np.zeros((h, w), np.uint8)
+        # cv2.circle(circle_img, (w // 2, h // 2), min(w, h) // 2, 1, thickness=-1)
+        # mask = cv2.bitwise_and(mask, mask, mask=circle_img)[...,None]
 
-            img = np.concatenate([img, mask], -1).astype('float32')
+        img = np.concatenate([img, mask], -1).astype('float32')
 
     H, W, D = img.shape
     h, w = resolution
@@ -350,8 +358,10 @@ def recover_image(img, min_val=-1, max_val=1.0, width=512, bg=None, weight=None,
     height = sizes[0] // width
     img = img.float().to('cpu')
 
-    if len(sizes) == 1 and (bg is not None):
-        bg_mask = img.eq(bg)[:, None].type_as(img)
+    # if len(sizes) == 1 and (bg is not None):
+    #     bg_mask = img.eq(bg)[:, None].type_as(img)
+    if bg is not None:
+        bg_mask = img.eq(bg).type_as(img)
 
     img = pprc.preprocessInverse(img)
     img = (img - min_val) / (max_val - min_val)
@@ -365,7 +375,9 @@ def recover_image(img, min_val=-1, max_val=1.0, width=512, bg=None, weight=None,
         img = img * weight[:, None]
 
     if bg is not None:
-        img = img * (1 - bg_mask) + bg_mask
+        # img = img * (1 - bg_mask) + bg_mask
+        img = img * (1 - bg_mask) + bg_mask * bg
+        img = img[..., :3]
     img = img.reshape(height, width, -1)
     return img
 

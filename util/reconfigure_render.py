@@ -18,10 +18,11 @@ TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/'\
 DRY_RUN = False  # only create camera/light positions and do not evaluate model
 
 CHUNK_SIZE = '256'
-RENDER_BEAM = '2'  # should be an even divisor of NUM_FRAMES TODO: fix it
+RENDER_BEAM = '1'  # should be an even divisor of NUM_FRAMES TODO: fix it
 
 MIN_COLOR = '0.0'  #
 MAX_COLOR = '0.8'
+BG_COLOR = '0.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
 
 # WITH_LIGHT = True
 # ARCH = "mlnrf_base"
@@ -63,6 +64,7 @@ LAMBERT_ONLY = False
 
 DATASET = "datasets/" + DATA  # "data/Synthetic_NeRF/" + DATA
 SAVE = "checkpoint/" + DATA + (('_' + NAME) if NAME else '')
+# SAVE = 'checkpoint/rocket_coloc_exr_niceRefllessNRF'
 MODEL = ARCH + "v1"
 # MODEL = 'mlnrfnrf_basev1_1strocket'
 CHECKPOINT = 'checkpoint12.pt'  # 'checkpoint_last.pt'
@@ -122,6 +124,8 @@ if 'MIN_COLOR' in locals():
 	parameters += '\n--min-color ' + MIN_COLOR
 if 'MAX_COLOR' in locals():
 	parameters += '\n--max-color ' + MAX_COLOR
+if 'BG_COLOR' in locals():
+	parameters += '\n--transparent-background "' + BG_COLOR + '"'
 if 'LIGHT_INTENSITY' in locals():
 	parameters += '\n--light-intensity ' + LIGHT_INTENSITY
 

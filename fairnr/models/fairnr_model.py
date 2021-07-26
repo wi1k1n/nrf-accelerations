@@ -240,6 +240,7 @@ class BaseModel(BaseFairseqModel):
             images[tag]['img'] = pprc.preprocessInverse(images[tag]['img'].cpu())
             images[tag]['gamma'] = float(self.args.gamma_correction)
             images[tag]['max_val'] = float(self.args.max_color)
+            images[tag]['bg'] = float(self.args.transparent_background)
 
         # here pass identity preprocessor since preprocessInverse has already been applied
         images = {

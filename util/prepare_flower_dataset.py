@@ -5,7 +5,7 @@ from scipy.spatial.transform import Rotation as Rot
 import cv2 as cv
 
 VOXEL_NUMS = 64
-INTREXTR_FROM_MEASXML = False
+INTREXTR_FROM_MEASXML = True
 
 XML_MEAS_PATH = '../realdata/flower_dome/meas.xml'
 # RAW_DATA_FOLDER = '../realdata/flower_dome/meas/tv000_045_cl133'
