@@ -7,10 +7,10 @@ COPY2CLIPBOARD = False
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "rocket_coloc_exr"
-NAME = "test2"  # postfix for dataset name
+DATA = "rocket_random_exr"
+NAME = "test3"  # postfix for dataset name
 RENDER_OUTPUT = "output"  # output if empty
-RES = "128x128"
+RES = "64x64"
 RENDER_PATH_LIGHT = True  # True - light source is moving, false - camera is moving
 NUM_FRAMES = '180'
 TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/'\
@@ -18,7 +18,7 @@ TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/'\
 DRY_RUN = False  # only create camera/light positions and do not evaluate model
 
 CHUNK_SIZE = '256'
-RENDER_BEAM = '1'  # should be an even divisor of NUM_FRAMES TODO: fix it
+RENDER_BEAM = '4'  # should be an even divisor of NUM_FRAMES TODO: fix it
 
 MIN_COLOR = '0.0'  #
 MAX_COLOR = '0.8'
@@ -53,12 +53,16 @@ BG_COLOR = '0.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
 # LAMBERT_ONLY = False
 # # <!/-- Explicit model with ignoring light interaction -->
 
-# <!-- Explicit model with NRF (colocated!) light interaction -->
-ARCH = "mlnrfnrf_base"
+# # <!-- Explicit model with NRF (colocated!) light interaction -->
+# ARCH = "mlnrfnrf_base"
+# TASK = 'single_object_light_rendering'
+# LAMBERT_ONLY = False
+# # <!/-- Explicit model with ignoring light interaction -->
+
+# <!-- Explicit model with VoxelApproximation light interaction -->
+ARCH = "mlnrfexva_base"
 TASK = 'single_object_light_rendering'
 LAMBERT_ONLY = False
-# LIGHT_INTENSITY = '10000.0'
-# TEXTURE_LAYERS = '3'
 # <!/-- Explicit model with ignoring light interaction -->
 
 
@@ -67,7 +71,7 @@ SAVE = "checkpoint/" + DATA + (('_' + NAME) if NAME else '')
 # SAVE = 'checkpoint/rocket_coloc_exr_niceRefllessNRF'
 MODEL = ARCH + "v1"
 # MODEL = 'mlnrfnrf_basev1_1strocket'
-CHECKPOINT = 'checkpoint12.pt'  # 'checkpoint_last.pt'
+CHECKPOINT = 'checkpoint2.pt'  # 'checkpoint_last.pt'
 MODEL_PATH = SAVE + '/' + MODEL + '/' + CHECKPOINT
 
 # Rocket

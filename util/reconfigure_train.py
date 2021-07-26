@@ -9,9 +9,9 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "flower_z9_static_png"
+DATA = "tablelamp_static_exr"
 NAME = "test"  # postfix for dataset name
-RES = "100x100"
+RES = "64x64"
 PIXELS_PER_VIEW = '80'
 VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
 
@@ -30,15 +30,15 @@ PRUNNING_EVERY_STEPS = '5000'
 PRUNNING_TH = '0.5'  # '0.5'
 SAVE_INTERVAL_UPDATES = '500'#'750'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
-TRAIN_VIEWS = '0..56'  # '0..100'
-VALID_VIEWS = '56..61'  # '100..200
+TRAIN_VIEWS = '0..150'  # '0..100'
+VALID_VIEWS = '150..200'  # '100..200
 NUM_WORKERS = '8'  # '0'
 
 PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #
-MAX_COLOR = '1.0'
+MAX_COLOR = '0.8'
 GAMMA_CORRECTION = '1.0'
-BG_COLOR = '1.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
+BG_COLOR = '0.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
 
 
 TRACE_NORMAL = False
@@ -78,11 +78,22 @@ TASK = 'single_object_rendering'
 # TEXTURE_LAYERS = '5'
 # # <!/-- Explicit model with ignoring light interaction -->
 
+# # <!-- Explicit model with VoxelApproximation light interaction -->
+# ARCH = "mlnrfexva_base"
+# TASK = 'single_object_light_rendering'
+# LAMBERT_ONLY = False
+# COMPOSITE_R = False  # doesn't work yet
+# # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
+# LIGHT_INTENSITY = '250.0'  # rocket_exr -> 5k Watt
+# TEXTURE_LAYERS = '5'
+# # <!/-- Explicit model with ignoring light interaction -->
+
 
 
 SUFFIX = "v1"
 DATASET = "datasets/" + DATA  # "data/Synthetic_NeRF/" + DATA
 SAVE = "checkpoint/" + DATA + (('_' + NAME) if NAME else '')
+# SAVE = "checkpoint/rocket_random_exr_test"
 MODEL = ARCH + SUFFIX
 #TODO: VOXEL_NUM & VOXEL_SIZE might not work as intended!
 

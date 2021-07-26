@@ -369,6 +369,7 @@ class LightVolumeRenderer(VolumeRenderer):
         early_stop=None, output_types=['sigma', 'texture']):
         outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
                                                 early_stop, output_types)
+        outputs['light_radius'] = self.light_radius.expand_as(outputs['sample_mask'])
         return outputs, _evals
 
 
@@ -441,7 +442,6 @@ class LightNRFVolumeRenderer(LightVolumeRenderer):
         outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
                                                early_stop, output_types)
         outputs['light_transmittance'] = torch.Tensor([])
-        outputs['light_radius'] = self.light_radius.expand_as(outputs['sample_mask'])
         return outputs, _evals
 
 @register_renderer('surface_volume_rendering')
