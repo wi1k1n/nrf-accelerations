@@ -373,4 +373,5 @@ with open(os.path.join(homedir, 'render_params.txt'), 'w') as fi:
 
 # Postprocessing script for the dataset
 if POSTPROCESSING_SCRIPT:
-    os.system("python postprocess_dataset.py " + renderPath + " " + homedir)
+    os.system("python postprocess_dataset.py " + renderPath + " " + homedir +
+                                            " " + str(opts.PERCENTILE_MIN) + " " + str(opts.PERCENTILE_MAX))
