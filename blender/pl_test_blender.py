@@ -38,6 +38,8 @@ img = img.reshape(sz[0], sz[1], -1).astype('float32')
 # Managing sizes
 cxpx, cypx = sz[0] // 2, sz[1] // 2
 
+print(img[cxpx, cypx])
+
 imgcum = np.sum(img[...,:3], axis=-1)
 imgnzx, imgnzy = np.nonzero(imgcum)
 wpx, hpx = imgnzx.max() - imgnzx.min(), imgnzy.max() - imgnzy.min()

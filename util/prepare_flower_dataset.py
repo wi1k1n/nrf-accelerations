@@ -1,4 +1,4 @@
-import os, os.path as op, re, json
+import os, os.path as op, re, json, random
 import xml.etree.ElementTree as ET
 import numpy as np
 from scipy.spatial.transform import Rotation as Rot
@@ -16,12 +16,19 @@ INTR_MEAS_PATH = '../realdata/flower_dome/meas/tv000_045_cl133_masked/intrinsics
 RAW_DATA_FOLDER = '../realdata/flower_dome/meas/tv000_045_cl133_masked'
 OUTPUT_FOLDER = '../realdata/flower_dome/dataset_png/'
 
+NAME_POSTFIX = '_masked'
 EXTENSION = 'png'  # 'jpg'
-# PROCESS_IMAGES = True
-BBOX = [-0.75, -0.75, -1.5, 0.75, 0.75, -0.5]
+PROCESS_IMAGES = False
+SHUFFLE = True
+# BBOX = [-0.75, -0.75, -1.5, 0.75, 0.75, -0.5]
+# BBOX = [-50, -50, -10, 50, 50, 80]
+BBOX = [-30, -30, -10, 30, 30, 70]
 # ROTATE = [0, -1, -1]
 UNDO_CV1 = True
+INVERT_TRANSLATION = False
 
+random.seed(1)
+np.random.seed(1)
 print('Processing measurements at path:')
 print(RAW_DATA_FOLDER)
 print('Out folder:', OUTPUT_FOLDER)
@@ -36,8 +43,8 @@ assert op.isdir(RAW_DATA_FOLDER), 'Folder with measurements is not found'
 # dict of zoom levels
 # --- each zoom level is a dict of cameras
 zoomLevels = dict()
-name_postfix = ''
 
+##### Read extrinsics/intrinsics from meta files
 # If getting intrinsics/extrinsics from meas.xml
 if INTREXTR_FROM_MEASXML:
 	XML_MEAS_PATH = op.abspath(XML_MEAS_PATH)
@@ -84,7 +91,7 @@ else:
 
 	zoomLevels['-1'] = dict()
 
-	name_postfix = '_masked'
+	# name_postfix = '_masked'
 
 	# get intrinsics
 	with open(INTR_MEAS_PATH) as fh:
@@ -134,6 +141,10 @@ zoomLevel = list(zoomLevels.keys())[0]
 print('Cameras #{}: [{}] ... [{}]'.format(len(zoomLevels[zoomLevel].keys()), list(zoomLevels[zoomLevel].keys())[0], list(zoomLevels[zoomLevel].keys())[-1]))
 
 
+
+
+
+
 ##### Create dataset
 # Iterate zoom levels
 measurementFNames = os.listdir(RAW_DATA_FOLDER)
@@ -155,17 +166,27 @@ for zoomIdx, cameras in zoomLevels.items():
 
 	adjust_ext = np.eye(4)
 	if 'UNDO_CV1' in locals() and UNDO_CV1:
-		adjust_ext = np.linalg.inv(cameras['1']['extrinsics'])
+		cam1 = cameras['1']
+		if 'extrinsics' in cam1 and cam1['extrinsics'] is not None:
+			ext1 = cam1['extrinsics']
+		else:
+			ext1 = np.concatenate((
+				np.concatenate((np.array(Rot.from_rotvec(cam1['rotation']).as_matrix()),
+								cam1['translation'][:, None],), axis=1),
+				np.r_[0, 0, 0, 1][None]), axis=0)
+		adjust_ext = ext1
 
 	json_data = {'frames': []}
 	camPoints = []
+	measImgPaths = {}  # paths to real existing images
+
+	# Create list of available images
 	for camIdx, cam in cameras.items():
 		# Searching for measurement file in folder
-		print('Cam #{}/{}'.format(camIdx, len(cameras.keys())))
 		lightIdx = 133
 		lightPhi = 270
 		lightTheta = 75
-		regText = '^cv0{0,2}'+str(camIdx)+'_tv0{0,2}'+str(cam['theta'])+'(\.)?(\d{0,2})?_pv0{0,2}'+str(cam['phi'])+'(\.)?(\d{0,2})?_cl0{0,2}'+str(lightIdx)+'_tl0{0,2}'+str(lightTheta)+'(\.)?(\d{0,2})?_pl0{0,2}'+str(lightPhi)+'(\.)?(\d{0,2})?_ISO400_FQ0_IDX1'+name_postfix+'\.'+EXTENSION+'$'
+		regText = '^cv0{0,2}' + str(camIdx) +'_tv0{0,2}' + str(cam['theta']) +'(\.)?(\d{0,2})?_pv0{0,2}' + str(cam['phi']) +'(\.)?(\d{0,2})?_cl0{0,2}' + str(lightIdx) +'_tl0{0,2}' + str(lightTheta) +'(\.)?(\d{0,2})?_pl0{0,2}' + str(lightPhi) +'(\.)?(\d{0,2})?_ISO400_FQ0_IDX1' + NAME_POSTFIX + '\.' + EXTENSION + '$'
 		regex = re.compile(regText)
 		measFile = [fn for i, fn in enumerate(measurementFNames) if regex.match(fn)]
 		# assert len(measFile) == 1, 'Either measurement file is not found or found more than one corresponding files. Regex: ' + regText
@@ -173,7 +194,24 @@ for zoomIdx, cameras in zoomLevels.items():
 			print('Measurement cv{}_tv{}_pv{}_cl{}_tl{}_pl{} not found!'.format(camIdx, cam['theta'], cam['phi'], lightIdx, lightTheta, lightPhi))
 			continue
 		measPath = op.abspath(op.join(RAW_DATA_FOLDER, measFile[0]))
+		measImgPaths[camIdx] = measPath
 
+	saveIdcs = [i for i in range(len(measImgPaths.keys()))]
+
+	if 'SHUFFLE' in locals() and SHUFFLE:
+		random.shuffle(saveIdcs)
+
+	# Loop for processing images
+	for camIdx, cam in cameras.items():
+		print('Cam #{}/{}{}{}'.format(camIdx,
+									  len(cameras.keys()),
+									  ' --> {}'.format(saveIdcs[0]) if len(saveIdcs) else '',
+									  ('' if camIdx in measImgPaths else ' skipped!')))
+		if not camIdx in measImgPaths:
+			continue
+
+
+		measPath = measImgPaths[camIdx]
 
 		if 'extrinsics' in cam and cam['extrinsics'] is not None:
 			extrinsics = cam['extrinsics']
@@ -189,7 +227,9 @@ for zoomIdx, cameras in zoomLevels.items():
 		# rm[2, 2] = -1
 
 		extrinsics = adjust_ext @ extrinsics
-		extrinsics[:3, 3] *= -1
+
+		if 'INVERT_TRANSLATION' in locals() and INVERT_TRANSLATION:
+			extrinsics[:3, 3] *= -1
 
 
 
@@ -208,7 +248,7 @@ for zoomIdx, cameras in zoomLevels.items():
 		# Add data for transforms.json file (used for light/cam visualization)
 		frame_data = {
 			'file_path': measPath,
-			'transform_matrix': extrinsics.tolist(),
+			'transform_matrix': np.linalg.inv(extrinsics).tolist(),
 			'pl_transform_matrix': np.concatenate((np.zeros((3, 4)), np.r_[0, 0, 0, 1][None]), axis=0).tolist()
 		}
 		json_data['frames'].append(frame_data)
@@ -219,22 +259,26 @@ for zoomIdx, cameras in zoomLevels.items():
 		if 'PROCESS_IMAGES' in locals() and PROCESS_IMAGES:
 			img = cv.imread(measPath, cv.IMREAD_UNCHANGED)
 			undistortedImg = cv.undistort(img, cam['intrinsic'], cam['distort'])
-			cv.imwrite(op.join(pathRGB, '{:04d}.{}'.format(int(camIdx), EXTENSION)), undistortedImg)
+			# cv.imwrite(op.join(pathRGB, '{:04d}.{}'.format(int(camIdx), EXTENSION)), undistortedImg)
+			cv.imwrite(op.join(pathRGB, '{:04d}.{}'.format(saveIdcs[0], EXTENSION)), undistortedImg)
+
 		# cv.imwrite(op.join(pathRGB, '{:04d}.jpg'.format(int(camIdx))), img)
 
-		with open(op.join(pathPose, '{:04d}.txt'.format(int(camIdx))), 'w') as fo:
+		with open(op.join(pathPose, '{:04d}.txt'.format(saveIdcs[0])), 'w') as fo:
 			for ii, pose in enumerate(frame_data['transform_matrix']):
 				print(" ".join([str(-p) if (((j == 2) | (j == 1)) and (ii < 3)) else str(p)
 								for j, p in enumerate(pose)]), file=fo)
 
-		with open(op.join(pathPosePL, '{:04d}.txt'.format(int(camIdx))), 'w') as fo:
+		with open(op.join(pathPosePL, '{:04d}.txt'.format(saveIdcs[0])), 'w') as fo:
 			for ii, pose in enumerate(frame_data['pl_transform_matrix']):
 				print(" ".join([str(-p) if (((j == 2) | (j == 1)) and (ii < 3)) else str(p)
 								for j, p in enumerate(pose)]), file=fo)
 
+		saveIdcs.pop(0)
+
 	assert len(camPoints), 'No files have been processed'
 
-	# Writing intrinsics from the last camera (since it is the same in all cameras)
+	# Writing intrinsics from the last camera (since it is the same in all cameras for one zoom level)
 	np.savetxt(op.join(curFolder, 'intrinsics.txt'), cam['intrinsic'])
 
 	if 'BBOX' in locals():

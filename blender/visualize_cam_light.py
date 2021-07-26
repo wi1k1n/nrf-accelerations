@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 
 MODEL = 'rocket_test'
 PATH = 'D:\\edu\\UniBonn\\Study\\thesis\\codes\\blender\\datasets\\' + MODEL
-PATH = 'D:\\edu\\UniBonn\\Study\\thesis\\codes\\realdata\\flower_dome\\dataset\\zoom_-1'
+# PATH = 'D:\\edu\\UniBonn\\Study\\thesis\\codes\\realdata\\flower_dome\\dataset\\zoom_0'
 CAM_ICONS = True
 INVERT_CAMERA_Z = True
 

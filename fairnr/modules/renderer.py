@@ -269,9 +269,11 @@ class VolumeRenderer(Renderer):
         if 'light_transmittance' in outputs:
             # carefully divide even though this almost only happens in masked elements
             lightdmask = (outputs['lightd'] <= 1e-6)
-            outputs['lightd'][lightdmask] = 1.
-            fatt = (outputs['light_radius'] ** 2) / outputs['lightd']  # torch handles zero division with inf values
-            fatt[lightdmask] = 1.
+            lightd = torch.where(outputs['lightd'] <= 1e-6,
+                                 torch.Tensor([1.]).expand_as(outputs['lightd']).to(outputs['lightd'].device),
+                                 outputs['lightd'])
+            fatt = (outputs['light_radius'] ** 2) / lightd  # torch handles zero division with inf values
+            fatt[lightdmask] = 0.0
 
             Ll = samples['point_light_intensity'] * fatt
             # NRF paper, using same sample points as for view ray
