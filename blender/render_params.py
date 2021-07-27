@@ -5,16 +5,20 @@ options_train = {
 	"START_FROM": 0,
 
 	"PATH_MODEL": 'models/tablelamp.blend',
-	"DATASET_NAME": 'tablelamp_static_exr',
+	"DATASET_NAME": 'tablelamp_random_exr',
 	"OUTPUT_DIR": '%DATASET_NAME%',
 	# "PRESET_VIEWS_FOLDER": 'checkpoints/%DATASET_NAME%/mlnrf_base/output_cam',
 	"RESULTS_PATH": 'rgb',
 
 	"VOXEL_NUMS": 64,  # 512,  # can still be later overridden using argument 'VOXEL_NUM'
-	"VIEWS": 200,  # number of renderings. Ignored, if RANDOM_VIEWS == False
+	"VIEWS": 500,  # number of renderings. Ignored, if RANDOM_VIEWS == False
 	"RESOLUTION": 256,  # resolution of resulting renders
 	
-	"LIGHT_SETUP": 'fixed', # none/fixed/colocated/random. Ignored, if RANDOM_VIEWS == False
+	"LIGHT_SETUP": 'random', # none/fixed/colocated/random. Ignored, if RANDOM_VIEWS == False
+	"LIGHT_COS_CONSTRAIN": 120, # None/(0 ~ 180). Max angle between cam and light. Ignored, if RANDOM_VIEWS == False
+	# "LIGHT_COS_CONSTRAIN_RND": False,  	# False/(mean, std) (e.g. (0, 3*light_cos_constr). 
+	# 									# If constain is sharp or stochastic
+	# 									# DOESNT WORK!
 
 	"COLOR_DEPTH": 16,  # 8
 	"FORMAT": 'OPEN_EXR',  # 'PNG'/OPEN_EXR'/'HDR' # use 16/32 bit color depth with OPEN_EXR format

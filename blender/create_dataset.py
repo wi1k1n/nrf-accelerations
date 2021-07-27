@@ -215,12 +215,19 @@ if opts.RANDOM_VIEWS:
     camAngles = (min(opts.CAM_HEMISPHERE_ANGLES), max(opts.CAM_HEMISPHERE_ANGLES))
     assert camAngles[0] >= -90 and camAngles[0] < camAngles[1] and camAngles[1] <= 90, 'CAM_HEMISPHERE_ANGLES should be a list of [a_min, a_max] angles, calculated from XY plane'
 
-    # Precompute camera rotations
+    # Precompute camera & light rotations
     #                              [xyz] x VIEWS x [cam|light]
     rot = np.random.uniform(0, 1, size=(3, opts.VIEWS, 2)) * np.array([1, 1, 0])[:, None, None]
     rot[0] = (rot[0] * (camAngles[1] - camAngles[0]) + 90 + camAngles[0]) / 180.0
     rot[0] = np.arccos(rot[0] * 2 - 1)
     rot[1] *= 2 * np.pi
+
+    # # refine light positions, if light has to be constrained
+    # if hasattr(opts, 'LIGHT_COS_CONSTRAIN') and opts.LIGHT_COS_CONSTRAIN:
+    #     rotCam, rotLight = rot[..., 0], rot[...,1]
+    #     np.einsum('ij,ij->j', a, b)
+    #     np.where(rot[..., 0])
+
     rot0sin, rot0cos = np.sin(rot[0]), np.cos(rot[0])
     rot1sin, rot1cos = np.sin(rot[1]), np.cos(rot[1])
     rot = rot.transpose(1, 0, 2)  # rot = rot.T
@@ -271,9 +278,12 @@ for i in range(0, views2iterate):
 
     # Update camera position
     if opts.RANDOM_VIEWS:
-        cam.location[0] = camDst * rot0sin[i][0] * rot1cos[i][0] + modelCenter[0]
-        cam.location[1] = camDst * rot0sin[i][0] * rot1sin[i][0] + modelCenter[1]
-        cam.location[2] = camDst * rot0cos[i][0] + modelCenter[2]
+        camLoc = [
+            camDst * rot0sin[i][0] * rot1cos[i][0] + modelCenter[0],
+            camDst * rot0sin[i][0] * rot1sin[i][0] + modelCenter[1],
+            camDst * rot0cos[i][0] + modelCenter[2]
+        ]
+        cam.location = camLoc
 
         # Update light position if needed
         if opts.LIGHT_SETUP == 'none':
@@ -281,9 +291,41 @@ for i in range(0, views2iterate):
         elif opts.LIGHT_SETUP == 'colocated':
             pointLight.location = cam.location
         elif opts.LIGHT_SETUP == 'random':
-            pointLight.location[0] = camDst * rot0sin[i][1] * rot1cos[i][1] + modelCenter[0]
-            pointLight.location[1] = camDst * rot0sin[i][1] * rot1sin[i][1] + modelCenter[1]
-            pointLight.location[2] = camDst * rot0cos[i][1] + modelCenter[2]
+            plLoc = [
+                camDst * rot0sin[i][1] * rot1cos[i][1] + modelCenter[0],
+                camDst * rot0sin[i][1] * rot1sin[i][1] + modelCenter[1],
+                camDst * rot0cos[i][1] + modelCenter[2]
+            ]
+
+            if hasattr(opts, 'LIGHT_COS_CONSTRAIN') and opts.LIGHT_COS_CONSTRAIN is not None:
+                # print('LIGHT_COS_CONSTRAIN')
+                camV = np.array(camLoc) - np.array(modelCenter)
+                camV = camV / np.linalg.norm(camV)
+
+                plV = np.array(plLoc) - np.array(modelCenter)
+                plV = plV / np.linalg.norm(plV)
+
+                it = 0
+                while np.arccos(np.dot(camV, plV)) > opts.LIGHT_COS_CONSTRAIN * np.pi / 180. and it < 1000:
+                    # print('(dot) ', np.arccos(np.dot(camV, plV)), ' > ', opts.LIGHT_COS_CONSTRAIN * np.pi / 180.)
+                    newRot = np.random.uniform(0, 1, size=(2,))
+                    newRot[0] = (newRot[0] * (camAngles[1] - camAngles[0]) + 90 + camAngles[0]) / 180.0
+                    newRot[0] = np.arccos(newRot[0] * 2 - 1)
+                    newRot[1] *= 2 * np.pi
+
+                    plLoc = [
+                        camDst * np.sin(newRot[0]) * np.cos(newRot[1]) + modelCenter[0],
+                        camDst * np.sin(newRot[0]) * np.sin(newRot[1]) + modelCenter[1],
+                        camDst * np.cos(newRot[0]) + modelCenter[2]
+                    ]
+                    plV = np.array(plLoc) - np.array(modelCenter)
+                    plV = plV / np.linalg.norm(plV)
+                    it += 1
+
+                if (it == 1000):
+                    print('WARNING: LIGHT_COS_CONSTRAIN could not be satisfied!')
+
+            pointLight.location = plLoc
     else:
         print('## Processing file ', camLightPoses[i])
         # cam.matrix_world = np.loadtxt(os.path.join(opts.VIEWS_PATH, camLightPoses[i]))

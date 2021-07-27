@@ -7,6 +7,7 @@ MODEL = 'rocket_test'
 PATH = 'D:\\edu\\UniBonn\\Study\\thesis\\codes\\blender\\datasets\\' + MODEL
 # PATH = 'D:\\edu\\UniBonn\\Study\\thesis\\codes\\realdata\\flower_dome\\dataset\\zoom_0'
 CAM_ICONS = True
+DRAW_LINES = True
 INVERT_CAMERA_Z = True
 
 
@@ -136,6 +137,27 @@ for ind, dir in enumerate(dirs):
 	pts_rot = np.matmul(Tpls, cam_pts.T)
 	plotData.append(go.Scatter3d(x=pts_rot[0], y=pts_rot[1], z=pts_rot[2], name='cam{:2}'.format(ind), line=dict(color="blue", width=3), marker=dict(size=0), mode="lines"))
 
+# print statistics about cos
+if len(cams) == len(lights):
+	cosLists = []
+	for i, cam in enumerate(cams):
+		camV = np.array(cam[:3])
+		camV = camV / np.linalg.norm(camV)
+
+		plV = np.array(lights[i][:3])
+		plV = plV / np.linalg.norm(plV)
+
+		cosLists.append(np.arccos(np.dot(camV, plV)) * 180. / np.pi)
+# print(np.historgram(cosLists, 10))
+
+# draw lines
+if 'DRAW_LINES' in locals() and DRAW_LINES:
+	assert len(cams) == len(lights), '# of lights has to be same as # of cams for drawing lines!'
+	for i, cam in enumerate(cams):
+		# ptsLines = np.stack((cams[i][:3], [0, 0, 0], lights[i][:3]), axis=1)
+		ptsLines = np.stack((cams[i][:3], lights[i][:3]), axis=1)
+		plotData.append(go.Scatter3d(x=ptsLines[0], y=ptsLines[1], z=ptsLines[2], name='line{:2}'.format(i),
+									 line=dict(color="pink", width=1), marker=dict(size=0), mode="lines"))
 
 
 fig = go.Figure(data=plotData)
