@@ -9,8 +9,8 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "tablelamp_random_exr"
-NAME = "test"  # postfix for dataset name
+DATA = "brdf_sphere_random_exr"
+NAME = "test4"  # postfix for dataset name
 RES = "64x64"
 PIXELS_PER_VIEW = '80'
 VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
@@ -21,7 +21,7 @@ LR = '0.0005'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
 COLOR_WEIGHT = '1.0'  #'256.0'
-ALPHA_WEIGHT = '0.0'  #'1e-3'
+ALPHA_WEIGHT = '1e-3'  #'1e-3'
 
 
 REDUCE_STEP_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
@@ -32,17 +32,18 @@ SAVE_INTERVAL_UPDATES = '500'#'750'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
 TRAIN_VIEWS = '0..150'  # '0..100'
 VALID_VIEWS = '150..200'  # '100..200
-NUM_WORKERS = '8'  # '0'
+NUM_WORKERS = '0'  # '0'
 
 PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #
-MAX_COLOR = '0.4'
+MAX_COLOR = '5.0'
 GAMMA_CORRECTION = '1.0'
 BG_COLOR = '0.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
 
 
 TRACE_NORMAL = False
 LAMBERT_ONLY = False
+TASK = 'single_object_light_rendering'
 
 # # <!-- Original NSVF from facebook -->
 # ARCH = "nsvf_base"
@@ -51,17 +52,14 @@ LAMBERT_ONLY = False
 
 # # <!-- Implicit model with ignoring light interaction -->
 # ARCH = "mlnrf_base"
-# TASK = 'single_object_light_rendering'
 # # <!/-- Implicit model with ignoring light interaction -->
 
 # # <!-- Implicit model with InVoxelApproximation light interaction -->
 # ARCH = "mlnrfiva_base"
-# TASK = 'single_object_light_rendering'
 # # <!/-- Implicit model with InVoxelApproximation light interaction -->
 
 # # <!-- Explicit model with ignoring light interaction -->
 # ARCH = "mlnrfex_base"
-# TASK = 'single_object_light_rendering'
 # TRACE_NORMAL = True
 # LAMBERT_ONLY = False
 # TEXTURE_LAYERS = '4'
@@ -70,24 +68,25 @@ LAMBERT_ONLY = False
 
 # # <!-- Explicit model with NRF (colocated!) light interaction -->
 # ARCH = "mlnrfnrf_base"
-# TASK = 'single_object_light_rendering'
-# LAMBERT_ONLY = False
-# COMPOSITE_R = False  # doesn't work yet
 # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
 # # LIGHT_INTENSITY = '250.0'  # rocket_exr -> 5k Watt
 # TEXTURE_LAYERS = '5'
-# # <!/-- Explicit model with ignoring light interaction -->
+# # <!/-- Explicit model with NRF (colocated!) light interaction -->
 
-# <!-- Explicit model with VoxelApproximation light interaction -->
-ARCH = "mlnrfexva_base"
-TASK = 'single_object_light_rendering'
-LAMBERT_ONLY = False
-COMPOSITE_R = False  # doesn't work yet
-# LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
-# LIGHT_INTENSITY = '1000.0'  # rocket_exr -> 5k Watt
-LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
-TEXTURE_LAYERS = '4'
-# <!/-- Explicit model with ignoring light interaction -->
+# # <!-- Explicit model with VoxelApproximation light interaction -->
+# ARCH = "mlnrfexva_base"
+# # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
+# # LIGHT_INTENSITY = '1000.0'  # rocket_exr -> 5k Watt
+# LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
+# TEXTURE_LAYERS = '4'
+# # <!/-- Explicit model with VoxelApproximation light interaction -->
+
+# <!-- Explicit model with Brute Force light interaction -->
+ARCH = "mlnrfexbf_base"
+LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
+# LIGHT_INTENSITY = '250.0'  # rocket_exr -> 5k Watt
+TEXTURE_LAYERS = '5'
+# <!/-- Explicit model with Brute Force light interaction -->
 
 
 

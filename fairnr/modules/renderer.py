@@ -9,9 +9,11 @@ from collections import defaultdict
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 from fairnr.modules.module_utils import FCLayer
 from fairnr.data.geometry import ray
+from fairseq.utils import with_torch_seed
 
 import logging
 logger = logging.getLogger(__name__)
@@ -79,7 +81,7 @@ class VolumeRenderer(Renderer):
 
     def forward_once(
         self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states, 
-        early_stop=None, output_types=['sigma', 'texture']):
+        early_stop=None, output_types=['sigma', 'texture'], **kwargs):
         """
         chunks: set > 1 if out-of-memory. it can save some memory by time.
         """
@@ -181,7 +183,8 @@ class VolumeRenderer(Renderer):
                             for name, s in samples.items()},
                         encoder_states, 
                         early_stop=early_stop,
-                        output_types=output_types)
+                        output_types=output_types,
+                        hits=hits)
                 if _outputs is not None:
                     accumulated_evaluations += _evals
 
@@ -235,7 +238,8 @@ class VolumeRenderer(Renderer):
             'probs': probs, 'depths': depth, 
             'max_depths': sampled_depth.masked_fill(hits.eq(0), -1).max(1).values,
             'min_depths': sampled_depth.min(1).values,
-            'missed': missed, 'ae': accumulated_evaluations
+            'missed': missed, 'ae': accumulated_evaluations,
+            'fe': free_energy   # free energy (sigmas)
         })
         if original_depth is not None:
             results['z'] = (original_depth * probs).sum(-1)
@@ -254,7 +258,7 @@ class VolumeRenderer(Renderer):
 
 
         # simply composite colors
-        if 'texture' in outputs and not 'compClr' in locals():
+        if 'texture' in outputs:
             compClr = outputs['texture'] * probs.unsqueeze(-1)
         # or evaluate brdf if needed
         elif all([k in results for k in ['albedo', 'normal_brdf', 'roughness', 'light']]):
@@ -263,8 +267,8 @@ class VolumeRenderer(Renderer):
             compClr = compClr.squeeze()
             if field_fn.min_color == 0:
                 compClr = torch.sigmoid(compClr)
-        else:
-            raise Exception('Neither texture nor R is got for compositing')
+        # else:
+        #     raise Exception('Neither texture nor R is got for compositing')
         # if light_transmittance has to be considered
         if 'light_transmittance' in outputs:
             # carefully divide even though this almost only happens in masked elements
@@ -288,7 +292,8 @@ class VolumeRenderer(Renderer):
             else:
                 raise NotImplementedError('This branch of code has not been finished yet')
         # final summation of compositing colors
-        results['colors'] = compClr.sum(-2)
+        if 'compClr' in locals():
+            results['colors'] = compClr.sum(-2)
         
         if 'normal' in outputs:
             results['normal'] = (outputs['normal'] * probs.unsqueeze(-1)).sum(-2)
@@ -340,6 +345,10 @@ class LightVolumeRenderer(VolumeRenderer):
 
 
     def forward(self, input_fn, field_fn, ray_start, ray_dir, samples, *args, **kwargs):
+        # Light stuff is only needed for texture output
+        if 'output_types' in kwargs and not 'texture' in kwargs['output_types']:
+            return super().forward(input_fn, field_fn, ray_start, ray_dir, samples, *args, **kwargs)
+
         viewsN = kwargs['view'].shape[-1]
         pixelsPerView = int(kwargs['hits'].shape[-1] / viewsN)
         voxelsN = samples['sampled_point_voxel_idx'].shape[-1]
@@ -366,10 +375,10 @@ class LightVolumeRenderer(VolumeRenderer):
 
     def forward_once(
         self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
-        early_stop=None, output_types=['sigma', 'texture']):
+        early_stop=None, output_types=['sigma', 'texture'], **kwargs):
         outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
                                                 early_stop, output_types)
-        outputs['light_radius'] = self.light_radius.expand_as(outputs['sample_mask'])
+        if 'texture' in output_types: outputs['light_radius'] = self.light_radius.expand_as(outputs['sample_mask'])
         return outputs, _evals
 
 
@@ -386,7 +395,7 @@ class LightIVAVolumeRenderer(LightVolumeRenderer):
 
     def forward_once(
             self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
-            early_stop=None, output_types=['sigma', 'texture']):
+            early_stop=None, output_types=['sigma', 'texture'], **kwargs):
         ######### <LIGHT_RAYS>
         # need to intersect light rays with the octree here first
         sampled_xyz = ray(ray_start.unsqueeze(1), ray_dir.unsqueeze(1), samples['sampled_point_depth'].unsqueeze(2))
@@ -438,11 +447,153 @@ class LightIVAVolumeRenderer(LightVolumeRenderer):
 class LightNRFVolumeRenderer(LightVolumeRenderer):
     def forward_once(
             self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
-            early_stop=None, output_types=['sigma', 'texture']):
+            early_stop=None, output_types=['sigma', 'texture'], **kwargs):
         outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
                                                early_stop, output_types)
         outputs['light_transmittance'] = torch.Tensor([])
         return outputs, _evals
+
+
+
+@register_renderer('light_bruteforce_volume_renderer')
+class LightBFVolumeRenderer(LightVolumeRenderer):
+    def __init__(self, args):
+        super().__init__(args)
+
+    def forward_chunk(self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+            gt_depths=None, output_types=['sigma', 'texture'], global_weights=None, **kwargs):
+        return super().forward_chunk(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+            gt_depths, output_types, global_weights, **kwargs)
+
+    # intersects light rays with octree
+    def intersect(self, light_start, light_dirs, encoder, encoder_states, **kwargs):
+        # kwargs['hits'] - hits for view rays
+        V, S, _ = light_dirs.size()
+        light_start, light_dirs, light_intersection_outputs, light_hits = \
+            encoder.light_ray_intersect(light_start.unsqueeze(0),
+                                         light_dirs.unsqueeze(0), encoder_states)
+
+        # if self.reader.no_sampling and self.training:  # sample points after ray-voxel intersection
+        #     uv, size = kwargs['uv'], kwargs['size']
+        #     mask = hits.reshape(*uv.size()[:2], uv.size(-1))
+        #
+        #     # sample rays based on voxel intersections
+        #     sampled_uv, sampled_masks = self.reader.sample_pixels(
+        #         uv, size, mask=mask, return_mask=True)
+        #     sampled_masks = sampled_masks.reshape(uv.size(0), -1).bool()
+        #     hits, sampled_masks = hits[sampled_masks].reshape(S, -1), sampled_masks.unsqueeze(-1)
+        #     intersection_outputs = {name: outs[sampled_masks.expand_as(outs)].reshape(S, -1, outs.size(-1))
+        #                             for name, outs in intersection_outputs.items()}
+        #     ray_start = ray_start[sampled_masks.expand_as(ray_start)].reshape(S, -1, 3)
+        #     ray_dir = ray_dir[sampled_masks.expand_as(ray_dir)].reshape(S, -1, 3)
+        #
+        # else:
+        #     sampled_uv = None
+
+        min_depth = light_intersection_outputs['min_depth'].reshape(V, S, -1)
+        max_depth = light_intersection_outputs['max_depth'].reshape(V, S, -1)
+        pts_idx = light_intersection_outputs['intersected_voxel_idx'].reshape(V, S, -1)
+        dists = (max_depth - min_depth)  #.masked_fill(pts_idx.eq(-1), 1.0)
+        light_intersection_outputs['probs'] = (dists / dists.sum(dim=-1, keepdim=True))\
+                                                .masked_fill(pts_idx.eq(-1), 0.0)\
+                                                .reshape(*light_intersection_outputs['min_depth'].size())
+        dists = dists.masked_fill(pts_idx.eq(-1), 0.0)
+        light_intersection_outputs['steps'] = (dists.sum(-1) / encoder.step_size) \
+                                                .reshape(*light_intersection_outputs['min_depth'].size()[:-1])
+        # if getattr(self.args, "fixed_num_samples", 0) > 0:
+        #     intersection_outputs['steps'] = intersection_outputs['min_depth'].new_ones(
+        #         *intersection_outputs['min_depth'].size()[:-1], 1) * self.args.fixed_num_samples
+        # else:
+        #     intersection_outputs['steps'] = dists.sum(-1) / self.encoder.step_size
+        return light_start, light_dirs, light_intersection_outputs, light_hits#, sampled_uv
+
+
+
+    def forward_once(
+            self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+            early_stop=None, output_types=['sigma', 'texture'], **kwargs):
+        ######### <LIGHT_RAYS>
+        if not 'texture' in output_types:
+            return super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+                                                   early_stop, output_types)
+
+        # need to intersect light rays with the octree here first
+        sampled_xyz = ray(ray_start.unsqueeze(1), ray_dir.unsqueeze(1), samples['sampled_point_depth'].unsqueeze(2))
+        point_light_xyz = samples['point_light_xyz']
+        light_dirs = point_light_xyz - sampled_xyz
+        light_start = sampled_xyz
+
+        # [shapes x views x rays x xyz]
+        light_start, light_dirs, light_intersection_outputs, light_hits = \
+            self.intersect(light_start, light_dirs, input_fn, encoder_states, **kwargs)
+
+        light_start, light_dirs = light_start.reshape(-1, light_start.size(-1)),\
+                                  light_dirs.reshape(-1, light_dirs.size(-1))
+
+        # If light ray hits voxels
+        if light_hits.sum() > 0:
+            # TODO: refusing missing rays should increase efficiency, but is not implemented yet
+            # light_intersection_outputs = {
+            #     name: outs[light_hits] for name, outs in light_intersection_outputs.items()}
+            # # kwargs.update({'light_hits': light_hits})
+            # light_start, light_dirs = light_start[light_hits], light_dirs[light_hits]
+
+            # This part is probably not necessary at this point
+            # encoder_states = {name: s.reshape(-1, s.size(-1)) if s is not None else None
+            #     for name, s in encoder_states.items()}
+
+            # [views*rays*view_samples x lray_voxel_intersections]
+            light_intersection_outputs = {
+                name: outs.reshape(np.prod(sampled_xyz.size()[:-1]), -1) for name, outs in light_intersection_outputs.items()}
+            light_intersection_outputs['steps'] = light_intersection_outputs['steps'].squeeze()
+
+            # sample points and use middle point approximation
+            # TODO: different GPUs might sample the same way! have to use 'with with_torch_seed(self.unique_seed):'
+            light_samples = input_fn.ray_sample(light_intersection_outputs)
+            # # [views*rays x view_samples x light_samples]
+            # light_samples = {
+            #     name: outs.reshape(*sampled_xyz.size()[:-1], -1) for name, outs in light_samples.items()}
+            # [views*rays*view_samples x light_samples]
+            light_samples = {
+                name: outs.reshape(np.prod(sampled_xyz.size()[:-1]), -1) for name, outs in light_samples.items()}
+
+            # Evaluate model on light samples
+            lresults = self.forward(input_fn, field_fn, light_start, light_dirs, light_samples, encoder_states,
+            early_stop=None, output_types=['sigma'], **kwargs)
+
+        # light_start, light_dirs = light_start.reshape(*sampled_xyz.size()), light_dirs.reshape(*sampled_xyz.size())
+        # light_hits = light_hits.reshape(*sampled_xyz.size()[:2])
+
+        light_min_depth = light_intersection_outputs['min_depth']
+        light_max_depth = light_intersection_outputs['max_depth']
+        # light_voxel_idx = light_intersection_outputs['intersected_voxel_idx']
+
+        # exp(-sum(sigma * dt)) = exp(-cumsum(shifted_free_energy))
+
+        transmittances = torch.exp(-torch.sum((light_max_depth - light_min_depth) * self.voxel_sigma, axis=-1))
+
+        # light_mask = light_voxel_idx.ne(-1)
+        # transmittances = torch.zeros(sampled_xyz.size()[:2]).to(sampled_xyz.device)
+        # for i, ray_hits in enumerate(light_hits):
+        #     for j, hit in enumerate(ray_hits):
+        #         if not hit: continue
+        #         mask = light_mask[0, 0, :]
+        #         min_d, max_d = light_min_depth[i, j, mask], \
+        #                                 light_max_depth[i, j, mask]
+        #         # transmittances[i, j] = torch.sum((max_d - min_d) / voxel_size_norm * self.voxel_sigma)
+        #         transmittances[i, j] = torch.exp(-torch.sum((max_d - min_d) * self.voxel_sigma))
+        # outputs['light_transmittance'] = transmittances
+
+        ######### </LIGHT_RAYS>
+
+        outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+                                               early_stop, output_types)
+
+        outputs['light_transmittance'] = transmittances
+
+        return outputs, _evals
+
+
 
 @register_renderer('surface_volume_rendering')
 class SurfaceVolumeRenderer(VolumeRenderer):
