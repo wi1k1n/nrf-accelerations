@@ -1,9 +1,69 @@
 
-\chapter{Evaluation}
+\chapter{Evaluation \im{(or Results?)}}
 \label{chap:evaluation}
 
+This chapter addresses results of the experiments and comparisons to other methods.
 
-\section{Yeey}
+
+\section{Implementation details}
+
+\begin{enumerate}
+    \item Datasets
+    \begin{enumerate}
+        \item Synthetic datasets:
+        \begin{enumerate}
+            \item static/co-located/arbitrary
+            \item Blender + python
+            \item Blender point light intensity for light attenuation
+        \end{enumerate}
+        \item Real-world datasets: flower??? tac7
+    \end{enumerate}
+    \item Loss function: color + beta-regularizer
+    \item Parameters: optimizer, lr, batch, coefficients
+    \item Software/Hardware setup
+    \item Time estimates
+\end{enumerate}
+
+
+
+% \section{Blender-Radiance coefficient}
+
+% The light attenuation factor has to be taken into account in the explicit scheme.
+
+% $L_o(x, \Omega_o) = L_e(x, \Omega_o) + \int_{H_i}{f_{BRDF}(\Omega_i, x, \Omega_o) L_i(x, \Omega_i) cos \Theta_i d\omega_i}$
+
+% $L_i = \tau_l L_l$
+
+% $L_l = f_{att}I$
+
+% $f_{att}=\frac{1}{1 + 2d/r + d/r^2}$
+
+% $L_o = \frac{k_d}{\pi} \frac{1}{1 + 2d/r + d/r^2} I cos \Theta_i$
+
+% $k_c = 0, k_l = 0, k_q = 1$
+
+% r = 0.05
+
+% $f_{att} = r^2 / d = 0.0025 / (10-0.05) = 2.51256e-4$
+
+% $0.24316406 = 0.8 / \pi * 2.51256e-4 * I * 1$
+
+% $0.24316406 = 2.01005e-4 * I$
+
+% $I = 500$
+
+
+\section{Colocated setting flaws}
+
+Network barely generalizes for noncolocated light source position when trained only on colocated setting
+
+
+\section{Brute Force vs Approximation}
+
+Time/memory/quality comparisons
+
+
+
 
 % This is some test area for new mathematical helper macros to nicely visualize mathematical formulas.
 

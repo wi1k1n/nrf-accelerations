@@ -1,47 +1,44 @@
 \chapter{Related work}
 \label{chap:related_work}
 
-This chapter demonstrates how pages full of text will look like.
+\section{Basic models and knowledge}
+
+Not very long about very basics
+Laying out why the following sections are relevant for this work
+
+\subsection{\{Rendering equation\} \im{or/and radiometry?}}
+\begin{enumerate}
+    %\item Color space \im{?}
+    \item LDR/HDR
+    \item Rendering equation
+    \item Transfer equation
+    \item (simple) volume rendering
+    \item BSSRDF + Reflection Models
+\end{enumerate}
+
+\sm{Not sure how relevant that is. Maybe put this in a subsection later for NeRF? Lowest priority for now.}
+
+\subsection{Camera model}
+\begin{enumerate}
+    \item Homogenous coordinates
+    \item Pinhole camera model
+    \item Intrinsics
+    \item Extrinsics
+    \item Distortion
+\end{enumerate}
 
 
-\section{Scene representation}
+\section{Neural scene representation}
 
-Explicit and implicit representations
+\sm{sounds like a good listing}
 
+\begin{enumerate}
+    \item Explicit/implicit scene representations
+    \item Neural Radiance Field (Scene Representation Networks, Local Light Field Fusion ..->.. NeRF)
+    \item Positional encoding (Fourier Features Let Networks Learn...) % How it is performed and what for? The background research behind this.
+    \item NeRF optimizations (NSVF, FastNeRF, KiloNeRFAutomatic Integration and others)
+    \item Rendering under novel lighting conditions (NRF, DRF, Deep Voxels, NeRD, NeRV, NeRFactor etc)
+\end{enumerate}
 
-
-
-\section{Light interaction}
-
-Appearance models
-
-
-
-
-\section{Free viewpoint rendering of real world scenes}
-
-Tons of neural network papers for it
-
-
-
-
-
-\section{NeRF with light interaction}
-
-Paper NRF with its explicit model and corresponding limitations
-
-\subsection{Learned light field}
-
-/*forgot the name of the paper, where the light field is learnd and then simply used for direct and even indirect illumination*/
-
-
-
-
-\section{Positional encoding}
-
-How it is performed and what for? The background research behind this.
-
-
-\section{HDR/LDR}
 
 % \lipsum[1-15]

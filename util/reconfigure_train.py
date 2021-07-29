@@ -17,7 +17,7 @@ VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER
 
 USE_OCTREE = True
 CHUNK_SIZE = '16'  #'256'  # > 1 to save memory to time
-LR = '0.0005'  # 0.001
+LR = '0.0001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
 COLOR_WEIGHT = '1.0'  #'256.0'
@@ -32,7 +32,7 @@ SAVE_INTERVAL_UPDATES = '500'#'750'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
 TRAIN_VIEWS = '0..150'  # '0..100'
 VALID_VIEWS = '150..200'  # '100..200
-NUM_WORKERS = '0'  # '0'
+NUM_WORKERS = '8'  # '0'
 
 PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #

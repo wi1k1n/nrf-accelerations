@@ -545,15 +545,12 @@ class LightBFVolumeRenderer(LightVolumeRenderer):
 
         # If light ray hits voxels
         if light_hits.sum() > 0:
-            # TODO: refusing missing rays should increase efficiency, but is not implemented yet
-            # light_intersection_outputs = {
+            # TODO: better squeeze intersections using hits mask, not implemented yet
+            # # Squeezing light outputs to hits only
+            # lintersection_outputs_squeezed = {
             #     name: outs[light_hits] for name, outs in light_intersection_outputs.items()}
             # # kwargs.update({'light_hits': light_hits})
-            # light_start, light_dirs = light_start[light_hits], light_dirs[light_hits]
-
-            # This part is probably not necessary at this point
-            # encoder_states = {name: s.reshape(-1, s.size(-1)) if s is not None else None
-            #     for name, s in encoder_states.items()}
+            # lstart_squeezed, ldirs_squeezed = light_start.unsqueeze(0)[light_hits], light_dirs.unsqueeze(0)[light_hits]
 
             # [views*rays*view_samples x lray_voxel_intersections]
             light_intersection_outputs = {
@@ -563,47 +560,36 @@ class LightBFVolumeRenderer(LightVolumeRenderer):
             # sample points and use middle point approximation
             # TODO: different GPUs might sample the same way! have to use 'with with_torch_seed(self.unique_seed):'
             light_samples = input_fn.ray_sample(light_intersection_outputs)
+            # light_samples_squeezed = input_fn.ray_sample(lintersection_outputs_squeezed)
+
             # # [views*rays x view_samples x light_samples]
             # light_samples = {
             #     name: outs.reshape(*sampled_xyz.size()[:-1], -1) for name, outs in light_samples.items()}
-            # [views*rays*view_samples x light_samples]
-            light_samples = {
-                name: outs.reshape(np.prod(sampled_xyz.size()[:-1]), -1) for name, outs in light_samples.items()}
+            # # [views*rays*view_samples x light_samples]
+            # light_samples = {
+            #     name: outs.reshape(np.prod(sampled_xyz.size()[:-1]), -1) for name, outs in light_samples.items()}
 
-            # Evaluate model on light samples
-            lresults = self.forward(input_fn, field_fn, light_start, light_dirs, light_samples, encoder_states,
-            early_stop=None, output_types=['sigma'], **kwargs)
+            # Evaluate model on light
+            lresults = self.forward(input_fn, field_fn, light_start, light_dirs, light_samples,
+                                    encoder_states, early_stop=None, output_types=['sigma'], **kwargs)
+            # lresults = self.forward(input_fn, field_fn, lstart_squeezed, ldirs_squeezed, light_samples_squeezed,
+            #                         encoder_states, early_stop=None, output_types=['sigma'], **kwargs)
 
-        # light_start, light_dirs = light_start.reshape(*sampled_xyz.size()), light_dirs.reshape(*sampled_xyz.size())
-        # light_hits = light_hits.reshape(*sampled_xyz.size()[:2])
 
-        lfe = lresults['fe']
-        lsampled_depth = light_samples['sampled_point_depth']
+            # # Unsqueeze results
+            # light_intersection_outputs = {
+            #     name: outs[light_hits] for name, outs in lintersection_outputs_squeezed.items()}
 
-        shifted_lfe = torch.cat([lfe.new_zeros(lsampled_depth.size(0), 1), lfe[:, :-1]], dim=-1)  # shift one step
-        tau_j = torch.exp(-torch.cumsum(shifted_lfe.float(), dim=-1))
-        tau = torch.prod(tau_j, dim=-1).reshape(*sampled_xyz.size()[:-1])
+            lfe = lresults['fe']
+            # lsampled_depth = light_samples['sampled_point_depth']
 
-        # light_min_depth = light_intersection_outputs['min_depth']
-        # light_max_depth = light_intersection_outputs['max_depth']
-        # light_voxel_idx = light_intersection_outputs['intersected_voxel_idx']
+            # shifted_lfe = torch.cat([lfe.new_zeros(lsampled_depth.size(0), 1), lfe[:, :-1]], dim=-1)  # shift one step
+            # tau_j = torch.exp(-torch.cumsum(shifted_lfe.float(), dim=-1))
+            # tau = torch.prod(tau_j, dim=-1).reshape(*sampled_xyz.size()[:-1])
 
-        # exp(-sum(sigma * dt)) = exp(-csum(free_energy))
-
-        # transmittances = torch.exp(-torch.sum((light_max_depth - light_min_depth) * self.voxel_sigma, axis=-1))
-
-        # light_mask = light_voxel_idx.ne(-1)
-        # transmittances = torch.zeros(sampled_xyz.size()[:2]).to(sampled_xyz.device)
-        # for i, ray_hits in enumerate(light_hits):
-        #     for j, hit in enumerate(ray_hits):
-        #         if not hit: continue
-        #         mask = light_mask[0, 0, :]
-        #         min_d, max_d = light_min_depth[i, j, mask], \
-        #                                 light_max_depth[i, j, mask]
-        #         # transmittances[i, j] = torch.sum((max_d - min_d) / voxel_size_norm * self.voxel_sigma)
-        #         transmittances[i, j] = torch.exp(-torch.sum((max_d - min_d) * self.voxel_sigma))
-        # outputs['light_transmittance'] = transmittances
-
+            tau = torch.exp(-torch.sum(lfe, dim=-1)).reshape(*sampled_xyz.size()[:-1])
+        else:
+            tau = torch.ones(*sampled_xyz.size()[:-1], device=sampled_xyz.device)
         ######### </LIGHT_RAYS>
 
         outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,

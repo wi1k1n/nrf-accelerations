@@ -1,31 +1,62 @@
 \chapter{Method}
 \label{chap:method}
 
-In this chapter I describe the proposed solution
+In this chapter I describe the proposed solution and the implementation details
 
 
-\section{NSVF with light interaction}
+\section{Implicit Neural Reflectance Field}
 
-NSVF proposed a good technique of using Sparse Voxel Trees in order to increase the rendering speed. However, the scene is still lacking the light interaction.
+Existing BRDF models limits the type of scenes that can be captured
+and successfully reconstructed afterwards.
+To model object appearance one can employ neural network, which is able to get trained for a very complex appearance representations.
+In this work I \im{we?} call this technique as "Implicit scheme".
 
-One can achieve this by also passing light directions along with distance to the light source into the network, in order to make it distinguish different surface properties for different view and light directions.
+Texture predictor not only is dependant on view direction,
+but also requires the light direction and distance to light source
+(for modelling the light attenuation effect).
+Figure \# shows the network structure for this approach.
 
-
-
-
-
-\section{Tangent frame for light/view directions}
+\begin{enumerate}
+    \item Light rays are not sampled (-> varying light transmittance either not considered or assumed to get learned by network\im{???})
+    \item |--> Tangential space for coordinates (and parametrization as half-vectors. not done)
+\end{enumerate}
 
 Since the appearance effects happen mostly in a local coordinate frame, the usage of the global direction vectors implies on the model to learn global to local coordinate system transformation. Although this is generally achievable, the overall complexity of the task can be too overwhelming for the model and some kind of correlations might affect the model. In order to increase the training performance this transformation can be done deterministically and the view and light directions in local coordinate frame are to be passed to the input of the model.
 
 The usage of the cartesian vectors is not very effective for reflectance representations. The half diff vectors (rusinkiewicz parametrization) can be used instead of positionally encoded l and v.
+\sm{or in combination with positional encoding}
 
 
 
 
-\section{Light rays sampling}
+\section{Explicit Neural Reflectance Field \im{for arbitrary light source}}
 
-NRF used the colocated light sources. In this case the light rays sampling was coinciding with the view ray sampling. The 
+The NRF inherits very poor performance behavior from NeRF,
+which limits it to only be feasible for the co-located light source setting.
+However, with some optimization techniques \cite{NSVF, ...} can be used to make this method practical.
+
+Using Octree with Sparse Voxels \cite{NSVF} highly increases the efficiency of sampling view rays,
+and using voxel features allows to use smaller networks,
+which also speeds up the training.
+
+This efficiency improvement makes the general problem statement with an arbitrary light source feasible.
+
+
+\section{In-Voxel Approximation}
+
+Using the octree allows to approximate light rays sampling inside voxels in order to increase the performance of the method.
+
+Instead of performing inverse CDF sampling as it is done for view rays, one can do the following:
+\begin{enumerate}
+    \item Bravely \sm{colloquial} assume the media homogenious inside voxels and boldly approximate it as constant
+    \item Under the same brave assumption perform some sampling inside the voxel once at N iterations (e.g. right after pruning has been performed)
+    \item The in-voxel sampling can be lighter than inverse CDF (e.g. just sample the center of voxel, or voxel corners + trilinear interpolation)
+\end{enumerate}
+
+
+% NSVF proposed a good technique of using Sparse Voxel Trees in order to increase the rendering speed. However, the scene is still lacking the light interaction.
+
+% One can achieve this by also passing light directions along with distance to the light source into the network, in order to make it distinguish different surface properties for different view and light directions.
 
 
 

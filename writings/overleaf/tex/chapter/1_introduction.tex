@@ -1,6 +1,15 @@
 \chapter{Introduction}
 \label{chap:introduction}
 
+% light attenuation + light as learnable parameter (as there barely exist the ground truth value for real datasets)
+% positions required, but meshroom can be used
+% different sigma in voxel strategies for inVoxelApproximation
+% scenes with highly specular objects trains better using log-transform
+% discussion part: background color problem
+% layer depth for NSVF can be way more shallow since voxel features
+% assuming single(!) point(!) light only
+% inverseCDF sampling for NSVF
+
 The task of reconstructing a real 3D scene from a set of 2D captured images
 and modeling it under novel viewing and light conditions
 is a long-standing problem in computer graphics and vision.
@@ -20,7 +29,7 @@ containing both geometric and appearance information. \cite{tewari2020state}
 \cite{mildenhall2020nerf} presented a state-of-the-art approach,
 which uses deep neural network as an implicit scene representation
 along with a ray-marching technique. 
-This technique has quickly become a starting point for a lot of other works. \im{list several main works here}
+This technique has quickly become a starting point for a lot of other works. \im{short list of main works here}
 However, the main limitation for most of them is the lack of light interaction,
 which disables the novel light conditions for the rendering scene.
 
