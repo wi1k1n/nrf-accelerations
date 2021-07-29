@@ -210,6 +210,14 @@ class VolumeRenderer(Renderer):
 
         outputs = {key: torch.cat(outputs[key], 1) for key in outputs}
         results = {}
+
+        # If hits.sum() == 0
+        # ~~~ plan the code such that this case never happens! ~~~
+        if not len(outputs.items()):
+            outputs['sample_mask'] = torch.zeros_like(sampled_depth) > 0
+            outputs['ray'] = torch.ones(*sampled_depth.size(), 3, device=sampled_depth.device) * 3 / (3 ** 0.5)
+            free_energy = torch.zeros_like(sampled_depth)
+            accumulated_evaluations = torch.Tensor([0]).to(sampled_depth.device).sum()
         
         if 'free_energy' in outputs:
             free_energy = outputs['free_energy']
@@ -321,9 +329,13 @@ class VolumeRenderer(Renderer):
                     {name: s[i: i+chunk_size] for name, s in samples.items()}, *args, **kwargs)
                 for i in range(0, ray_start.size(0), chunk_size)
             ]
-            results = {name: torch.cat([r[name] for r in results], 0)
-                        if results[0][name].dim() > 0 else sum([r[name] for r in results])
-                    for name in results[0]}
+            # results = {name: torch.cat([r[name] for r in results], 0)
+            #             if results[0][name].dim() > 0 else sum([r[name] for r in results])
+            #         for name in results[0]}
+            example_result = next(ri for ri in results if ri is not None)
+            results = {name: torch.cat([r[name] for r in results if r is not None], 0)
+                        if example_result[name].dim() > 0 else sum([r[name] for r in results if r is not None])
+                    for name in example_result}
 
         if getattr(input_fn, "track_max_probs", False) and (not self.training):
             input_fn.track_voxel_probs(samples['sampled_point_voxel_idx'].long(), results['probs'])
@@ -378,7 +390,8 @@ class LightVolumeRenderer(VolumeRenderer):
         early_stop=None, output_types=['sigma', 'texture'], **kwargs):
         outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
                                                 early_stop, output_types)
-        if 'texture' in output_types: outputs['light_radius'] = self.light_radius.expand_as(outputs['sample_mask'])
+        if 'texture' in output_types:
+            outputs['light_radius'] = self.light_radius.expand_as(outputs['sample_mask'])
         return outputs, _evals
 
 
@@ -564,13 +577,20 @@ class LightBFVolumeRenderer(LightVolumeRenderer):
         # light_start, light_dirs = light_start.reshape(*sampled_xyz.size()), light_dirs.reshape(*sampled_xyz.size())
         # light_hits = light_hits.reshape(*sampled_xyz.size()[:2])
 
-        light_min_depth = light_intersection_outputs['min_depth']
-        light_max_depth = light_intersection_outputs['max_depth']
+        lfe = lresults['fe']
+        lsampled_depth = light_samples['sampled_point_depth']
+
+        shifted_lfe = torch.cat([lfe.new_zeros(lsampled_depth.size(0), 1), lfe[:, :-1]], dim=-1)  # shift one step
+        tau_j = torch.exp(-torch.cumsum(shifted_lfe.float(), dim=-1))
+        tau = torch.prod(tau_j, dim=-1).reshape(*sampled_xyz.size()[:-1])
+
+        # light_min_depth = light_intersection_outputs['min_depth']
+        # light_max_depth = light_intersection_outputs['max_depth']
         # light_voxel_idx = light_intersection_outputs['intersected_voxel_idx']
 
-        # exp(-sum(sigma * dt)) = exp(-cumsum(shifted_free_energy))
+        # exp(-sum(sigma * dt)) = exp(-csum(free_energy))
 
-        transmittances = torch.exp(-torch.sum((light_max_depth - light_min_depth) * self.voxel_sigma, axis=-1))
+        # transmittances = torch.exp(-torch.sum((light_max_depth - light_min_depth) * self.voxel_sigma, axis=-1))
 
         # light_mask = light_voxel_idx.ne(-1)
         # transmittances = torch.zeros(sampled_xyz.size()[:2]).to(sampled_xyz.device)
@@ -589,7 +609,7 @@ class LightBFVolumeRenderer(LightVolumeRenderer):
         outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
                                                early_stop, output_types)
 
-        outputs['light_transmittance'] = transmittances
+        outputs['light_transmittance'] = tau
 
         return outputs, _evals
 
