@@ -10,13 +10,13 @@ INJECT_PYCHARM = True
 SAVE_FILE = True
 
 DATA = "brdf_sphere_random_exr"
-NAME = "test4"  # postfix for dataset name
+NAME = "test5"  # postfix for dataset name
 RES = "64x64"
 PIXELS_PER_VIEW = '80'
 VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
 
 USE_OCTREE = True
-CHUNK_SIZE = '16'  #'256'  # > 1 to save memory to time
+CHUNK_SIZE = '128'  #'256'  # > 1 to save memory to time
 LR = '0.0001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
@@ -30,8 +30,8 @@ PRUNNING_EVERY_STEPS = '5000'
 PRUNNING_TH = '0.5'  # '0.5'
 SAVE_INTERVAL_UPDATES = '500'#'750'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
-TRAIN_VIEWS = '0..150'  # '0..100'
-VALID_VIEWS = '150..200'  # '100..200
+TRAIN_VIEWS = '0..170'  # '0..100'
+VALID_VIEWS = '170..200'  # '100..200
 NUM_WORKERS = '8'  # '0'
 
 PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
@@ -68,8 +68,8 @@ TASK = 'single_object_light_rendering'
 
 # # <!-- Explicit model with NRF (colocated!) light interaction -->
 # ARCH = "mlnrfnrf_base"
-# LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
-# # LIGHT_INTENSITY = '250.0'  # rocket_exr -> 5k Watt
+# # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
+# LIGHT_INTENSITY = '500.0'  # rocket_exr -> 5k Watt
 # TEXTURE_LAYERS = '5'
 # # <!/-- Explicit model with NRF (colocated!) light interaction -->
 
@@ -84,7 +84,8 @@ TASK = 'single_object_light_rendering'
 # <!-- Explicit model with Brute Force light interaction -->
 ARCH = "mlnrfexbf_base"
 LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
-# LIGHT_INTENSITY = '250.0'  # rocket_exr -> 5k Watt
+# LIGHT_INTENSITY = '500.0'  # rocket_exr -> 5k Watt
+# LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
 TEXTURE_LAYERS = '5'
 # <!/-- Explicit model with Brute Force light interaction -->
 
@@ -93,7 +94,7 @@ TEXTURE_LAYERS = '5'
 SUFFIX = "v1"
 DATASET = "datasets/" + DATA  # "data/Synthetic_NeRF/" + DATA
 SAVE = "checkpoint/" + DATA + (('_' + NAME) if NAME else '')
-# SAVE = "checkpoint/tablelamp_random_exr_test"
+# SAVE = "checkpoint/rocket_random_exr_test4"
 MODEL = ARCH + SUFFIX
 #TODO: VOXEL_NUM & VOXEL_SIZE might not work as intended!
 

@@ -616,8 +616,10 @@ class SparseVoxelEncoder(Encoder):
     def pruning(self, field_fn, th=0.5, encoder_states=None, train_stats=False):
         if not train_stats:
             logger.info("pruning...")
-            scores = self.get_scores(field_fn, th=th, bits=16, encoder_states=encoder_states)
-            keep = (1 - scores.min(-1)[0]) > th
+            # scores = self.get_scores(field_fn, th=th, bits=16, encoder_states=encoder_states)
+            # keep = (1 - scores.min(-1)[0]) > th
+            scores_min = self.get_scores(field_fn, th=th, bits=16, encoder_states=encoder_states)
+            keep = (1 - scores_min) > th
         else:
             logger.info("pruning based on training set statics (e.g. probs)...")
             if dist.is_initialized() and dist.get_world_size() > 1:  # sync on multi-gpus
@@ -655,10 +657,11 @@ class SparseVoxelEncoder(Encoder):
             
             # evaluation with density
             field_outputs = field_fn(field_inputs, outputs=['sigma'])
-            free_energy = -torch.relu(field_outputs['sigma']).reshape(-1, bits ** 3)
+            free_energy = torch.relu(field_outputs['sigma']).reshape(-1, bits ** 3)
             
             # return scores
-            return torch.exp(free_energy)
+            # return torch.exp(free_energy)
+            return torch.exp(-free_energy).min(-1)[0]
 
         return torch.cat([get_scores_once(feats[i: i + chunk_size], points[i: i + chunk_size], values) 
             for i in range(0, points.size(0), chunk_size)], 0)

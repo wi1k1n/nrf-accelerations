@@ -1,37 +1,78 @@
 \chapter{Related work}
 \label{chap:related_work}
 
-\section{Basic models and knowledge}
+% \section{Basic models and knowledge}
 
-Not very long about very basics
 Laying out why the following sections are relevant for this work
 
-\subsection{\{Rendering equation\} \im{or/and radiometry?}}
-\begin{enumerate}
-    %\item Color space \im{?}
-    \item LDR/HDR
-    \item Rendering equation
-    \item Transfer equation
-    \item (simple) volume rendering
-    \item BSSRDF + Reflection Models
-\end{enumerate}
 
-\sm{Not sure how relevant that is. Maybe put this in a subsection later for NeRF? Lowest priority for now.}
+% \subsection{Camera model}
+% \begin{enumerate}
+%     \item Homogenous coordinates
+%     \item Pinhole camera model
+%     \item Intrinsics
+%     \item Extrinsics
+%     \item Distortion
+% \end{enumerate}
 
-\subsection{Camera model}
-\begin{enumerate}
-    \item Homogenous coordinates
-    \item Pinhole camera model
-    \item Intrinsics
-    \item Extrinsics
-    \item Distortion
-\end{enumerate}
+
+\section{Scene representation}
+
+The problem of scene reconstruction is an extensive challenge consisting of different aspects,
+one of which is scene representation.
+It defines the way how scene features are described.
+Different representations have its own properties and can be a better or worse fit depending on the task.
+
+Scene features usually include geometry and illumination information
+and can be represented \textit{explicitly} or \textit{implicitly}.
+
+\subsection{Explicit geometry}
+
+\textit{Explicit} methods use geometric primitives to describe scenes.
+
+Voxel grids (\cite{Lombardi_2019}) is a very common way to describe a geometry of the scene mostly due to its simplicity.
+
+However, straightforwardly they are highly memory demanding.
+This can be handled applying techniques like multi-resolution approach (\cite{häne2017hierarchical})
+or truncated signed distance fields (\cite{truncdistfield1996curless}),
+which represent geometry implicitly.
+
+Another way to represent a geometry is using \textit{point clouds} (\cite{qi2017pointnet}, \cite{fan2016point}).
+They can be easily retrieved using different sensors (e.g. depth cameras),
+therefore they are widely used in robotics and computer graphics fields.
+Point clouds require a complex post-processing step
+(e.g. \cite{ballpivoting1999bernardini}) in order to produce the mesh of the scene,
+which makes them quite tedious to work with.
+
+Geometry can be represented using meshes,
+where corresponding edges and vertices form a graph (\cite{wang20183d}).
+Although these methods work directly on meshes,
+the downsides are in high limitations of these methods,
+such as requirement of reference template mesh,
+tendency to produce self-intersecting meshes or opened surfaces (\cite{groueix2018atlasnet}).
+
+\subsection{Implicit geometry}
+
+\textit{Implicit} methods map points in space to some value,
+which implicitly gives knowledge about the scene.
+
+The most common example of implicit geometry representation is the signed distance field (SDF) (\cite{truncdistfield1996curless}, \cite{Lombardi_2019}),
+which is basically a mapping $\mathbb{R}^3 \xrightarrow{} \mathbb{R}$ defining the surface as a level-set (mostly a zero-based).
+
+Occupancy fields (\cite{occupancy2019mescheder}) are introduced as neural networks that directly learn continuous 3D occupancy function.
+
+The neural implicit shape representations exploits the same idea,
+with the difference of employing deep networks
+is a standing alone subcategory of implicit geometry representations.
+It 
+
+
 
 
 \section{Neural scene representation}
 
 \sm{sounds like a good listing}
-
+{\color{teal}
 \begin{enumerate}
     \item Explicit/implicit scene representations
     \item Neural Radiance Field (Scene Representation Networks, Local Light Field Fusion ..->.. NeRF)
@@ -39,6 +80,7 @@ Laying out why the following sections are relevant for this work
     \item NeRF optimizations (NSVF, FastNeRF, KiloNeRFAutomatic Integration and others)
     \item Rendering under novel lighting conditions (NRF, DRF, Deep Voxels, NeRD, NeRV, NeRFactor etc)
 \end{enumerate}
+}
 
 
 % \lipsum[1-15]

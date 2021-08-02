@@ -125,7 +125,7 @@ class VolumeRenderer(Renderer):
             noise = 0 if not self.discrete_reg and (not self.training) else torch.zeros_like(sigma).normal_()
             # noise = 0
             free_energy = torch.relu(noise + sigma) * sampled_dists
-            free_energy = free_energy * 7.0  # ? [debug]
+            # free_energy = free_energy * 7.0  # ? [debug]
             # (optional) free_energy = (F.elu(sigma - 3, alpha=1) + 1) * dists
             # (optional) free_energy = torch.abs(sigma) * sampled_dists  ## ??
             outputs['free_energy'] = masked_scatter(sample_mask, free_energy)
@@ -290,7 +290,8 @@ class VolumeRenderer(Renderer):
             Ll = samples['point_light_intensity'] * fatt
             # NRF paper, using same sample points as for view ray
             if not len(outputs['light_transmittance']):
-                tau = b.type_as(free_energy)
+                # tau = b.type_as(free_energy)
+                tau = torch.exp(-free_energy.float())
             # light_transmittance values are provided by child-class
             else:
                 tau = outputs['light_transmittance']
@@ -581,13 +582,13 @@ class LightBFVolumeRenderer(LightVolumeRenderer):
             #     name: outs[light_hits] for name, outs in lintersection_outputs_squeezed.items()}
 
             lfe = lresults['fe']
-            # lsampled_depth = light_samples['sampled_point_depth']
-
-            # shifted_lfe = torch.cat([lfe.new_zeros(lsampled_depth.size(0), 1), lfe[:, :-1]], dim=-1)  # shift one step
+            # shifted_lfe = torch.cat([lfe.new_zeros(lfe.size(0), 1), lfe[:, :-1]], dim=-1)  # shift one step
             # tau_j = torch.exp(-torch.cumsum(shifted_lfe.float(), dim=-1))
             # tau = torch.prod(tau_j, dim=-1).reshape(*sampled_xyz.size()[:-1])
 
             tau = torch.exp(-torch.sum(lfe, dim=-1)).reshape(*sampled_xyz.size()[:-1])
+            # tau = torch.exp(-torch.sum(lfe * light_intersection_outputs['steps'].unsqueeze(-1), dim=-1))\
+            #     .reshape(*sampled_xyz.size()[:-1])
         else:
             tau = torch.ones(*sampled_xyz.size()[:-1], device=sampled_xyz.device)
         ######### </LIGHT_RAYS>
