@@ -59,7 +59,11 @@ class MLNRFExModel(NSVFModel):
 		return all_results
 
 	def add_other_logs(self, all_results):
-		return super().add_other_logs(all_results)
+		other_logs = super().add_other_logs(all_results)
+		other_logs.update({
+			'Li_log': item(self.raymarcher.light_intensity)
+		})
+		return other_logs
 
 	def _visualize(self, images, sample, output, state, **kwargs):
 		img_id, shape, view, width, name = state

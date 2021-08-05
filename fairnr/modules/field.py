@@ -299,6 +299,7 @@ class RaidanceLightField(RaidanceField):
 class RaidanceExplicitLightField(RaidanceField):
     def __init__(self, args):
         self.lambert_only = getattr(args, 'lambert_only', False)
+        # self.predict_l = getattr(args, 'predict_l', False)
         self.composite_r = getattr(args, 'composite_r', False)
         super().__init__(args)
         self.bg_color = BackgroundField(out_dim=3, bg_color=self.trans_bg, min_color=self.min_color, stop_grad=self.sgbg)
@@ -313,12 +314,17 @@ class RaidanceExplicitLightField(RaidanceField):
 
     def build_texture_renderer(self, args):
         tex_input_dim = sum(self.tex_input_dims)
+        R_dim = 6
+        if not self.lambert_only:
+            R_dim += 1
+        # if self.predict_l:
+        #     R_dim += 1
         self.renderer = ExplicitLightTextureField(
             tex_input_dim, args.texture_embed_dim,
             args.texture_layers + 2 if not self.nerf_style else 2,
             with_ln=self.with_ln if not self.nerf_style else False,
             spec_init=True if not self.nerf_style else False,
-            r_dim=6 if self.lambert_only else 7)
+            r_dim=R_dim)
 
         self.brdf = Microfacet(default_rough=0.3, lambert_only=self.lambert_only, f0=0.91)
 
@@ -354,6 +360,8 @@ class RaidanceExplicitLightField(RaidanceField):
             albedo = R[:, :3]
             normal = R[:, 3:6]
             roughness = None if self.lambert_only else torch.clamp(R[:, 6], 1e-3, 1.).unsqueeze(-1)
+            # if self.predict_l:
+            #     inputs['light_intensity'] = torch.nn.ReLU()(R[:, -1])
             inputs['albedo'] = albedo
             inputs['roughness'] = roughness
             inputs['normal_brdf'] = normal

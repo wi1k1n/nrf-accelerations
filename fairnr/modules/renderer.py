@@ -14,6 +14,7 @@ import numpy as np
 from fairnr.modules.module_utils import FCLayer
 from fairnr.data.geometry import ray
 from fairseq.utils import with_torch_seed
+from fairseq.modules import GradMultiply
 
 import logging
 logger = logging.getLogger(__name__)
@@ -69,6 +70,8 @@ class VolumeRenderer(Renderer):
         # ray-marching parameters
         parser.add_argument('--discrete-regularization', action='store_true',
                             help='if set, a zero mean unit variance gaussian will be added to encougrage discreteness')
+        parser.add_argument('--discrete-regularization-light', action='store_true',
+                            help='same as --discrete-regularization, but for light rays')
         
         # additional arguments
         parser.add_argument('--chunk-size', type=int, metavar='D', 
@@ -147,6 +150,8 @@ class VolumeRenderer(Renderer):
             outputs['feat_n2'] = masked_scatter(sample_mask, field_outputs['feat_n2'])
         if 'lightd' in field_inputs:
             outputs['lightd'] = masked_scatter(sample_mask, field_inputs['lightd'].squeeze())
+        # if 'light_intensity' in field_outputs:
+        #     outputs['light_intensity'] = masked_scatter(sample_mask, field_outputs['light_intensity'].squeeze())
         if 'ray' in field_inputs:
             outputs['ray'] = masked_scatter(sample_mask, field_inputs['ray'])
         if 'light' in field_inputs:
@@ -287,11 +292,19 @@ class VolumeRenderer(Renderer):
             fatt = (outputs['light_radius'] ** 2) / lightd  # torch handles zero division with inf values
             fatt[lightdmask] = 0.0
 
+            # light_intensity = outputs['light_intensity'] if 'light_intensity' in outputs \
+            #             else samples['point_light_intensity']
+            light_intensity = samples['point_light_intensity']
+
             Ll = samples['point_light_intensity'] * fatt
+            # if self.training:
+            #     light_intensity = GradMultiply.apply(light_intensity, 1000.0)
+            # Ll = light_intensity * fatt
+
             # NRF paper, using same sample points as for view ray
             if not len(outputs['light_transmittance']):
-                # tau = b.type_as(free_energy)
-                tau = torch.exp(-free_energy.float())
+                tau = b.type_as(free_energy)
+                # tau = torch.exp(-free_energy.float())  # wrong!
             # light_transmittance values are provided by child-class
             else:
                 tau = outputs['light_transmittance']
@@ -300,6 +313,7 @@ class VolumeRenderer(Renderer):
                 compClr = compClr * Li.unsqueeze(-1)
             else:
                 raise NotImplementedError('This branch of code has not been finished yet')
+            # exp(-sum(v)) == prod(exp(-v))
         # final summation of compositing colors
         if 'compClr' in locals():
             results['colors'] = compClr.sum(-2)
@@ -346,7 +360,10 @@ class VolumeRenderer(Renderer):
 class LightVolumeRenderer(VolumeRenderer):
     def __init__(self, args):
         super().__init__(args)
-        self.light_intensity = torch.Tensor([args.light_intensity]).to(self.args.device_id)
+        self.predict_l = getattr(args, 'predict_l', False)
+        if self.predict_l:
+            self.light_intensity = nn.Parameter(torch.Tensor([args.light_intensity]).to(self.args.device_id))
+        else: self.light_intensity = torch.Tensor([0.]).to(self.args.device_id)
         self.light_radius = torch.Tensor([args.light_radius]).to(self.args.device_id)
 
     @staticmethod
@@ -355,6 +372,8 @@ class LightVolumeRenderer(VolumeRenderer):
 
         parser.add_argument('--light-intensity', type=float, default=1.)
         parser.add_argument('--light-radius', type=float, default=0.1)
+        parser.add_argument('--predict-l', action='store_true',
+                            help='if set, the intensity value L will be predicted by model')
 
 
     def forward(self, input_fn, field_fn, ray_start, ray_dir, samples, *args, **kwargs):
@@ -373,8 +392,11 @@ class LightVolumeRenderer(VolumeRenderer):
 
         plXYZExpanded = torch.repeat_interleave(plXYZ[0, :, :, 0], pixelsPerView, 0)[:, None, :3].expand(-1, voxelsN, -1)
         # plCYZExpanded.shape: viewsN * pixelsPerView x voxelsN x 3
+        light_intensity = self.light_intensity
+        if self.predict_l and self.training:
+            light_intensity = GradMultiply.apply(light_intensity, 1000.0)
         samples.update({'point_light_xyz': plXYZExpanded[None, ...][kwargs['hits']],
-                        'point_light_intensity': self.light_intensity.expand(samples['sampled_point_distance'].shape),
+                        'point_light_intensity': light_intensity.expand(samples['sampled_point_distance'].shape),
                         'point_light_radius': self.light_radius.expand(samples['sampled_point_distance'].shape)
                         })
 
@@ -534,8 +556,10 @@ class LightBFVolumeRenderer(LightVolumeRenderer):
         # need to intersect light rays with the octree here first
         sampled_xyz = ray(ray_start.unsqueeze(1), ray_dir.unsqueeze(1), samples['sampled_point_depth'].unsqueeze(2))
         point_light_xyz = samples['point_light_xyz']
-        light_dirs = point_light_xyz - sampled_xyz
-        light_start = sampled_xyz
+        # light_dirs = point_light_xyz - sampled_xyz
+        # light_start = sampled_xyz
+        light_dirs = sampled_xyz - point_light_xyz
+        light_start = point_light_xyz
 
         # [shapes x views x rays x xyz]
         light_start, light_dirs, light_intersection_outputs, light_hits = \

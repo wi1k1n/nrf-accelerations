@@ -9,15 +9,15 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "rocket_coloc_exr"
-NAME = "test5"  # postfix for dataset name
+DATA = "guitar_coloc_exr"
+NAME = "test7"  # postfix for dataset name
 RES = "64x64"
 PIXELS_PER_VIEW = '80'
 VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
 
 USE_OCTREE = True
 CHUNK_SIZE = '128'  #'256'  # > 1 to save memory to time
-LR = '0.00002'  # 0.001
+LR = '0.0001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
 COLOR_WEIGHT = '1.0'  #'256.0'
@@ -30,15 +30,17 @@ PRUNNING_EVERY_STEPS = '5000'
 PRUNNING_TH = '0.5'  # '0.5'
 SAVE_INTERVAL_UPDATES = '500'#'750'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
-TRAIN_VIEWS = '0..170'  # '0..100'
-VALID_VIEWS = '170..200'  # '100..200
-NUM_WORKERS = '8'  # '0'
+TRAIN_VIEWS = '0..450'  # '0..100'
+VALID_VIEWS = '450..500'  # '100..200
+NUM_WORKERS = '0'  # '0'
 
 PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
-MIN_COLOR = '0.0'  #
-MAX_COLOR = '0.7'
-GAMMA_CORRECTION = '1.5'
+MIN_COLOR = '0.8'  #
+MAX_COLOR = '1.4'
+GAMMA_CORRECTION = '1.0'
 BG_COLOR = '0.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
+SIGMA_NOISE = True
+# SIGMA_NOISE_LIGHT = False  # not implemented yet
 
 
 TRACE_NORMAL = False
@@ -66,12 +68,14 @@ TASK = 'single_object_light_rendering'
 # LIGHT_INTENSITY = '1000.0'
 # # <!/-- Explicit model with ignoring light interaction -->
 
-# # <!-- Explicit model with NRF (colocated!) light interaction -->
-# ARCH = "mlnrfnrf_base"
-# # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
-# LIGHT_INTENSITY = '500.0'  # rocket_exr -> 5k Watt
-# TEXTURE_LAYERS = '5'
-# # <!/-- Explicit model with NRF (colocated!) light interaction -->
+# <!-- Explicit model with NRF (colocated!) light interaction -->
+ARCH = "mlnrfnrf_base"
+PREDICT_L = True
+# LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
+# LIGHT_INTENSITY = '5000.0'  # rocket_exr -> 5k Watt
+LIGHT_INTENSITY = '500.0'  # guitar_exr -> 0.5k Watt
+TEXTURE_LAYERS = '5'
+# <!/-- Explicit model with NRF (colocated!) light interaction -->
 
 # # <!-- Explicit model with VoxelApproximation light interaction -->
 # ARCH = "mlnrfexva_base"
@@ -81,13 +85,14 @@ TASK = 'single_object_light_rendering'
 # TEXTURE_LAYERS = '4'
 # # <!/-- Explicit model with VoxelApproximation light interaction -->
 
-# <!-- Explicit model with Brute Force light interaction -->
-ARCH = "mlnrfexbf_base"
-# LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
-LIGHT_INTENSITY = '50.0'  # rocket_exr -> 5k Watt
-# LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
-TEXTURE_LAYERS = '5'
-# <!/-- Explicit model with Brute Force light interaction -->
+# # <!-- Explicit model with Brute Force light interaction -->
+# ARCH = "mlnrfexbf_base"
+# PREDICT_L = True
+# # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
+# LIGHT_INTENSITY = '1000.0'  # rocket_exr -> 5k Watt
+# # LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
+# TEXTURE_LAYERS = '5'
+# # <!/-- Explicit model with Brute Force light interaction -->
 
 
 
@@ -128,12 +133,18 @@ if 'TRACE_NORMAL' in locals() and TRACE_NORMAL:
 	parameters += '\n--trace-normal'
 if 'LAMBERT_ONLY' in locals() and LAMBERT_ONLY:
 	parameters += '\n--lambert-only'
+if 'PREDICT_L' in locals() and PREDICT_L:
+	parameters += '\n--predict-l'
 if 'COMPOSITE_R' in locals() and COMPOSITE_R:
 	parameters += '\n--composite-r'
 if 'GAMMA_CORRECTION' in locals():
 	parameters += '\n--gamma-correction ' + GAMMA_CORRECTION
 if 'LIGHT_INTENSITY' in locals():
 	parameters += '\n--light-intensity ' + LIGHT_INTENSITY
+if 'SIGMA_NOISE' in locals() and SIGMA_NOISE:
+	parameters += '\n--discrete-regularization'
+if 'SIGMA_NOISE_LIGHT' in locals() and SIGMA_NOISE_LIGHT:
+	parameters += '\n--discrete-regularization-light'
 # parameters += '\n--scene-scale ' + SCENE_SCALE
 parameters += '\n--view-resolution ' + RES
 parameters += '\n--max-sentences 1'
@@ -157,7 +168,6 @@ if 'TEXTURE_LAYERS' in locals():
 	parameters += '\n--texture-layers ' + TEXTURE_LAYERS
 # if USE_CPU:
 # 	parameters += '\n--cpu'
-parameters += '\n--discrete-regularization'
 parameters += '\n--color-weight ' + COLOR_WEIGHT
 parameters += '\n--alpha-weight ' + ALPHA_WEIGHT
 parameters += '\n--min-color ' + MIN_COLOR
