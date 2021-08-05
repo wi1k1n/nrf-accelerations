@@ -30,12 +30,11 @@ and can be represented \textit{explicitly} or \textit{implicitly}.
 
 \textit{Explicit} methods use geometric primitives to describe scenes.
 
-Voxel grids (\cite{Lombardi_2019}) is a very common way to describe a geometry of the scene mostly due to its simplicity.
-
+\textit{Voxel grids} (\cite{Lombardi_2019}) is a very common way to describe a geometry of the scene mostly due to its simplicity.
 However, straightforwardly they are highly memory demanding.
-This can be handled applying techniques like multi-resolution approach (\cite{häne2017hierarchical})
+This can be handled applying techniques like multi-resolution approach (\cite{häne2017hierarchical}), octree hierarchies (\cite{riegler2017octnet}, \cite{tatarchenko2017octree})
 or truncated signed distance fields (\cite{truncdistfield1996curless}),
-which represent geometry implicitly.
+which in fact already represent geometry implicitly.
 
 Another way to represent a geometry is using \textit{point clouds} (\cite{qi2017pointnet}, \cite{fan2016point}).
 They can be easily retrieved using different sensors (e.g. depth cameras),
@@ -44,7 +43,7 @@ Point clouds require a complex post-processing step
 (e.g. \cite{ballpivoting1999bernardini}) in order to produce the mesh of the scene,
 which makes them quite tedious to work with.
 
-Geometry can be represented using meshes,
+Geometry can be represented using \textit{meshes},
 where corresponding edges and vertices form a graph (\cite{wang20183d}).
 Although these methods work directly on meshes,
 the downsides are in high limitations of these methods,
@@ -59,17 +58,49 @@ which implicitly gives knowledge about the scene.
 The most common example of implicit geometry representation is the signed distance field (SDF) (\cite{truncdistfield1996curless}, \cite{Lombardi_2019}),
 which is basically a mapping $\mathbb{R}^3 \xrightarrow{} \mathbb{R}$ defining the surface as a level-set (mostly a zero-based).
 
-Occupancy fields (\cite{occupancy2019mescheder}) are introduced as neural networks that directly learn continuous 3D occupancy function.
+Occupancy fields (\cite{occupancy2019mescheder}) are introduced as neural networks
+that directly learn continuous 3D occupancy function.
+This allows to achieve an arbitrary resolution
+instead of learning voxelized representations
+that results only in fixed resolution.
 
-The neural implicit shape representations exploits the same idea,
-with the difference of employing deep networks
-is a standing alone subcategory of implicit geometry representations.
-It 
+
+\im{Eigher reference brdf models here, or as it comes to them}
 
 
 
 
 \section{Neural scene representation}
+
+Neural scene representations exploit the idea of employing
+deep neural networks in order to implicitly encode information about the scene.
+
+\cite{niemeyer2020differentiable} introduces the volumetric rendering method,
+that uses the differentiable rendering functions,
+allowing the implicit neural geometry representations to be optimized
+with only 2D supervision instead of requiring 3D ground truth models.
+Using only 2D sample images the predicted surface depth is used
+for projecting and sampling the ray.
+Resulting intersection locations are then forwarded into texture prediction field,
+which outputs color value for that point.
+The appearance is not explicitly modelled, meaning that the view- and lighting-dependant effect are not taken into account.
+
+
+The Scene Representations Networks (SRNs) are introduced by \cite{sitzmann2019srns}.
+The recurrent neural networks lie in the core of this approach.
+Camera extrinsics and intrinsics is passed as inputs into the network,
+which is then being evaluated for all the samples along the ray,
+trying to decided where the surface is located.
+The network produces the feature vector which is then decoded into a single color value for that point on the surface.
+This method implies no explicit appearance modelling.
+The SRNs approach grows from DeepVoxel method (\cite{sitzmann2019deepvoxels}),
+where the feature vectors are integrated into a persistent cartesian 3D-voxel grid.
+% The similar approach is used in \cite{saito2019pifu},
+% where 2 separate predictors are used for occupancy and texture fields.
+
+Local Light Field Fusion (LLFF) (\cite{mildenhall2019local}) ... --> NeRF
+
+
 
 \sm{sounds like a good listing}
 {\color{teal}

@@ -9,7 +9,7 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "brdf_sphere_random_exr"
+DATA = "rocket_coloc_exr"
 NAME = "test5"  # postfix for dataset name
 RES = "64x64"
 PIXELS_PER_VIEW = '80'
@@ -17,7 +17,7 @@ VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER
 
 USE_OCTREE = True
 CHUNK_SIZE = '128'  #'256'  # > 1 to save memory to time
-LR = '0.0001'  # 0.001
+LR = '0.00002'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
 COLOR_WEIGHT = '1.0'  #'256.0'
@@ -36,8 +36,8 @@ NUM_WORKERS = '8'  # '0'
 
 PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #
-MAX_COLOR = '5.0'
-GAMMA_CORRECTION = '1.0'
+MAX_COLOR = '0.7'
+GAMMA_CORRECTION = '1.5'
 BG_COLOR = '0.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
 
 
@@ -83,8 +83,8 @@ TASK = 'single_object_light_rendering'
 
 # <!-- Explicit model with Brute Force light interaction -->
 ARCH = "mlnrfexbf_base"
-LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
-# LIGHT_INTENSITY = '500.0'  # rocket_exr -> 5k Watt
+# LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
+LIGHT_INTENSITY = '50.0'  # rocket_exr -> 5k Watt
 # LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
 TEXTURE_LAYERS = '5'
 # <!/-- Explicit model with Brute Force light interaction -->
