@@ -10,7 +10,7 @@ INJECT_PYCHARM = True
 SAVE_FILE = True
 
 DATA = "guitar_coloc_exr"
-NAME = "test8"  # postfix for dataset name
+NAME = "test9"  # postfix for dataset name
 RES = "64x64"
 PIXELS_PER_VIEW = '80'
 VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW

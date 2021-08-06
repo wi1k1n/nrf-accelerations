@@ -85,7 +85,8 @@ def base_architecture(args):
 
 	# field
 	args.inputs_to_density = getattr(args, "inputs_to_density", "emb:6:32")
-	args.inputs_to_texture = getattr(args, "inputs_to_texture", "feat:0:256,ray:4,light:4,lightd:0:1")
+	# args.inputs_to_texture = getattr(args, "inputs_to_texture", "feat:0:256,ray:4,light:4,lightd:0:1")
+	args.inputs_to_texture = getattr(args, "inputs_to_texture", "feat:0:256,ray:4")
 	args.feature_embed_dim = getattr(args, "feature_embed_dim", 256)
 	args.density_embed_dim = getattr(args, "density_embed_dim", 128)
 	args.texture_embed_dim = getattr(args, "texture_embed_dim", 256)
