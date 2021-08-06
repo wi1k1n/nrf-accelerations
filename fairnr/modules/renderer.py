@@ -361,9 +361,10 @@ class LightVolumeRenderer(VolumeRenderer):
     def __init__(self, args):
         super().__init__(args)
         self.predict_l = getattr(args, 'predict_l', False)
+        self.light_intensity_scale = args.light_intensity
         if self.predict_l:
-            self.light_intensity = nn.Parameter(torch.Tensor([args.light_intensity]).to(self.args.device_id))
-        else: self.light_intensity = torch.Tensor([0.]).to(self.args.device_id)
+            self.light_intensity = nn.Parameter(torch.Tensor([1.0]).to(self.args.device_id))
+        else: self.light_intensity = torch.Tensor([1.]).to(self.args.device_id)
         self.light_radius = torch.Tensor([args.light_radius]).to(self.args.device_id)
 
     @staticmethod
@@ -392,11 +393,11 @@ class LightVolumeRenderer(VolumeRenderer):
 
         plXYZExpanded = torch.repeat_interleave(plXYZ[0, :, :, 0], pixelsPerView, 0)[:, None, :3].expand(-1, voxelsN, -1)
         # plCYZExpanded.shape: viewsN * pixelsPerView x voxelsN x 3
-        light_intensity = self.light_intensity
-        if self.predict_l and self.training:
-            light_intensity = GradMultiply.apply(light_intensity, 1000.0)
+        # light_intensity = self.light_intensity
+        # if self.predict_l and self.training:
+        #     light_intensity = GradMultiply.apply(light_intensity, 1000.0)
         samples.update({'point_light_xyz': plXYZExpanded[None, ...][kwargs['hits']],
-                        'point_light_intensity': light_intensity.expand(samples['sampled_point_distance'].shape),
+                        'point_light_intensity': (self.light_intensity * self.light_intensity_scale).expand(samples['sampled_point_distance'].shape),
                         'point_light_radius': self.light_radius.expand(samples['sampled_point_distance'].shape)
                         })
 

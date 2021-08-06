@@ -10,7 +10,7 @@ INJECT_PYCHARM = True
 SAVE_FILE = True
 
 DATA = "guitar_coloc_exr"
-NAME = "test7"  # postfix for dataset name
+NAME = "test8"  # postfix for dataset name
 RES = "64x64"
 PIXELS_PER_VIEW = '80'
 VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
@@ -34,10 +34,10 @@ TRAIN_VIEWS = '0..450'  # '0..100'
 VALID_VIEWS = '450..500'  # '100..200
 NUM_WORKERS = '0'  # '0'
 
-PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
-MIN_COLOR = '0.8'  #
-MAX_COLOR = '1.4'
-GAMMA_CORRECTION = '1.0'
+PREPROCESS = 'log'  # none/mstd/minmax/log/nsvf(min_color==-1!)
+MIN_COLOR = '0.0'  #
+MAX_COLOR = '0.8'  # 0.8 - rocket/guitar; 5.0 - sphere
+GAMMA_CORRECTION = '2.0'
 BG_COLOR = '0.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
 SIGMA_NOISE = True
 # SIGMA_NOISE_LIGHT = False  # not implemented yet
@@ -89,8 +89,9 @@ TEXTURE_LAYERS = '5'
 # ARCH = "mlnrfexbf_base"
 # PREDICT_L = True
 # # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
-# LIGHT_INTENSITY = '1000.0'  # rocket_exr -> 5k Watt
+# # LIGHT_INTENSITY = '1000.0'  # rocket_exr -> 5k Watt
 # # LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
+# LIGHT_INTENSITY = '500.0'  # guitar_exr -> 0.5k Watt
 # TEXTURE_LAYERS = '5'
 # # <!/-- Explicit model with Brute Force light interaction -->
 
@@ -203,6 +204,7 @@ parameters += '\n--save-dir ' + SAVE + '/' + MODEL
 if SAVE_FILE:
 	with open('configuration.txt', 'w') as f:
 		f.write(parameters)
+		# f.write(parameters.replace('\n', ' '))
 
 if COPY2CLIPBOARD:
 	pyperclip.copy(parameters)

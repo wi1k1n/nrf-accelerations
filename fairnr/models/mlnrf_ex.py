@@ -61,7 +61,7 @@ class MLNRFExModel(NSVFModel):
 	def add_other_logs(self, all_results):
 		other_logs = super().add_other_logs(all_results)
 		other_logs.update({
-			'Li_log': item(self.raymarcher.light_intensity)
+			'Li_log': item(self.raymarcher.light_intensity * self.raymarcher.light_intensity_scale)
 		})
 		return other_logs
 
