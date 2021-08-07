@@ -102,7 +102,7 @@ class Microfacet:
 
 def safe_l2_normalize(x, axis=None, eps=1e-6):
 	return x / torch.norm(x, p=2, dim=axis, keepdim=True)
-	# # The code below is way more correct but produces cuda error on back propagation pass
+	# # # The code below is way more correct but produces cuda error on back propagation pass
 	# norm = torch.norm(x, p=2, dim=axis, keepdim=True)
 	# mask = norm <= eps
 	# norm[mask] = 1
@@ -110,6 +110,14 @@ def safe_l2_normalize(x, axis=None, eps=1e-6):
 
 # returns 0 if denominator == zero
 def divide_no_nan(a, b, eps=1e-6):
-	return torch.div(a, torch.where(b < eps, torch.Tensor([np.inf]).to(a.device), b))
 	# return torch.where(b < eps, torch.zeros_like(a).to(a.device), torch.div(a, b))
 	# return torch.nan_to_num(torch.div(a, b), nan=0, posinf=0, neginf=0)
+
+	return torch.div(a, torch.where(b < eps, torch.Tensor([np.inf]).to(a.device), b))
+
+	# mask = b < eps
+	# a_safe = a.new(a)
+	# a_safe[mask] = 0.
+	# b_safe = b.new(b)
+	# b_safe[mask] = 1.
+	# return torch.div(a_safe, b_safe)

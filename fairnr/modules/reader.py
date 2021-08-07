@@ -9,7 +9,8 @@ import random, os, glob
 
 from fairnr.data.geometry import get_ray_direction, r6d2mat
 
-torch.autograd.set_detect_anomaly(True)
+# torch.autograd.set_detect_anomaly(True)
+torch.autograd.set_detect_anomaly(False)
 TINY = 1e-9
 READER_REGISTRY = {}
 
