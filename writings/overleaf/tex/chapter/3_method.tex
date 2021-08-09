@@ -1,7 +1,76 @@
 \chapter{Method}
 \label{chap:method}
 
-In this chapter I describe the proposed solution and the implementation details
+In this chapter I first describe the core techniques that have been used.
+It is then followed by a detailed explanation of the proposed solution.
+Finally I give the implementation details and settings.
+
+\section{Neural Radiance Fields}
+
+The Neural Radiance Fields approach (\cite{mildenhall2020nerf}) lies directly in the heart of the proposed solutions.
+The continuous 5D function $F : (p,v) \xrightarrow{} (c, \omega)$ is required to be achieved in order to solve the novel view synthesis problem.
+Given the spatial location $p \in \mathbb{R}$ and the 2D viewing direction $(\theta, \phi)$ (or its equivalent 3D Cartesian representation $v \in \mathbb{R}$),
+one has to obtain the RGB color value $c$ and the probability volume density $\omega$ at this exact point $p$ under the viewing direction $v$.
+To obtain the image of the scene, one can take a pin-hole camera at position $p_0$ and cast rays to the scene: $p(z) = p_0 + z\cdot v$.
+The final visible color value $C(p,v)$ can then be evaluated using volume rendering approach \cite{niemeyer2020differentiable} along the ray $p$:
+\begin{equation}
+    C(p,v) = \int_{0}^{\infty} \omega(p(z)) \cdot c(p(z),v) dz
+    \label{eq:rendering_equation}
+\end{equation}
+, $\omega(p(z))$ is a probability weight function
+\begin{equation}
+    \omega(p(z)) = \tau_c(p(z)) \sigma(p(z))
+\end{equation}
+, where $\tau_c(p(z)) = e^{\int_0^z \sigma(p(s)) ds}$ denotes the accumulated transmittance along the ray up to the point $p(z)$, $\sigma(p(z))$ is the volume density at point $p(z)$ and the probability property is held: $\int_0^\infty \omega(p(z))dz = 1$
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.6\textwidth]{figures/mlp_nerf.png}
+    \caption{MLP used in NeRF \cite{mildenhall2020nerf} Dark blue boxes represent hidden layers. Black arrows indicate FC-layers with sigmoid activation, orange arrows - FC-layers without activation. $\zeta(.)$ stays for positional encoding function. $\sigma$ is 1D volume density, $c$ is a 3D color value. }
+    \label{fig:mlp_nerf}
+\end{figure}
+
+\im{This paragraph should probably be moved to the related work.. somehow}
+\cite{mildenhall2020nerf} propose to use a Multi-Layer Perceptron (MLP) as a representation
+of an implicit function $F = F_\Theta$ with parameters $\Theta$.
+The scheme structure of original NeRF's MLP is outlined in \Cref{fig:mlp_nerf}.
+The position $p(z)$ is first encoded using position encoding function $\zeta(\cdot)$ (positional encoding is described in section \ref{subsec:pos_enc}) and then is processed with 8 fully-connected neural layers with ReLU activations.
+The resulting feature vector is then concatenated with positionally encoded vector direction $v$
+before the the volume density $\sigma(p(z))$ and the color value $c(p(z), v)$ is outputed.
+The important concept here is that $\sigma$ only depends on point $p(z)$
+whilst the color value $c$ is view dependant as well.
+This setting is required to encourage the MLP to be multi-view consistent.
+
+In order to perform the volume rendering, the continuous integral from equation \Cref{eq:rendering_equation} has to be solved.
+One can estimate this integral using a discrete set of densely sampled points as proposed by \cite{mildenhall2020nerf}.
+Separating each ray into $N$ bins and drawing random samples from each bin
+makes the representation able to learn continuous function
+while only using finite number of samples.
+The estimate for the integral $C(p, v)$ will have a form (\cite{mildenhall2020nerf}, \cite{max1995optical}):
+
+\begin{equation}
+    C(p, v) \approx \sum_{i=1}^{N} \tau_c(p_i) (1 - e^{-\sigma(p_i) \delta_i}) c(p_i, v)
+\end{equation}
+
+, where $p_i = p(z_i)$ for brevity, $\tau_c(p_i) = e^{-\sum_{j=0}^i \sigma(p_j) \delta_j }$ is the accumulated transmittance and $\delta_i = z_{i+1} - z_i$ is the distance between adjacent sample points.
+
+\subsection{Positional encoding}
+\label{subsec:pos_enc}
+
+Neural networks are known as a highly representative class of functions (\cite{hornik1989multilayer}).
+However, recent works (\cite{rahaman2019spectral}, \cite{tancik2020fourfeat}) demonstrate the tendency of
+biasing towards low frequency functions during training of deep neural networks.
+The results can be smoothed and blurry as frequency-dependant learning speed
+is much slower for high-frequency parts of the scene.
+\cite{rahaman2019spectral} show that one can highly improve the quality of the MLP outputs
+by using an embedding, which maps inputs to a higher dimensional space before passing them to the MLP.
+
+The positional encoding function $\zeta(p) : \mathbb{R} \xrightarrow{} \mathbb{R}^{2L}$ as proposed by \cite{mildenhall2020nerf}, \cite{vaswani2017attention} is represented by Fourier series in the following form:
+
+\begin{equation}
+    \zeta(p) = (\sin(2^0\pi p), \cos(2^0\pi p), ..., \sin(2^{L-1}\pi p), \cos(2^{L-1}\pi p))
+\end{equation}
+
 
 
 \section{Implicit Neural Reflectance Field}

@@ -11,7 +11,7 @@ SAVE_FILE = True
 
 DATA = "guitar_coloc_exr"
 NAME = ""  # postfix for dataset name
-RES = "128x128"
+RES = "256x256"
 PIXELS_PER_VIEW = '80'
 VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
 
@@ -21,25 +21,25 @@ LR = '0.0001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
 COLOR_WEIGHT = '1.0'  #'256.0'
-ALPHA_WEIGHT = '1e-3'  #'1e-3'
+ALPHA_WEIGHT = '1e-3'  #'1ve-3'
 
 
 REDUCE_STEP_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
 HALF_VOXEL_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
 PRUNNING_EVERY_STEPS = '5000'
 PRUNNING_TH = '0.5'  # '0.5'
-SAVE_INTERVAL_UPDATES = '500'#'750'  # '100'
+SAVE_INTERVAL_UPDATES = '1000'#'750'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
 TRAIN_VIEWS = '0..170'  # '0..100'
 VALID_VIEWS = '170..200'  # '100..200
-NUM_WORKERS = '8'  # '0'
+NUM_WORKERS = '0'  # '0'
 
-PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
+PREPROCESS = 'log'  # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #
 MAX_COLOR = '0.8'  # 0.8 - rocket/guitar; 5.0 - sphere
-GAMMA_CORRECTION = '2.0'
+GAMMA_CORRECTION = '2.0'  # 2.0 - rocket/guitar, 1.0 - sphere
 BG_COLOR = '0.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
-SIGMA_NOISE = False
+SIGMA_NOISE = True
 # SIGMA_NOISE_LIGHT = False  # not implemented yet
 
 
@@ -73,15 +73,16 @@ ARCH = "mlnrfnrf_base"
 PREDICT_L = True
 # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
 # LIGHT_INTENSITY = '5000.0'  # rocket_exr -> 5k Watt
-LIGHT_INTENSITY = '10.0'  # guitar_exr -> 0.5k Watt
+LIGHT_INTENSITY = '300.0'  # guitar_exr -> 0.5k Watt
 TEXTURE_LAYERS = '5'
 # <!/-- Explicit model with NRF (colocated!) light interaction -->
 
 # # <!-- Explicit model with VoxelApproximation light interaction -->
 # ARCH = "mlnrfexva_base"
 # # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
-# # LIGHT_INTENSITY = '1000.0'  # rocket_exr -> 5k Watt
-# LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
+# # LIGHT_INTENSITY = '500.0'  # rocket_exr -> 5k Watt
+# # LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
+# LIGHT_INTENSITY = '500.0'  # guitar_exr -> 0.5k Watt
 # TEXTURE_LAYERS = '4'
 # # <!/-- Explicit model with VoxelApproximation light interaction -->
 
@@ -203,8 +204,8 @@ parameters += '\n--save-dir ' + SAVE + '/' + MODEL
 
 if SAVE_FILE:
 	with open('configuration.txt', 'w') as f:
-		f.write(parameters)
-		# f.write(parameters.replace('\n', ' '))
+		# f.write(parameters)
+		f.write(parameters.replace('\n', ' '))
 
 if COPY2CLIPBOARD:
 	pyperclip.copy(parameters)

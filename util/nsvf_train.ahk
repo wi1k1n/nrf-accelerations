@@ -62,7 +62,7 @@ ReconfigureRender() {
 ^!+o::
 ;;; Look for 'menu' button
 CoordMode Pixel
-ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *10 img\overleaf_menu.png
+ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *20 img\overleaf_menu.png
 
 if (ErrorLevel) { ; 'menu' button not found
     Msgbox, Menu button not found!

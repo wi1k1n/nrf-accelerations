@@ -433,13 +433,19 @@ class LightIVAVolumeRenderer(LightVolumeRenderer):
     def forward_once(
             self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
             early_stop=None, output_types=['sigma', 'texture'], **kwargs):
+        # No need to light overhead if only sigma field requested
+        if not 'texture' in output_types:
+            return super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+                                                   early_stop, output_types)
         ######### <LIGHT_RAYS>
         # need to intersect light rays with the octree here first
         sampled_xyz = ray(ray_start.unsqueeze(1), ray_dir.unsqueeze(1), samples['sampled_point_depth'].unsqueeze(2))
 
         point_light_xyz = samples['point_light_xyz']
-        light_dirs = point_light_xyz - sampled_xyz
-        light_start = sampled_xyz
+        # light_dirs = point_light_xyz - sampled_xyz
+        # light_start = sampled_xyz
+        light_dirs = sampled_xyz - point_light_xyz
+        light_start = point_light_xyz
         # [shapes x views x rays x xyz]
         light_start, light_dirs, light_intersection_outputs, light_hits = \
             input_fn.light_ray_intersect(light_start.unsqueeze(0),

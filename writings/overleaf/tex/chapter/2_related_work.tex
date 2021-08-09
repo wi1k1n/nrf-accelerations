@@ -74,6 +74,10 @@ that results only in fixed resolution.
 
 Neural scene representations exploit the idea of employing
 deep neural networks in order to implicitly encode information about the scene.
+The network learns mapping between the spatial locations and feature representations of the scene.
+The rendering techniques is used in order to get novel views of the scene.
+To make training possible the rendering process has to be formulated in a differentiable way.
+This allows to use loss functions that minimizes the differences between generated views and ground truth 2D images.
 
 \cite{niemeyer2020differentiable} introduces the volumetric rendering method,
 that uses the differentiable rendering functions,
