@@ -118,6 +118,8 @@ class VolumeRenderer(Renderer):
             B, K = mask.size()
             if x.dim() == 1:
                 return x.new_zeros(B, K).masked_scatter(mask, x)
+            if not sum(x.size()):
+                print('')
             return x.new_zeros(B, K, x.size(-1)).masked_scatter(
                 mask.unsqueeze(-1).expand(B, K, x.size(-1)), x)
         
@@ -414,8 +416,9 @@ class LightVolumeRenderer(VolumeRenderer):
         early_stop=None, output_types=['sigma', 'texture'], **kwargs):
         outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
                                                 early_stop, output_types)
-        if 'texture' in output_types:
-            outputs['light_radius'] = self.light_radius.expand(outputs['texture'].size()[:-1])
+        if outputs is not None:
+            if 'texture' in output_types:
+                outputs['light_radius'] = self.light_radius.expand(outputs['texture'].size()[:-1])
         return outputs, _evals
 
 
@@ -493,7 +496,8 @@ class LightNRFVolumeRenderer(LightVolumeRenderer):
             early_stop=None, output_types=['sigma', 'texture'], **kwargs):
         outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
                                                early_stop, output_types)
-        outputs['light_transmittance'] = torch.Tensor([])
+        if outputs is not None:
+            outputs['light_transmittance'] = torch.Tensor([])
         return outputs, _evals
 
 
