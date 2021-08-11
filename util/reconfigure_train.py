@@ -11,7 +11,7 @@ SAVE_FILE = True
 
 DATA = "guitar_coloc_exr"
 NAME = ""  # postfix for dataset name
-RES = "256x256"
+RES = "64x64"
 PIXELS_PER_VIEW = '80'
 VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
 
@@ -34,7 +34,7 @@ TRAIN_VIEWS = '0..170'  # '0..100'
 VALID_VIEWS = '170..200'  # '100..200
 NUM_WORKERS = '0'  # '0'
 
-PREPROCESS = 'log'  # none/mstd/minmax/log/nsvf(min_color==-1!)
+PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #
 MAX_COLOR = '0.8'  # 0.8 - rocket/guitar; 5.0 - sphere
 GAMMA_CORRECTION = '2.0'  # 2.0 - rocket/guitar, 1.0 - sphere

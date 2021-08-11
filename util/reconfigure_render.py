@@ -10,7 +10,7 @@ SAVE_FILE = True
 DATA = "guitar_coloc_exr"
 NAME = ""  # postfix for dataset name
 RENDER_OUTPUT = "output"  # output if empty
-RES = "64x64"
+RES = "256x256"
 RENDER_PATH_LIGHT = True  # True - light source is moving, false - camera is moving
 NUM_FRAMES = '180'
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/'\
@@ -18,7 +18,7 @@ NUM_FRAMES = '180'
 TARGETS_PATH = 'datasets/' + DATA + ('_' if NAME else '') + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
 DRY_RUN = False  # only create camera/light positions and do not evaluate model
 
-CHUNK_SIZE = '64'
+CHUNK_SIZE = '16'
 RENDER_BEAM = '1'  # should be an even divisor of NUM_FRAMES TODO: fix it
 
 MIN_COLOR = '0.0'  #
@@ -75,7 +75,7 @@ SAVE = "checkpoint/" + DATA + (('_' + NAME) if NAME else '')
 # SAVE = 'checkpoint/rocket_coloc_exr_niceRefllessNRF'
 MODEL = ARCH + "v1"
 # MODEL = 'mlnrfnrf_basev1_1strocket'
-CHECKPOINT = 'checkpoint16.pt'  # 'checkpoint_last.pt'
+CHECKPOINT = 'checkpoint_last.pt'  # 'checkpoint_last.pt'
 MODEL_PATH = SAVE + '/' + MODEL + '/' + CHECKPOINT
 
 # # Rocket
