@@ -8,10 +8,10 @@ INJECT_PYCHARM = True
 SAVE_FILE = True
 
 DATA = "guitar_coloc_exr"
-NAME = ""  # postfix for dataset name
+NAME = "test8"  # postfix for dataset name
 RENDER_OUTPUT = "output"  # output if empty
-RES = "256x256"
-RENDER_PATH_LIGHT = True  # True - light source is moving, false - camera is moving
+RES = "64x64"
+RENDER_PATH_LIGHT = False  # True - light source is moving, False - camera is moving
 NUM_FRAMES = '180'
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/'\
 # 			   + DATA + '_' + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
@@ -101,7 +101,7 @@ MODELOVERRIDES = '"{\'chunk_size\':'+CHUNK_SIZE+',\'raymarching_tolerance\':'+RA
 # BG_COLOR = '1.0,1.0,1.0'  # '1.0,1.0,1.0'
 # MODELOVERRIDES = '{\'min_color\':'+MIN_COLOR+'}'
 # MODELOVERRIDES = {}
-NUM_WORKERS = '8'
+NUM_WORKERS = '0'
 
 
 XML_PATH = '.run/render.run.xml'

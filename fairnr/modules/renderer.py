@@ -415,7 +415,7 @@ class LightVolumeRenderer(VolumeRenderer):
         outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
                                                 early_stop, output_types)
         if 'texture' in output_types:
-            outputs['light_radius'] = self.light_radius.expand_as(outputs['sample_mask'])
+            outputs['light_radius'] = self.light_radius.expand(outputs['texture'].size()[:-1])
         return outputs, _evals
 
 
