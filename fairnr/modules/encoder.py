@@ -660,8 +660,8 @@ class SparseVoxelEncoder(Encoder):
             free_energy = torch.relu(field_outputs['sigma']).reshape(-1, bits ** 3)
             
             # return scores
-            # return torch.exp(free_energy)
-            return torch.exp(-free_energy * 7.0).min(-1)[0]
+            return torch.exp(free_energy)
+            # return torch.exp(-free_energy * 7.0).min(-1)[0]
 
         return torch.cat([get_scores_once(feats[i: i + chunk_size], points[i: i + chunk_size], values) 
             for i in range(0, points.size(0), chunk_size)], 0)

@@ -16,7 +16,8 @@ NUM_FRAMES = '180'
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/'\
 # 			   + DATA + '_' + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
 # TARGETS_PATH = 'datasets/' + DATA + ('_' if NAME else '') + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
-TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/guitar_coloc_exr_target_cam/target'
+# TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/guitar_coloc_exr_target_cam/target'
+TARGETS_PATH = '/tmp/mazlov/blender/guitar_coloc_exr_target_cam/target'
 DRY_RUN = False  # only create camera/light positions and do not evaluate model
 
 CHUNK_SIZE = '16'
@@ -102,7 +103,7 @@ MODELOVERRIDES = '"{\'chunk_size\':'+CHUNK_SIZE+',\'raymarching_tolerance\':'+RA
 # BG_COLOR = '1.0,1.0,1.0'  # '1.0,1.0,1.0'
 # MODELOVERRIDES = '{\'min_color\':'+MIN_COLOR+'}'
 # MODELOVERRIDES = {}
-NUM_WORKERS = '0'
+NUM_WORKERS = '8'
 
 
 XML_PATH = '.run/render.run.xml'

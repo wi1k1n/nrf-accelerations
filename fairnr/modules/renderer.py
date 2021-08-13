@@ -118,8 +118,6 @@ class VolumeRenderer(Renderer):
             B, K = mask.size()
             if x.dim() == 1:
                 return x.new_zeros(B, K).masked_scatter(mask, x)
-            if not sum(x.size()):
-                print('')
             return x.new_zeros(B, K, x.size(-1)).masked_scatter(
                 mask.unsqueeze(-1).expand(B, K, x.size(-1)), x)
         
