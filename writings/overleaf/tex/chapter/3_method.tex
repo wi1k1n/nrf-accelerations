@@ -19,7 +19,7 @@ is required to be achieved in order to solve the novel view synthesis problem.
 Given the spatial location $p \in \mathbb{R}^3$ and the 2D viewing direction $(\theta, \phi)$ (or its equivalent 3D Cartesian representation $v \in \mathbb{R}^3$),
 one has to obtain the RGB color value $c$ and the volume density $\sigma$ at this exact point $p$ under the viewing direction $v$.
 To obtain the image of the scene, one can take a pin-hole camera at position $p_0$ and cast rays to the scene: $p(z) = p_0 + z\cdot v$.
-The final visible color value $C(p,v)$ can then be evaluated using volume rendering approach \cite{niemeyer2020differentiable} along the ray $p$:
+The final visible color value $C(p,v)$ can then be evaluated using volume rendering approach \cite{niemeyer2020differentiable}, \cite{Novak18volumeSTAR} along the ray $p$:
 \begin{equation}
     C(p,v) = \int_{0}^{\infty} \omega(p(z)) \cdot c(p(z),v) dz,
     \label{eq:rendering_equation}
@@ -33,7 +33,7 @@ where $\tau_c(p(z)) = e^{\int_0^z \sigma(p(s)) ds}$ denotes the accumulated tran
 \begin{figure}[t]
     \centering
     \includegraphics[width=0.6\textwidth]{figures/mlp_nerf.png}
-    \caption{MLP used in NeRF \cite{mildenhall2020nerf} Dark blue boxes represent hidden layers. Black arrows indicate FC-layers with sigmoid activation, orange arrows - FC-layers without activation. $\zeta(.)$ stays for positional encoding function. $\sigma$ is 1D volume density, $c$ is a 3D color value. }
+    \caption{MLP used in NeRF \cite{mildenhall2020nerf} Dark blue boxes represent hidden layers. Black arrows indicate FC-layers with sigmoid activation, orange arrows - FC-layers without activation. $\zeta(.)$ stands for positional encoding function. $\sigma$ is 1D volume density, $c$ is a 3D color value. }
     \label{fig:mlp_nerf}
 \end{figure}
 
@@ -56,6 +56,7 @@ while only using finite number of samples.
 The estimate for the integral $C(p, v)$ will have a form (\cite{mildenhall2020nerf}, \cite{max1995optical}):
 
 \begin{equation}
+    \label{eq:integral_estimation}
     C(p, v) \approx \sum_{i=1}^{N} \tau_c(p_i) (1 - \exp (-\sigma(p_i) \delta_i)) c(p_i, v),
 \end{equation}
 where $p_i = p(z_i)$ for brevity, $\tau_c(p_i) = \exp (-\sum_{j=0}^i \sigma(p_j) \delta_j )$ is the accumulated transmittance and $\delta_i = z_{i+1} - z_i$ is the distance between adjacent sample points.
@@ -118,7 +119,7 @@ Here $g_i(p)$ is the representation of $p$ that is defined as:
 \end{equation}
 where $\{p_j^*\}_{j=1}^8, p_j^* \in \mathbb{R}^3$ is the set of eight vertices of voxel $V_i$,
 $\Tilde{g_i} \in \mathbb{R}^d$ represent the feature vectors that are stored for each vertex of voxel $V_i$,
-$\chi(\cdot)$ stays for trilinear interpolation,
+$\chi(\cdot)$ stands for trilinear interpolation,
 and $\zeta(\cdot)$ is a post-processing function,
 which corresponds to positional encoding function explained in \ref{subsec:pos_enc}.
 
@@ -128,9 +129,103 @@ The sampling of the ray is only performed on the intervals of intersection with 
 This allows to reject a descent amount of unimportant samples.
 A very efficient Axis Aligned Bounding Box (AABB) ray intersection algorithm (\cite{haines1989essential}) is applied here
 to extract the above mentioned intervals.
+Another step is \textit{early termination}, which reduces the number of samples that have to be processed.
+Since solid surfaces does not imply color values being dispersed along the ray,
+the sample points that are behind the surface would be needless.
+The technique here is to straight forwardly stop evaluating points,
+that have an accumulated transmittance lower than some threshold.
+
+The training on the scene begins with the octree,
+which consists of $N$ voxels that fit in bounding box of the whole scene
+and cover all parts of the scene.
+One can get rid of non-essential voxels by performing a \textit{self-pruning} procedure.
+This technique leverages the property of neural radiance fields
+to extract some coarse scene geometry during early training iterations.
+The decision if voxel is going to be pruned is made by uniformly sampling $G$ points inside the voxel
+and comparing the minimum transmittance value with some threshold value $\gamma$ or more formally when:
+\begin{equation}
+    \underset{j=1 \dots G}{min} {\exp (- \sigma (g_i(p_j)))} > \gamma, p_j \in V_i, V_i \in \mathbb{V},
+\end{equation}
+where $\sigma (g_i(p_j))$ is the model prediction for $\sigma$ when processing $g_i(p_j)$.
+The pruning procedure has to be performed regularly as the accuracy of the model increases as it gets more and more trained,
+which means that more voxels can be pruned and therefore rejected from processing.
+
+As model learns more detailed representation of the scene it becomes necessary to refine voxel structure.
+During the refinement procedure each voxel is being subdivided into $2^3$ subvoxels by halving the voxel size.
+Ray sampling steps are also being halved at this point in order to correspond new voxel size value.
+The feature representation vectors $\Tilde{g_i}$ of the new vertices are initialized similarly to calculating $G_i(p)$,
+namely using trilinear interpolation function $\chi(\cdot)$.
+This scheme allows to achieve more detailed scene representation
+and also increases the model capacity.
 
 
 
+\subsection{Neural Reflectance Fields}
+
+Although the neural radiance fields approach is able to produce realistic renderings under novel view conditions,
+one of main limitations of this method is the inability to handle any kind of visual effects related to dynamic light conditions.
+The core assumption of these approaches is a static illumination,
+which is implicitly presented in the color values of the rendered images.
+This in turn does not allow to change illumination on the rendering phase.
+
+\cite{bi2020neural} propose the framework for eliminating this exact limitation.
+Authors introduce neural reflectance field (NRF), which is the neural scene representation
+that in addition to scene geometry also encodes normal and reflectance properties of the scene.
+This approach allows to evaluate an explicit reflectance model at the selected point after all.
+Although \cite{bi2020neural} focus on the microfacet bidirectional reflectance distribution function (BRDF) (\cite{walter2007microfacet}),
+any other reflectance model can be used within this method as well
+(i.e. authors also show some results of furry objects using hair reflectance model \cite{kajiya1989fur}).
+
+This method uses the same rendering framework as proposed by \cite{mildenhall2020nerf}.
+Assuming that the volume containing the scene to be only scattering volume (i.e. there are no emission or absorption processes),
+the corresponding rendering equation \Cref{eq:rendering_equation} (\cite{Novak18volumeSTAR}) looks similarly
+except for operating with radiance values $L$ instead of color values $c$:
+\begin{equation}
+    L(p, v) = \int_0^\infty \omega(p(z)) \cdot L_s(p(z), v) dz = \int_0^\infty \tau_c(p(z)) \sigma(p(z)) \cdot L_s(p(z), v)dz,
+\end{equation}
+where $L_s(p(z), v)$ denotes the scattered light at point $p(z)$ along direction $v$.
+
+In general case $L_s$ is calculated by integrating incident radiance along the whole unit sphere $\mathbb{S}$:
+\begin{equation}
+    \label{eq:radiance_Li}
+    L_s(p, v) = \int_\mathbb{S} f_p(p, v, l) L_i(p, l)dl,
+\end{equation}
+where $l$ is the 3D Cartesian representation of directions of the incident radiance $L_i(p, l)$.
+$f_p(p, v, l)$ is the phase function, which controls
+how the light that comes from $l$ scatters at point $p$ if viewing from $v$.
+
+\cite{bi2020neural} only assume single light source setting
+and the reflectance function as the phase function,
+which allows to simplify \Cref{eq:radiance_Li}:
+\begin{equation}
+    L_s(p, v) = f_r(p, v, l, n(p), R(p)) L_i(p, l),
+\end{equation}
+where $f_r$ denotes a differentiable reflectance function
+with parameters $R$.
+Normal vector $n$ is also required for evaluation of reflectance model $f_r$.
+$L_i(p, l)$ is the radiance that arrives from direction $l$ and can be calculated using light intensity $L_l(p)$
+and the transmittance value $\tau_l(p, l)$,
+which indicates the loss of light from the light source to the sample point $p$ along light ray $l$, as follows:
+$L_i(p, l) = \tau_l(p, l) L_l(p, l)$.
+The light attenuation coefficient $f_{att}$ is considered inside the $L_l$ term:
+$L_l(p, l) = \frac{1}{d^2 / r^2}$,
+where $d$ is distance from sample point $p$ to the light source
+and $r$ is the light's radius (assuming light source to be an emissive sphere with radius $r$).
+
+Combining these equations together and applying the same technique for numerical integral estimation
+as used by \cite{mildenhall2020nerf} and \cite{liu2021neural} gives the following formulation of \Cref{eq:integral_estimation} for NRF:
+\begin{equation}
+    L(p, v, l) \approx \sum_{i=1}^N \tau_l(p_i, l) L_l(p_i, l) f_r(p_i, v, l, n(p_i), R(p_i)) \tau_c(p_i) (1 - \exp (-\sigma(p_i)\delta_i))
+\end{equation}
+Here $\tau_l$ plays the same role for light ray $l$
+as $\tau_c$ operates for view ray $v$.
+It is evaluated similarly along the light ray $l$:
+$\tau_l(p_i, l) = \exp (-\sum_{j=1}^M \sigma(p'_j) \delta'_j)$,
+where $p'(z') = p'_0 + z' \cdot l$ are sample points that are additionaly sampled along the light ray $l$ and $\delta'_j = z'_{j=1} - z'_j$.
+
+This formulation covers the general case when light source can be located at arbitrary position.
+Since the $l$ and $v$ vectors are different, the additional sampling of light ray is required,
+which makes 
 
 
 \section{Implicit Neural Reflectance Field}
