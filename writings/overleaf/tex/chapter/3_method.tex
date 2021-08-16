@@ -82,7 +82,7 @@ The positional encoding function $\zeta(p) : \mathbb{R} \xrightarrow{} \mathbb{R
 
 
 \subsection{Sparse Voxels Octree}
-
+\label{subsec:NSVF}
 The already described approach already is able to represent scenes with a high accuracy.
 However, the very inefficient way of sampling points along rays
 makes the training very slow and tough,
@@ -226,7 +226,7 @@ as used by \cite{mildenhall2020nerf} and \cite{liu2021neural} gives the followin
 Here $\tau_l$ plays the same role for light ray $l$
 as $\tau_c$ operates for view ray $v$.
 It is evaluated similarly along the light ray $l$:
-$\tau_l(p_i, l) = \exp (-\sum_{j=1}^M \sigma(p'_j) \delta'_j)$,
+$\tau_l(p'_i, l) = \exp (-\sum_{j=1}^M \sigma(p'_j) \delta'_j)$,
 where $p'(z') = p'_0 + z' \cdot l$ are sample points that are additionaly sampled along the light ray $l$ and $\delta'_j = z'_{j=1} - z'_j$.
 
 This formulation covers the general case when light source can be located at arbitrary position ('arbitrary setting').
@@ -240,7 +240,7 @@ then sampling points $p(z)$ and $p'(z)$ would be the same,
 which in turn means that $\tau_c(p_i) = \tau_l(p_i)$ ('co-located setting').
 In this case there is no need in additionally sampling light rays,
 which leave the processing time requirements on the same level as original work by \cite{mildenhall2020nerf}.
-\Cref{fig:colocated_light_source} shows this process in more details.
+\Cref{fig:colocated_light_source} \im{add figure} shows this process in more details.
 Another advantage of this setting is that it has an accessible real-world analogy.
 In particular, all of modern cellphones are equipped with cameras
 and flash lights that are placed close to each other.
@@ -313,63 +313,120 @@ This technique requires some robust estimation of $I$ as an initialization value
 
 
 
+\section{In-Voxel Light Approximation}
 
+Using sparse octree voxels for increasing the efficiency of the method
+makes the whole problem feasible within some commonly accessible hardware.
+However, the training procedure still remained highly computationally expensive and memory demanding
+and therefore very slow in training or still even intractable for high resolution scenes.
 
-\im{..............}
+The main load of this approach still remains in the additional sampling of light rays
+and the consecutive model evaluation for calculating $\tau_l(p', l)$.
+This fact leads to the task of minimizing the overhead that is caused by calculating light ray transmittances.
 
-\im{..............}
+Predictions of volume densities at view ray sample points have primary importance
+as they contribute into the final radiance value the most.
+This assumption brings to the fact that light rays are not required
+to be sampled as densely as view rays to remain the same level of accuracy.
+The lower number of points can be sampled on the light rays,
+which would result in lower memory and time consumption.
+However, this approach only aleviates the problem while not solving its route cause.
 
-\im{..............}
+The octree structure that is used to encode feature vectors $\Tilde{g_i}$ in the corners of voxels
+represent itself a coarse geometry of the scene.
+Starting with only a few voxels that cover the whole bounding box around the scene,
+the voxels undergo the \textit{self-pruning} and \textit{refinement} procedure (explained in \Cref{subsec:NSVF}),
+which increase the detailing capabilities of the octree
+by increasing the number of voxels, lowering its sizes and rejecting empty voxels.
+After only a few steps of the aforementioned operations the overall voxel structure
+repeats scene geometry with a considerable amount of accuracy.
+These voxels that intersect with the light rays can be used as a rough estimation of volume densities.
+
+\im{add figure and describe with more math in addition to words}
+There are plenty of techniques that can be applied here in order to calculate light transmittances more efficiently.
+The main proposed technique imply the assumption
+that the volume density is homogeneously distributed inside the voxel.
+This assumption is certainly wrong for general case,
+but should give a fair estimation for the light ray transmittances.
+In this case the travelled distance of the ray inside the voxel
+can be used to weigh some value $\hat{\sigma_k}$.
+This sigma value can be regularly evaluated
+using the general explicit scheme approach (by straight forwardly sampling light rays).
+The period of evaluation can be similar to periods for \textit{self-pruning} and \textit{refinement} procedures
+as some coarse value would already give an acceptable level of certainty.
+$\dots \dots \dots$
+\begin{enumerate}
+    \item - evaluate sigma in center of voxels
+    \item - evaluate sigmas on enter/exit of voxels
+    \item --- repeat above-mentioned techniques once in N~5k iterations
+    \item - use constant sigma for all voxels
+\end{enumerate}
+
 
 
 \section{Implicit Neural Reflectance Field}
 
-Existing BRDF models limits the type of scenes that can be captured
-and successfully reconstructed afterwards.
-To model object appearance one can employ neural network, which is able to get trained for a very complex appearance representations.
-In this work I \im{we?} call this technique as "Implicit scheme".
+The aforementioned methods that are proposed within this work
+extend existing approaches in terms of efficiency for the problem of reproducing the scene under novel view and light conditions.
+The novel light conditions is the essential requirement here
+as it expects the method to not only account for color values
+but also care about the reflectance of the surface.
+Although, the NRF approach is formulated in general form
+when any differentiable appearance model can be used for final radiance evaluation,
+the result is still limited by the chosen BRDF.
 
-Texture predictor not only is dependant on view direction,
-but also requires the light direction and distance to light source
-(for modelling the light attenuation effect).
-Figure \# shows the network structure for this approach.
+To expand these limitations one can shift the appearance evaluation burden to the deep neural network,
+which is able to get trained for a very complex appearance representations.
+This 'implicit scheme' would have a simpler neural network structure,
+which is shown on \Cref{fig:implicit_scheme_structure} \im{add figure}
+The light interaction is performed here implicitly by providing 
+the network the light direction $l$ as well as distance from sample point to the light source $d_i = \norm{p^l_k - p_i}$
+as denoted on figure.
 
-\begin{enumerate}
-    \item Light rays are not sampled (-> varying light transmittance either not considered or assumed to get learned by network\im{???})
-    \item |--> Tangential space for coordinates (and parametrization as half-vectors. not done)
-\end{enumerate}
+Another quality of this technique will be the increased complexity of the learning function,
+which would expect the network structure with greater capacity.
 
-Since the appearance effects happen mostly in a local coordinate frame, the usage of the global direction vectors implies on the model to learn global to local coordinate system transformation. Although this is generally achievable, the overall complexity of the task can be too overwhelming for the model and some kind of correlations might affect the model. In order to increase the training performance this transformation can be done deterministically and the view and light directions in local coordinate frame are to be passed to the input of the model.
-
-The usage of the cartesian vectors is not very effective for reflectance representations. The half diff vectors (rusinkiewicz parametrization) can be used instead of positionally encoded l and v.
-\sm{or in combination with positional encoding}
-
-
-
-
-\section{Explicit Neural Reflectance Field \im{for arbitrary light source}}
-
-The NRF inherits very poor performance behavior from NeRF,
-which limits it to only be feasible for the co-located light source setting.
-However, with some optimization techniques \cite{NSVF, ...} can be used to make this method practical.
-
-Using Octree with Sparse Voxels \cite{NSVF} highly increases the efficiency of sampling view rays,
-and using voxel features allows to use smaller networks,
-which also speeds up the training.
-
-This efficiency improvement makes the general problem statement with an arbitrary light source feasible.
+Disadvantage: almost no control over implicit representation
 
 
-\section{In-Voxel Approximation}
 
-Using the octree allows to approximate light rays sampling inside voxels in order to increase the performance of the method.
+% \section{Implicit Neural Reflectance Field}
 
-Instead of performing inverse CDF sampling as it is done for view rays, one can do the following:
-\begin{enumerate}
-    \item Bravely \sm{colloquial} assume the media homogenious inside voxels and boldly approximate it as constant
-    \item Under the same brave assumption perform some sampling inside the voxel once at N iterations (e.g. right after pruning has been performed)
-    \item The in-voxel sampling can be lighter than inverse CDF (e.g. just sample the center of voxel, or voxel corners + trilinear interpolation)
-\end{enumerate}
+% Existing BRDF models limits the type of scenes that can be captured
+% and successfully reconstructed afterwards.
+% To model object appearance one can employ neural network, which is able to get trained for a very complex appearance representations.
+% In this work I \im{we?} call this technique as "Implicit scheme".
+
+% Texture predictor not only is dependant on view direction,
+% but also requires the light direction and distance to light source
+% (for modelling the light attenuation effect).
+% Figure \# shows the network structure for this approach.
+
+% \begin{enumerate}
+%     \item Light rays are not sampled (-> varying light transmittance either not considered or assumed to get learned by network\im{???})
+%     \item |--> Tangential space for coordinates (and parametrization as half-vectors. not done)
+% \end{enumerate}
+
+% Since the appearance effects happen mostly in a local coordinate frame, the usage of the global direction vectors implies on the model to learn global to local coordinate system transformation. Although this is generally achievable, the overall complexity of the task can be too overwhelming for the model and some kind of correlations might affect the model. In order to increase the training performance this transformation can be done deterministically and the view and light directions in local coordinate frame are to be passed to the input of the model.
+
+% The usage of the cartesian vectors is not very effective for reflectance representations. The half diff vectors (rusinkiewicz parametrization) can be used instead of positionally encoded l and v.
+% \sm{or in combination with positional encoding}
+
+% \section{In-Voxel Approximation}
+
+% Using the octree allows to approximate light rays sampling inside voxels in order to increase the performance of the method.
+
+% Instead of performing inverse CDF sampling as it is done for view rays, one can do the following:
+% \begin{enumerate}
+%     \item Bravely \sm{colloquial} assume the media homogenious inside voxels and boldly approximate it as constant
+%     \item Under the same brave assumption perform some sampling inside the voxel once at N iterations (e.g. right after pruning has been performed)
+%     \item The in-voxel sampling can be lighter than inverse CDF (e.g. just sample the center of voxel, or voxel corners + trilinear interpolation)
+% \end{enumerate}
+
+
+
+
+
 
 
 % NSVF proposed a good technique of using Sparse Voxel Trees in order to increase the rendering speed. However, the scene is still lacking the light interaction.
