@@ -151,7 +151,7 @@ if (i >= 7000) {
     return
 }
 
-Sleep, 1000
+Sleep, 3000
 Run, % "C:\Program Files\WinRAR\WinRAR.exe " . archivePath
 Sleep, 2000
 

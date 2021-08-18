@@ -32,12 +32,11 @@ where $\tau_c(p(z)) = e^{\int_0^z \sigma(p(s)) ds}$ denotes the accumulated tran
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.6\textwidth]{figures/mlp_nerf.png}
-    \caption{MLP used in NeRF \cite{mildenhall2020nerf} Dark blue boxes represent hidden layers. Black arrows indicate FC-layers with sigmoid activation, orange arrows - FC-layers without activation. $\zeta(.)$ stands for positional encoding function. $\sigma$ is 1D volume density, $c$ is a 3D color value. }
+    \includegraphics[width=0.9\textwidth]{figures/mlp_nerf.png}
+    \caption{MLP used in NeRF \cite{mildenhall2020nerf} Dark blue boxes represent hidden layers. Black arrows indicate FC-layers with sigmoid activation, orange arrows - FC-layers without activation. Green boxes are inputs: $p$ is a 3D sample point, $v$ is a 3D vector of viewing direction. Red boxes are the outputs: $\sigma$ is 1D volume density, $c$ is a 3D color value. $\zeta(.)$ stands for positional encoding function that maps inputs into higher dimensional space $\mathbb{R}^{2L}$ (more in \Cref{subsec:pos_enc}}
     \label{fig:mlp_nerf}
 \end{figure}
 
-\im{This paragraph should probably be moved to the related work.. somehow}
 \cite{mildenhall2020nerf} propose to use a Multi-Layer Perceptron (MLP) as a representation
 of an implicit function $F = F_\Theta$ with parameters $\Theta$.
 The scheme structure of original NeRF's MLP is outlined in \Cref{fig:mlp_nerf}.
@@ -75,26 +74,60 @@ by using an embedding, which maps inputs to a higher dimensional space before pa
 The positional encoding function $\zeta(p) : \mathbb{R} \xrightarrow{} \mathbb{R}^{2L}$ as proposed by \cite{mildenhall2020nerf}, \cite{vaswani2017attention} is represented by Fourier series in the following form:
 
 \begin{equation}
+    \label{eq:positional_encoding}
     \zeta(p) = (\sin(2^0\pi p), \cos(2^0\pi p), ..., \sin(2^{L-1}\pi p), \cos(2^{L-1}\pi p))
 \end{equation}
 
+
+\subsection{Hierarchical sampling}
+
+The proposed approach is ineffective in a way that it tends to generate a lot of unimportant samples
+that lie on a free space and do not make contribute much.
+To solve that authors propose the hierarchical volume sampling algorithm (similar to \cite{levoy1990efficient}),
+when another "coarse" neural network is used in order to roughly estimate volume densities along the ray.
+This insight is then used to perform a more informed sampling of main ("fine") network.
+The "coarse" network is being optimized along with the main network, which can be considered as an overhead.
+However, taking into account the increase of training convergence the overall training gets more efficient.
+
+
+\subsection{Optimization}
+
+The fully-differentiable formulation of the problem makes it possible
+to optimize network parameters $\Theta$ without any 3D supervision.
+This is done using the back-propagation approach from the differences
+between rendered predictions and ground truth images.
+This task therefore is reduced to the minimization problem of the loss function.
+The original method by \cite{mildenhall2020nerf} for loss function uses the following formulation:
+\begin{equation}
+    \mathcal{L} = \sum_{(p_0, v) \in \mathcal{B}} \norm{ C_c(p, v) - C^*(p, v) }^2_2 + \norm{ C_f(p, v) - C^*(p, v) }^2_2,
+\end{equation}
+where $\mathcal{B}$ is the set of sampled rays in each batch,
+$C^*$ is the target color value of the view ray $v$ and
+$C_c(p, v)$, $C_f(p, v)$ - are the predicted colors for the view ray $v$ of the coarse and fine networks respectively.
+
+Another regularization term can be added to this loss function as proposed by \cite{Lombardi_2019}.
+The beta-distribution regularizer $\Omega(\cdot)$
+forces the ray transmittance from the fine network $\tau_c$ to be close to $0$ or $1$:
+\begin{equation}
+    \Omega(\tau_c(p_i)) = \log(\tau_c(p_i)) + \log(1 - \tau_c(p_i))
+\end{equation}
+This helps the network to better handle background colors and get cleaner render after all.
+This regularization term is used in NSVF work (\cite{liu2021neural})
+that is described in \Cref{subsec:NSVF}
+and NRF work (\cite{bi2020neural}) that is described in \Cref{subsec:NRF}
 
 
 
 \subsection{Sparse Voxels Octree}
 \label{subsec:NSVF}
-The already described approach already is able to represent scenes with a high accuracy.
+The described approach is already able to represent scenes with high accuracy.
 However, the very inefficient way of sampling points along rays
 makes the training very slow and tough,
 since the model has to be repeatedly evaluated on unimportant samples
 of free space or occluded regions that do not make a worthwhile contribution to the finally rendered color value.
-
-\im{\subsubsection{one paragraph for: hierarchical sampling}}
-In the original approach \cite{mildenhall2020nerf} propose the hierarchical volume sampling algorithm (similar to \cite{levoy1990efficient}),
-when another "coarse" neural network is used in order to roughly estimate volume densities along the ray.
-This insight is then used to perform a more informed sampling of main ("fine") network.
-The "coarse" network is being optimized along with the main network, which can be considered as an overhead.
-However, taking into account the increase of training convergence the overall training gets more efficient.
+The \textit{hierarchical sampling} strategy alleviates the problem,
+but does not solve it completely.
+The method in its formulation therefore is still barely practical.
 
 
 \cite{liu2021neural} propose another framework
@@ -104,7 +137,7 @@ The main contribution is the usage of sparse voxel octrees (\cite{laine2011Effic
 that are efficiently used for training MLPs with shared parameters.
 
 This approach requires a slight elaboration on the problem formulation.
-Let the whole scene being fully contained in a set of $K$ sparse voxels: $\mathbb{V} = {V_1, ..., V_k}$.
+Let the whole scene being fully contained in a set of $K$ sparse voxels: $\mathbb{V} = \{V_k\}_{k=1}^K$.
 The scene can then be represented as a set of voxel-bounded implicit functions
 \begin{equation}
     F(p, v) = F_\Theta^i(g_i(p), \zeta(v)), \forall p \in V_i,
@@ -123,6 +156,27 @@ $\chi(\cdot)$ stands for trilinear interpolation,
 and $\zeta(\cdot)$ is a post-processing function,
 which corresponds to positional encoding function explained in \ref{subsec:pos_enc}.
 
+
+\begin{figure}[t]
+    \label{fig:nsvf_structure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/vanilla_nsvf.png}
+    \caption{Network structure of the NSVF approach \cite{liu2021neural}.
+Same notation as for \Cref{fig:mlp_nerf} is used.
+Dotted lines denote semantic parts of the presented structure:
+pink, green and blue dotted lines stand for encoder, density predictor and texture predictor respectively.
+\textit{Trilinear interpolation} block denotes interpolation of the sample point $p$ between voxel embeddings.}
+\end{figure}
+
+The proposed network structure is outlined in \Cref{fig:nsvf_structure}.
+The encoder part that is denoted with pink dotted line
+consists of only one layer comparing to the original NRF network
+where the encoder part consists of 5 deep layers.
+The density predictor (green dotted line) remains the same.
+The texture predictor (blue dotted line) is deeper comparing to the NeRF model.
+The overall model structure is slightly shallower comparing to the original NeRF network,
+which is still sufficient due to the distributed way of storing voxel embeddings in the voxel vertices.
+
 The volumetric rendering itself does not undergo any significant changes
 except for some additional steps that have to be performed.
 The sampling of the ray is only performed on the intervals of intersection with voxels $V_i$.
@@ -134,6 +188,9 @@ Since solid surfaces does not imply color values being dispersed along the ray,
 the sample points that are behind the surface would be needless.
 The technique here is to straight forwardly stop evaluating points,
 that have an accumulated transmittance lower than some threshold.
+
+\subsection{Voxels pruning and refinement}
+\label{subsec:pruning}
 
 The training on the scene begins with the octree,
 which consists of $N$ voxels that fit in bounding box of the whole scene
@@ -161,6 +218,7 @@ and also increases the model capacity.
 
 
 \subsection{Neural Reflectance Fields}
+\label{subsec:NRF}
 
 Although the neural radiance fields approach is able to produce realistic renderings under novel view conditions,
 one of main limitations of this method is the inability to handle any kind of visual effects related to dynamic light conditions.
@@ -229,6 +287,32 @@ It is evaluated similarly along the light ray $l$:
 $\tau_l(p'_i, l) = \exp (-\sum_{j=1}^M \sigma(p'_j) \delta'_j)$,
 where $p'(z') = p'_0 + z' \cdot l$ are sample points that are additionaly sampled along the light ray $l$ and $\delta'_j = z'_{j=1} - z'_j$.
 
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/vanilla_nrf.png}
+    \caption{MLP structure of the NRF \cite{bi2020neural} approach.
+The overall network structure echoes the original NeRF model.
+14 deep layers are used (instead of 10 in NeRF).
+The appearance model block represents BRDF $f_r$
+that is evaluated for each sample point $p$.
+To this end network outputs normal $n \in \mathbb{R}^3$
+and BRDF parameters $R \in \mathbb{R}^m$ ($m=4$ for microfacet BRDF).
+$L_l$ denotes light intensity with consideration to distance attenuation.
+}
+    \label{fig:nrf_structure}
+\end{figure}
+
+The architecture of the MLP is outlined in \Cref{fig:nrf_structure}.
+The deeper structure is used as the model capacity has to be increased
+due to higher complexity of the task.
+For each view sample point $p$ model outputs both normal vector $n$ and parameters $R$,
+which are requires by the selected BRDF model.
+For the microfacet BRDF (\cite{walter2007microfacet}) $R$ consists of 3-dimensional albedo value
+and 1-dimensional roughness value.
+
+
+
 This formulation covers the general case when light source can be located at arbitrary position ('arbitrary setting').
 Since the $l$ and $v$ vectors are different,
 the additional sampling of light ray for each view sample point is required.
@@ -240,7 +324,7 @@ then sampling points $p(z)$ and $p'(z)$ would be the same,
 which in turn means that $\tau_c(p_i) = \tau_l(p_i)$ ('co-located setting').
 In this case there is no need in additionally sampling light rays,
 which leave the processing time requirements on the same level as original work by \cite{mildenhall2020nerf}.
-\Cref{fig:colocated_light_source} \im{add figure} shows this process in more details.
+% \Cref{fig:colocated_light_source} \im{add figure} shows this process in more details.
 Another advantage of this setting is that it has an accessible real-world analogy.
 In particular, all of modern cellphones are equipped with cameras
 and flash lights that are placed close to each other.
@@ -259,6 +343,7 @@ Authors also show some renders where the 'arbitrary setting' had been used durin
 
 
 \section{Explicit Neural Reflectance Field}
+\label{sec:explicit_scheme}
 
 The described above methods have already achieved some appealing results.
 However, all of them have their own limitations that in either event reduce the performance either qualitatively or quantitatively.
@@ -274,13 +359,27 @@ for the color-based original NeRF approach.
 The usage of gradually refined octrees gives more control over the sampling process
 and makes the whole training phase faster.
 
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/explicit_scheme.png}
+    \caption{Model architecture for the 'explicit scheme'
+    (\Cref{sec:explicit_scheme}).
+The overall structure follows one from NSVF work.
+The outputs of the network are similar to the NRF model.
+BRDF evaluation ('appearance model' block) is required for achieving $f_r$ value.
+    }
+    \label{fig:mlnrf_bfex}
+\end{figure}
+
 Since both works NSVF and NRF use original NeRF framework,
 in particular similar numerical integral estimation,
 the process of reformulating NSVF problem to work with light radiances instead of color values is fairly straight forward.
-For the integral estimation \Cref{eq:integral_estimation} is simply replaced with \Cref{eq:integral_estimation_nrf}.
-However, the structure of the network takes a fair amount of changes
-that are shown on \Cref{fig:mlnrf_bfex}.
-\im{description of what is on the figure: structure + macro naming}
+For the integral estimation \Cref{eq:integral_estimation} is directly replaced with \Cref{eq:integral_estimation_nrf}.
+The network architecture follows the guidelines from the NSVF work,
+namely the encoder is shallow while texture predictor is deeper
+comparing to the original NeRF method.
+Appearance model block (right blue rhombus) includes BRDF evaluation,
+which results in $f_r$ value required for final radiance calculation (using integral estimation formula \cref{eq:integral_estimation_nrf})
 
 In order to train model on arbitrary light dataset
 an additional step of light rays sampling and volume density prediction is needed.
@@ -335,7 +434,7 @@ However, this approach only aleviates the problem while not solving its route ca
 The octree structure that is used to encode feature vectors $\Tilde{g_i}$ in the corners of voxels
 represent itself a coarse geometry of the scene.
 Starting with only a few voxels that cover the whole bounding box around the scene,
-the voxels undergo the \textit{self-pruning} and \textit{refinement} procedure (explained in \Cref{subsec:NSVF}),
+the voxels undergo the \textit{self-pruning} and \textit{refinement} procedure (explained in \Cref{subsec:pruning}),
 which increase the detailing capabilities of the octree
 by increasing the number of voxels, lowering its sizes and rejecting empty voxels.
 After only a few steps of the aforementioned operations the overall voxel structure
@@ -375,15 +474,28 @@ Although, the NRF approach is formulated in general form
 when any differentiable appearance model can be used for final radiance evaluation,
 the result is still limited by the chosen BRDF.
 
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/implicit_scheme.png}
+    \caption{Network architecture for the implicit scheme.
+The structure of the network mostly remains the same as in original NSVF work.
+Some additional parameters such as light ray direction $l$
+and distance $d$ from view sample point $p$ to the point light
+are provided in advance into texture predictor.
+}
+    \label{fig:implicit_scheme}
+\end{figure}
+
 To expand these limitations one can shift the appearance evaluation burden to the deep neural network,
 which is able to get trained for a very complex appearance representations.
 This 'implicit scheme' would have a simpler neural network structure,
-which is shown on \Cref{fig:implicit_scheme_structure} \im{add figure}
+which is shown on \Cref{fig:implicit_scheme}.
 The light interaction is performed here implicitly by providing 
 the network the light direction $l$ as well as distance from sample point to the light source $d_i = \norm{p^l_k - p_i}$
 as denoted on figure.
+Light ray direction $l$ is also positionally encoded with the same $L$ as view ray direction $v$.
 
-Another quality of this technique will be the increased complexity of the learning function,
+Another property of this technique will be the increased complexity of the learning function,
 which would expect the network structure with greater capacity.
 
 Disadvantage: almost no control over implicit representation
