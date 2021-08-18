@@ -1,8 +1,8 @@
 \chapter{Method}
 \label{chap:method}
 
-In this chapter I first describe the core techniques that have been used.
-It is then followed by a detailed explanation of the proposed solution.
+In this chapter I first describe techniques that lie in core of the proposed solution.
+They then followed by a detailed explanation of the proposed solution.
 Finally I give the implementation details and settings.
 
 \section{Neural Radiance Fields}
@@ -459,7 +459,6 @@ These voxels that intersect with the light rays can be used as an estimation of 
 %     \caption{caption}
 % \end{figure}
 \begin{figure}
-\label{fig:samplings}
     \begin{tabular}{ccc}
           \includegraphics[width=0.285\textwidth]{figures/sampling_nerf.png}
           & \includegraphics[width=0.26\textwidth]{figures/sampling_nsvf.png}
@@ -492,6 +491,7 @@ View rays are sampled in a similar way as in NSVF approach
 while light ray transmittances are estimated using travelled distances $d_{V_i}$
 of the light ray inside voxels.
 }
+\label{fig:samplings}
 \end{figure}
 
 There are plenty of techniques that can be applied here in order to calculate light transmittances more efficiently.
@@ -499,18 +499,24 @@ The main proposed technique imply the assumption
 that the volume density is homogeneously distributed inside the voxel.
 This assumption is certainly wrong for general case,
 but should give a fair estimation for the light ray transmittances.
-In this case the travelled distance $d_{V_i}$ of the ray inside voxel $V_i$
-can be used to weigh some value $\hat{\sigma_k}$ (\Cref{fig:sampling} (f)).
-This sigma value can be regularly evaluated
-using the general explicit scheme approach (by straight forwardly sampling light rays).
+In this case the travelled distance $d_{V_k}$ of the ray inside voxel $V_k$
+can be used to weigh some value $\hat{\sigma_{V_k}}$ (\Cref{fig:samplings} f):
+\begin{equation}
+    \tau_l(p_i, l) = \exp \sum_{V_k \in \mathbb{V}^*} -\hat{\sigma}_{V_k} \cdot d_{V_k},
+\end{equation}
+where $\tau_l(p_i, l)$ is the light transmittance value at the view sample point $p_i$
+and $\mathbb{V}^* \subset \mathbb{V}$ is the set of voxels $V_k$
+that have been intersected by the light ray $p'(z') = p'_0 + z' \cdot l$.
+
+The model can be periodically evaluated to predict the values of $\hat{\sigma}_{V_k}$ and consequently calculate $\tau_l$.
 The period of evaluation can be similar to periods for \textit{self-pruning} and \textit{refinement} procedures
 as some coarse value would already give an acceptable level of certainty.
-$\dots \dots \dots$
+
+Some other options can be applied here such as:
 \begin{enumerate}
-    \item - evaluate sigma in center of voxels
-    \item - evaluate sigmas on enter/exit of voxels
-    \item --- repeat above-mentioned techniques once in N~5k iterations
-    \item - use constant sigma for all voxels
+    \item calculate $\hat{\sigma}_{V_k}$ using points sampled in centers of voxels $V_k \in \mathbb{V}^*$
+    \item calculate mean $\hat{\sigma}_{V_k}$ value from points of intersection of light ray with voxels $V_k \in \mathbb{V}^*$
+    \item assign $\hat{\sigma}_{V_k} = \const, \forall V_k \in \mathbb{V}^*$
 \end{enumerate}
 
 
@@ -545,12 +551,12 @@ which is shown on \Cref{fig:implicit_scheme}.
 The light interaction is performed here implicitly by providing 
 the network the light direction $l$ as well as distance from sample point to the light source $d_i = \norm{p^l_k - p_i}$
 as denoted on figure.
-Light ray direction $l$ is also positionally encoded with the same $L$ as view ray direction $v$.
+Light ray direction $l$ is also positionally encoded with the same $L$ as view ray direction $v$ is.
 
 Another property of this technique will be the increased complexity of the learning function,
 which would expect the network structure with greater capacity.
 
-Disadvantage: almost no control over implicit representation
+\im{\textit{Disadvantage: almost no control over implicit representation}}
 
 
 

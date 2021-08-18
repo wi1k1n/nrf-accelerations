@@ -2,27 +2,109 @@
 \chapter{Evaluation \im{(or Results?)}}
 \label{chap:evaluation}
 
-This chapter addresses results of the experiments and comparisons to other methods.
+This chapter addresses implementation details, experiments, ablation studies and achieved results.
 
 
 \section{Implementation details}
 
 \begin{enumerate}
     \item Datasets
-    \begin{enumerate}
-        \item Synthetic datasets:
-        \begin{enumerate}
-            \item static/co-located/arbitrary
-            \item Blender + python
-            \item Blender point light intensity for light attenuation
-        \end{enumerate}
-        \item Real-world datasets: flower??? tac7
-    \end{enumerate}
     \item Loss function: color + beta-regularizer
-    \item Parameters: optimizer, lr, batch, coefficients
+    \item Parameters: optimizer, lr, batch, coefficients, pruning/refinement iterations
     \item Software/Hardware setup
     \item Time estimates
 \end{enumerate}
+
+
+\section{Datasets}
+\begin{enumerate}
+    \item Synthetic datasets:
+    \begin{enumerate}
+        \item static/co-located/arbitrary
+        \item Blender + python
+        \item Blender point light intensity for light attenuation
+        \item Different scenes (with its features explanations: reflectance, shape, etc.)
+    \end{enumerate}
+    \item Real-world datasets: flower??? tac7
+\end{enumerate}
+
+
+\section{Datasets}
+
+Metrics: MSE, SSIM, FLIPLoss/HDRFlipLoss
+
+
+\section{Experiments}
+
+The experiments involve training models on different synthetic datasets (\im{reference to prev. subsection}) with different parameters
+and quantitative (\im{ref}) and qualitative (\im{ref}) comparisons of those.
+
+
+
+\section{Comparisons}
+
+Following models for comparison:
+\begin{enumerate}
+    \item Vanilla NSVF
+    \item Explicit scheme colocated (NRF+NSVF)
+    \item Explicit scheme 'brute-force'
+    \item Explicit scheme w/in-voxel approximation
+    \item Implicit scheme w/in-voxel approximation
+\end{enumerate}
+
+
+Following datasets for comparison:
+\begin{enumerate}
+    \item BRDF sphere
+    \item Rocket
+    \item Guitar
+    \item \color{red}{Trophy/donut/tablelamp}
+\end{enumerate}
+
+Following settings:
+\begin{enumerate}
+    \item Static
+    \item Colocated
+    \item Arbitrary
+\end{enumerate}
+
+
+Table with time/memory consumptions:
+
+\im{I'M TABLE!}
+
+
+\section{Discussion}
+
+\begin{enumerate}
+    \item HDR inputs: preprocessing (log-transform)
+    \item Background color problem?
+    \item In-Voxel approximation: different sigma strategies
+    \item Implicit scheme with tangential coordinate system
+\end{enumerate}
+
+
+% \section{Colocated setting flaws}
+
+% Network barely generalizes for noncolocated light source position when trained only on colocated setting
+
+
+% \section{Brute Force vs Approximation}
+
+% Time/memory/quality comparisons
+
+
+\section{Discussion}
+
+\begin{enumerate}
+    \item HDR inputs: preprocessing (log-transform)
+    \item Background color problem?
+    \item In-Voxel approximation: different sigma strategies
+    \item Implicit scheme loses specularities: tangential coordinate system
+\end{enumerate}
+
+
+
 
 
 
@@ -53,24 +135,6 @@ This chapter addresses results of the experiments and comparisons to other metho
 % $I = 500$
 
 
-\section{Colocated setting flaws}
-
-Network barely generalizes for noncolocated light source position when trained only on colocated setting
-
-
-\section{Brute Force vs Approximation}
-
-Time/memory/quality comparisons
-
-
-\section{Discussion}
-
-\begin{enumerate}
-    \item HDR inputs: preprocessing (log-transform)
-    \item Background color problem?
-    \item In-Voxel approximation: different sigma strategies
-    \item Implicit scheme with tangential coordinate system
-\end{enumerate}
 
 
 
