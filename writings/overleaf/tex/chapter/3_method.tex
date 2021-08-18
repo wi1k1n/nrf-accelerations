@@ -80,6 +80,7 @@ The positional encoding function $\zeta(p) : \mathbb{R} \xrightarrow{} \mathbb{R
 
 
 \subsection{Hierarchical sampling}
+\label{subsec:hierarchy_sampling}
 
 The proposed approach is ineffective in a way that it tends to generate a lot of unimportant samples
 that lie on a free space and do not make contribute much.
@@ -427,9 +428,9 @@ Predictions of volume densities at view ray sample points have primary importanc
 as they contribute into the final radiance value the most.
 This assumption brings to the fact that light rays are not required
 to be sampled as densely as view rays to remain the same level of accuracy.
-The lower number of points can be sampled on the light rays,
+Thus the lower number of points can be sampled on the light rays,
 which would result in lower memory and time consumption.
-However, this approach only aleviates the problem while not solving its route cause.
+However, this approach only alleviates the problem while not solving its route cause.
 
 The octree structure that is used to encode feature vectors $\Tilde{g_i}$ in the corners of voxels
 represent itself a coarse geometry of the scene.
@@ -439,16 +440,67 @@ which increase the detailing capabilities of the octree
 by increasing the number of voxels, lowering its sizes and rejecting empty voxels.
 After only a few steps of the aforementioned operations the overall voxel structure
 repeats scene geometry with a considerable amount of accuracy.
-These voxels that intersect with the light rays can be used as a rough estimation of volume densities.
+These voxels that intersect with the light rays can be used as an estimation of volume densities.
 
-\im{add figure and describe with more math in addition to words}
+% \begin{figure}
+%     \begin{tabular}{ccc}
+%           \includegraphics[width=0.1\textwidth]{figures/sampling_nerf.png}
+%           & \includegraphics[width=0.1\textwidth]{figures/sampling_nsvf.png}
+%           & \includegraphics[width=0.1\textwidth]{figures/sampling_nrf.png}
+%           \\(a) NeRF \cite{mildenhall2020nerf} & (b) NSVF \cite{liu2021neural} & (c) NRF \cite{bi2020neural}
+%           \\[6pt]\multicolumn{3}{1}{
+%               \begin{tabular}{cc}
+%                 \includegraphics[width=0.1\textwidth]{figures/sampling_bfex.png}
+%                 & \includegraphics[width=0.1\textwidth]{figures/sampling_iva.png}
+%                 \\[6pt](d) 'Brute-force' & (e) In-voxel approximation
+%               \end{tabular}
+%           }
+%     \end{tabular}
+%     \caption{caption}
+% \end{figure}
+\begin{figure}
+\label{fig:samplings}
+    \begin{tabular}{ccc}
+          \includegraphics[width=0.285\textwidth]{figures/sampling_nerf.png}
+          & \includegraphics[width=0.26\textwidth]{figures/sampling_nsvf.png}
+          & \includegraphics[width=0.355\textwidth]{figures/sampling_nrf.png}
+          \\(a) NeRF \cite{mildenhall2020nerf} & (b) NSVF \cite{liu2021neural} & (c) NRF \cite{bi2020neural} (general)
+          \\[6pt]\includegraphics[width=0.26\textwidth]{figures/sampling_nrf_colocated.png}
+          & \includegraphics[width=0.32\textwidth]{figures/sampling_bfex.png}
+          & \includegraphics[width=0.32\textwidth]{figures/sampling_iva.png}
+          \\(d) NRF (colocated) & (e) 'Brute force'& (f) In-voxel approximation
+    \end{tabular}
+    \caption{
+Sampling techniques used in different approaches.
+The 2D sketch schemes are used instead of 3D visualizations for simplicity.
+Blue lines represent view rays $p(z)$ with direction vector $v$,
+purple lines stand for light rays $p'(z)$ with light direction vector $l$
+(only two of those are shown for brevity).
+Right dots represent sampled view points $p_i$, yellow dots stand for light sample points $p'_i$.
+Scheme (a) shows the original NeRF sampling technique without \textit{hierarchy sampling} (\Cref{subsec:hierarchy_sampling}).
+Scheme (b) correspond to the NSVF sampling technique
+that only occurs inside intersected voxels (represented by green boxes).
+Scheme (c) shows sampling of the general case of the NRF approach
+when light source is placed at arbitrary position.
+Scheme (d) displays the 'colocated setting'
+when point light source is positioned at the same location as camera.
+In this case light sample points (yellow dots) coincide with the view sample points (red dots).
+Scheme (e) correspond to the proposed in this work 'brute-force' approach
+when light rays sampling is reduced by using the same voxel structure as in NSVF (fig. (b)).
+Scheme (f) shows sampling in proposed in this work in-voxel approximation scheme.
+View rays are sampled in a similar way as in NSVF approach
+while light ray transmittances are estimated using travelled distances $d_{V_i}$
+of the light ray inside voxels.
+}
+\end{figure}
+
 There are plenty of techniques that can be applied here in order to calculate light transmittances more efficiently.
 The main proposed technique imply the assumption
 that the volume density is homogeneously distributed inside the voxel.
 This assumption is certainly wrong for general case,
 but should give a fair estimation for the light ray transmittances.
-In this case the travelled distance of the ray inside the voxel
-can be used to weigh some value $\hat{\sigma_k}$.
+In this case the travelled distance $d_{V_i}$ of the ray inside voxel $V_i$
+can be used to weigh some value $\hat{\sigma_k}$ (\Cref{fig:sampling} (f)).
 This sigma value can be regularly evaluated
 using the general explicit scheme approach (by straight forwardly sampling light rays).
 The period of evaluation can be similar to periods for \textit{self-pruning} and \textit{refinement} procedures
