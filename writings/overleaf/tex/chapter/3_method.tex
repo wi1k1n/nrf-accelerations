@@ -348,6 +348,8 @@ Authors also show some renders where the 'arbitrary setting' had been used durin
 
 The described above methods have already achieved some appealing results.
 However, all of them have their own limitations that in either event reduce the performance either qualitatively or quantitatively.
+The explained below solution is constructed to take advantages from both NRF and NSVF approaches.
+This method is later referred as 'brute-force scheme' as it performs the light rays sampling without any approximation techniques.
 
 Since the NRF approach \cite{bi2020neural} is based on NeRF, it inherits its poor performance behaviour
 and forces it to be only applicable for the 'co-located setting'.
@@ -414,6 +416,7 @@ This technique requires some robust estimation of $I$ as an initialization value
 
 
 \section{In-Voxel Light Approximation}
+\label{sec:invoxel}
 
 Using sparse octree voxels for increasing the efficiency of the method
 makes the whole problem feasible within some commonly accessible hardware.
@@ -522,6 +525,7 @@ Some other options can be applied here such as:
 
 
 \section{Implicit Neural Reflectance Field}
+\label{sec:implicit_scheme}
 
 The aforementioned methods that are proposed within this work
 extend existing approaches in terms of efficiency for the problem of reproducing the scene under novel view and light conditions.

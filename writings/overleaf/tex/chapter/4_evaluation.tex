@@ -1,14 +1,151 @@
 
-\chapter{Evaluation \im{(or Results?)}}
+\chapter{Evaluation}
 \label{chap:evaluation}
 
 This chapter addresses implementation details, experiments, ablation studies and achieved results.
 
 
+
+\section{Training and validation data}
+
+Each training session consists of optimizing parameters of a separate neural representation from one of proposed methods.
+The dataset for each training session is created on one specific scene and with one specific light setting.
+All of used datasets have been created in an artificial environment using Blender \cite{blender}.
+Each dataset consists of rendered RGB images of the scene.
+Each image is an HDR image (the OpenEXR \cite{openexr} format is used to store HDR data on disk).
+The dataset samples are the aforementioned images
+that correspond to a view from a pin-hole camera with intrinsic parameters $\mathcal{I}$ (same for the whole dataset).
+The camera is placed on a sphere around the scene,
+up-vector is always positive in $Z$ axis,
+the orientation is always aimed to the center of the scene.
+The position of the camera is described with two angles: azimuthal angle $\theta$ and inclination angle $\phi$.
+For each view the values of $(\theta, \phi)$ are sampled uniformly on the surface of the sphere.
+In the experiments the inclination angle is bounded between $-10$ and $80$ degrees.
+Camera extrinsics (in form of transformation matrix) are exported for each dataset sample along with the HDR image.
+Additionally to that the bounding box is also exported as it is required to initialize the octree for the NSVF method.
+
+
+\subsection{Light settings}
+
+Different light settings are required due to a diversity of tasks that different methods are to solve.
+The illumination of the scene is set using point light source.
+The intensity of the light source varies for different scenes and is chosen empirically.
+The positioning of the light source is performed according to the chosen light setting.
+Three different light settings are used in order to create three versions of each dataset.
+This is done based on the fact that different methods can only handle datasets with different settings:
+\begin{enumerate}
+    \item \textbf{Static setting}
+    
+    In this case the light source positioned at the same global location for all of the dataset samples.
+    This allows to produce renders of the scene with static illumination.
+    The motivation for this type of datasets comes from the limitation of the NSVF method
+    as it does not imply dynamic illumination.
+    Datasets with static setting are made for 'Vanilla NSVF' (\cite{liu2021neural})
+    and can also be processed with 'Brute-force' (\Cref{sec:explicit_scheme})
+    and both explicit and implicit schemes (\Cref{fig:implicit_scheme})
+    with in-voxel approximation (\Cref{sec:invoxel}).
+    
+    \item \textbf{Colocated setting}
+    
+    This setting implies the light source to be co-located with the camera.
+    In this case there is no displacement between camera and light source,
+    which allows the NRF (\cite{bi2020neural}) approach to reuse the view volume transmittances
+    in calculations as transmittances of the light rays.
+    The 'Brute-force' scheme as well as both explicit and implicit schemes
+    with in-voxel approximation are also able to be trained on this type of datasets.
+    
+    \item \textbf{Arbitrary setting}
+    
+    Datasets that have been created with this setting consist of renders
+    where both camera and light positions are sampled uniformly on a sphere around the scene.
+    The positioning of the light source follows the same scheme as for camera position.
+    Another constraint is applied here that forces the angle
+    between view and light rays to the center of the scene to be smaller
+    than some value $\alpha_{max}$.
+    In the experiments the value $\alpha_{max} = 120$ degrees has been used.
+    
+    This setting is focused on general case of the NRF approach
+    and can be handled by proposed methods, such as: 'Brute force' scheme
+    and both explicit and implicit schemes with in-voxel approximation.
+\end{enumerate}
+
+
+
+
+\begingroup
+\setlength{\tabcolsep}{40pt} % Default value: 6pt
+\begin{figure}
+    \centering
+    \begin{tabular}{ccc}
+          \includegraphics[width=0.13\textwidth]{figures/sphere.png}
+          & \includegraphics[width=0.1\textwidth]{figures/rocket.png}
+          & \includegraphics[width=0.13\textwidth]{figures/guitar.png}
+          \\(a) Sphere & (b) Rocket & (c) Guitar
+    \end{tabular}
+    \caption{
+    Preview samples of the created datasets.
+    \im{how to align sphere in center?}
+}
+\label{fig:dataset_preview}
+\end{figure}
+\endgroup
+
+\subsection{Scenes}
+
+Creating the datasets from scratch is motivated by the fact that
+vast majority of related works do not consider any light interaction.
+This results in such a problem that the datasets that have been used in these works
+do not include any necessary light information (global position).
+Another limitation of these datasets is that the light source is static upon the dataset samples,
+which results in a sparse light-view sampling of the scene.
+Three different scenes have been used for the evaluation.
+\im{reference figure to show this off - say about tonemapping}
+
+\textbf{Sphere}
+
+The \textit{sphere} scene consists solely of a sphere,
+which shares Lambertian reflectance (\cite{blinn1982light}) with some specular and roughness components.
+This scene is mostly used as a baseline as it is a very simple
+both geometrically and in terms of appearance.
+
+\textbf{Rocket}
+
+The \textit{rocket} scene contains a single object,
+which exhibits complicated geometry and realistic non-Lambertian materials.
+This scene contains global geometry complications (rocket wings) and some fine details (rivets on the rocket shell).
+The surface of the rocket shows moderate level of specularities (in comparison with sphere scene)
+
+\textbf{Guitar}
+
+The \textit{guitar} scene is created for testing models ability
+to reproduce highly specular BRDFs.
+Complex geometry also allows to asses how model handles geometrical features on different scales.
+For example strings can be barely seen on renders and they would presumably the most troublesome geometrical part of the whole scene.
+
+
+
+\subsection{Real-world dataset}
+
+\im{About how to get camera positions}
+
+\im{Description of faulty flower dataset??}
+
+
+% \begin{enumerate}
+%     \item Synthetic datasets:
+%     \begin{enumerate}
+%         \item static/co-located/arbitrary
+%         \item Blender + python
+%         \item Blender point light intensity for light attenuation
+%         \item Different scenes (with its features explanations: reflectance, shape, etc.)
+%     \end{enumerate}
+%     \item Real-world datasets: flower??? tac7
+% \end{enumerate}
+
+
 \section{Implementation details}
 
 \begin{enumerate}
-    \item Datasets
     \item Loss function: color + beta-regularizer
     \item Parameters: optimizer, lr, batch, coefficients, pruning/refinement iterations
     \item Software/Hardware setup
@@ -16,20 +153,8 @@ This chapter addresses implementation details, experiments, ablation studies and
 \end{enumerate}
 
 
-\section{Datasets}
-\begin{enumerate}
-    \item Synthetic datasets:
-    \begin{enumerate}
-        \item static/co-located/arbitrary
-        \item Blender + python
-        \item Blender point light intensity for light attenuation
-        \item Different scenes (with its features explanations: reflectance, shape, etc.)
-    \end{enumerate}
-    \item Real-world datasets: flower??? tac7
-\end{enumerate}
 
-
-\section{Datasets}
+\section{Metrics}
 
 Metrics: MSE, SSIM, FLIPLoss/HDRFlipLoss
 
@@ -58,7 +183,7 @@ Following datasets for comparison:
     \item BRDF sphere
     \item Rocket
     \item Guitar
-    \item \color{red}{Trophy/donut/tablelamp}
+    \item \color{orange}{Trophy/donut/tablelamp}
 \end{enumerate}
 
 Following settings:
@@ -90,18 +215,6 @@ Table with time/memory consumptions:
 
 
 % \section{Brute Force vs Approximation}
-
-% Time/memory/quality comparisons
-
-
-\section{Discussion}
-
-\begin{enumerate}
-    \item HDR inputs: preprocessing (log-transform)
-    \item Background color problem?
-    \item In-Voxel approximation: different sigma strategies
-    \item Implicit scheme loses specularities: tangential coordinate system
-\end{enumerate}
 
 
 
