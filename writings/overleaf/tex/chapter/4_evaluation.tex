@@ -22,7 +22,11 @@ The position of the camera is described with two angles: azimuthal angle $\theta
 For each view the values of $(\theta, \phi)$ are sampled uniformly on the surface of the sphere.
 In the experiments the inclination angle is bounded between $-10$ and $80$ degrees.
 Camera extrinsics (in form of transformation matrix) are exported for each dataset sample along with the HDR image.
-Additionally to that the bounding box is also exported as it is required to initialize the octree for the NSVF method.
+Additionally to that the bounding box is also exported as it is required
+to initialize the octree for the NSVF method and all of the proposed methods as well.
+$200$ sample images are used in datasets with 'static' and 'colocated' light settings.
+For the 'arbitrary' light setting each dataset consists of $500$ sample images
+for having more dense light-view sampling distribution.
 
 
 \subsection{Light settings}
@@ -124,9 +128,26 @@ For example strings can be barely seen on renders and they would presumably the 
 
 
 
-\subsection{Real-world dataset}
+\subsection{Real-world dataset handling}
 
-\im{About how to get camera positions}
+For the group of methods that only consider static illumination of the scene
+the dataset acquisition can be performed in different ways.
+One of these ways is to use a cell phone with its camera to capture the scene.
+The acquired images can then be processed with such techniques as
+structure-from-motion (\cite{Moulon2012}, \cite{Jancosek2011}, \cite{schoenberger2016structure})
+in order to retrieve the camera intrinsics and extrinsics in correspondence with captured images.
+Another way is to use some special hardware setups with calibrated camera positions
+such as gonioreflectometers or e.g. x-rite tac7 (\cite{merzbach2017highquality}).
+
+However, for the methods that model light interaction the light extrinsics information is lacking
+when using the aforementioned techniques.
+The acquisition of the dataset consisting of captures from real-world scenes
+for this group of methods is a fairly hard task that cannot be performed without any hardware assistance.
+Even for the 'colocated' case of the NRF method cellphones can only be used
+together with the robotic arm holding the cellphone (\cite{bi2020neural}).
+
+Another key point is the background that has to be as homogeneous as possible.
+The quality of final renders are sensitive to the too complex background behind the object on the scene.
 
 \im{Description of faulty flower dataset??}
 
@@ -144,6 +165,38 @@ For example strings can be barely seen on renders and they would presumably the 
 
 
 \section{Implementation details}
+
+All of the proposed methods are implemented on Python
+using PyTorch for neural fields and ray casting procedure.
+During training $80$ pixels are first sampled from each of $1$ or $2$ images 
+forming a batch that is used for one training iteration.
+These pixels are used to cast rays through the principle points of the corresponding cameras.
+These rays are then intersect the octree, which is initialized with $4^3$ voxels ($4$ voxels for each axis).
+These rays are then being sampled on the intersection intervals with the step size $0.125$.
+The following procedure differs depending on the method
+and include additional light ray casting, intersecting and sampling for the 'brute-force' scheme and BRDF evaluation for the 'explicit schemes'.
+Alpha compositing is performed after the color (or radiance) values are achieved.
+These values are then being supervised with the ground truth values using fine-network term from loss function from the \Cref{eq:loss_func} with the beta-distribution regularizer from the \Cref{eq:beta_regularizer}:
+\begin{equation}
+    \mathcal{L} = \sum_{(p_0,v)\in\mathcal{B}} \norm{ C(p, v) - C^*(p, v) } + \beta(\log(\tau_c(p, v)) + \log(1 - \tau_c(p, v))),
+\end{equation}
+with $\beta = 1e-3$ that is used in the experiments.
+
+Adam optimizer is used as an optimization algorithm for learning parameters $(\Theta, I)$ ($I$ is light intensity value).
+Learning rate for the optimizer is initialized with value $1e-4$
+and polynomially decays to value $1e-6$ over 75k iterations.
+Refinement procedure as well as reducing ray casting step are performed on iterations 5k, 25k and 50k.
+Self-pruning is performed every 5k iterations.
+Tone-mapping using scaling and gamma-correction (differ depending on scene)
+is performed to visualize HDR images (both inputs and outputs).
+
+All of the experiments are held on NVIDIA GTX 1080Ti GPU with 11GB of memory.
+Dataset sample images are down-sampled to 256px x 256px to fit the GPU memory limitations.
+\im{64x64 for 'brute force' scheme}
+\im{different schemes - different training times. approx ~12 hours}
+\im{inference time estimates}
+
+\im{25\% of the dataset is used for validation, 75\% for training}
 
 \begin{enumerate}
     \item Loss function: color + beta-regularizer

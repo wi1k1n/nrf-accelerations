@@ -100,6 +100,7 @@ between rendered predictions and ground truth images.
 This task therefore is reduced to the minimization problem of the loss function.
 The original method by \cite{mildenhall2020nerf} for loss function uses the following formulation:
 \begin{equation}
+    \label{eq:loss_func}
     \mathcal{L} = \sum_{(p_0, v) \in \mathcal{B}} \norm{ C_c(p, v) - C^*(p, v) }^2_2 + \norm{ C_f(p, v) - C^*(p, v) }^2_2,
 \end{equation}
 where $\mathcal{B}$ is the set of sampled rays in each batch,
@@ -110,6 +111,7 @@ Another regularization term can be added to this loss function as proposed by \c
 The beta-distribution regularizer $\Omega(\cdot)$
 forces the ray transmittance from the fine network $\tau_c$ to be close to $0$ or $1$:
 \begin{equation}
+    \label{eq:beta_regularizer}
     \Omega(\tau_c(p_i)) = \log(\tau_c(p_i)) + \log(1 - \tau_c(p_i))
 \end{equation}
 This helps the network to better handle background colors and get cleaner render after all.
