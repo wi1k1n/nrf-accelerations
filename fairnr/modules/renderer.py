@@ -139,7 +139,7 @@ class VolumeRenderer(Renderer):
         if 'albedo' in field_inputs:
             outputs['albedo'] = masked_scatter(sample_mask, field_inputs['albedo'].squeeze())
         if 'roughness' in field_inputs:
-            outputs['roughness'] = masked_scatter(sample_mask, field_inputs['roughness'].squeeze())
+            outputs['roughness'] = masked_scatter(sample_mask, field_inputs['roughness'].squeeze(-1))
         if 'normal_brdf' in field_inputs:
             outputs['normal_brdf'] = masked_scatter(sample_mask, field_inputs['normal_brdf'].squeeze())
         if 'texture' in field_outputs:
@@ -149,7 +149,7 @@ class VolumeRenderer(Renderer):
         if 'feat_n2' in field_outputs:
             outputs['feat_n2'] = masked_scatter(sample_mask, field_outputs['feat_n2'])
         if 'lightd' in field_inputs:
-            outputs['lightd'] = masked_scatter(sample_mask, field_inputs['lightd'].squeeze())
+            outputs['lightd'] = masked_scatter(sample_mask, field_inputs['lightd'].squeeze(-1))
         # if 'light_intensity' in field_outputs:
         #     outputs['light_intensity'] = masked_scatter(sample_mask, field_outputs['light_intensity'].squeeze())
         if 'ray' in field_inputs:

@@ -21,14 +21,14 @@ LR = '0.0001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
 COLOR_WEIGHT = '1.0'  #'256.0'
-ALPHA_WEIGHT = '1e-3'  #'1ve-3'
+ALPHA_WEIGHT = '1e-2'  #'1ve-3'
 
 
 REDUCE_STEP_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
 HALF_VOXEL_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
 PRUNNING_EVERY_STEPS = '5000'
 PRUNNING_TH = '0.5'  # '0.5'
-SAVE_INTERVAL_UPDATES = '10'#'750'  # '100'
+SAVE_INTERVAL_UPDATES = '1000'#'750'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
 TRAIN_VIEWS = '0..150'  # '0..100'
 VALID_VIEWS = '150..200'  # '100..200
@@ -74,7 +74,7 @@ ARCH = "mlnrfnrf_base"
 PREDICT_L = True
 # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
 # LIGHT_INTENSITY = '5000.0'  # rocket_exr -> 5k Watt
-LIGHT_INTENSITY = '300.0'  # guitar_exr -> 0.5k Watt
+LIGHT_INTENSITY = '500.0'  # guitar_exr -> 0.5k Watt
 TEXTURE_LAYERS = '5'
 # <!/-- Explicit model with NRF (colocated!) light interaction -->
 
