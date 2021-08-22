@@ -290,9 +290,22 @@ class BaseModel(BaseFairseqModel):
                 'img': output['normal'][shape, view], 'min_val': -1, 'max_val': 1}
         return images
 
-    def add_eval_scores(self, logging_output, sample, output, criterion, scores=['ssim', 'psnr', 'lpips'], outdir=None):
+    def add_eval_images(self, sample, output, criterion, shape=0, view=0):
+        predict, target = output['colors'][shape, view], sample['colors'][shape, view]
+
+        img_id = '{}_{}'.format(sample['shape'][shape], sample['view'][shape, view])
+        width = int(sample['size'][shape, view][1])
+        if hasattr(criterion, 'flip'):
+            with torch.no_grad():
+                pred = predict.transpose(1, 0).reshape(3, -1, width).unsqueeze(0)
+                ref = target.transpose(1, 0).reshape(3, -1, width).unsqueeze(0)
+                diff = criterion.flip(pred, ref).reshape(-1, 1)
+
+        return {'loss_hdrflip/{}:HWC'.format(img_id): recover_image(diff, min_val=0, max_val=1, width=width)}
+
+    def add_eval_scores(self, logging_output, sample, output, criterion, scores=['ssim', 'psnr', 'lpips', 'flip'], outdir=None):
         predicts, targets = output['colors'], sample['colors']
-        ssims, psnrs, lpips, rmses = [], [], [], []
+        ssims, psnrs, lpips, rmses, flips = [], [], [], [], []
         
         for s in range(predicts.size(0)):
             for v in range(predicts.size(1)):
@@ -319,6 +332,11 @@ class BaseModel(BaseFairseqModel):
                     td = sample['depths'][sample['depths'] > 0]
                     pd = output['depths'][sample['depths'] > 0]
                     rmses += [torch.sqrt(((td - pd) ** 2).mean()).item()]
+                if 'flip' in scores and hasattr(criterion, 'flip'):
+                    with torch.no_grad():
+                        pred = predicts[s, v].transpose(1, 0).reshape(3, -1, width).unsqueeze(0)
+                        ref = targets[s, v].transpose(1, 0).reshape(3, -1, width).unsqueeze(0)
+                        flips += [float(criterion.flip(pred, ref).sum())]
 
                 if outdir is not None:
                     def imsave(filename, image):
@@ -344,6 +362,8 @@ class BaseModel(BaseFairseqModel):
             logging_output['lpips_loss'] = np.mean(lpips)
         if len(rmses) > 0:
             logging_output['rmses_loss'] = np.mean(rmses)
+        if len(flips) > 0:
+            logging_output['flips_loss'] = np.mean(flips)
 
     def adjust(self, **kwargs):
         raise NotImplementedError

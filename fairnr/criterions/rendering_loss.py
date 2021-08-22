@@ -115,6 +115,10 @@ class SRNLossCriterion(RenderingCriterion):
         if args.eval_lpips:
             from lpips_pytorch import LPIPS
             self.lpips = LPIPS(net_type='alex', version='0.1')
+
+        if args.eval_hdrflip:
+            from fairnr.criterions.flip_loss import HDRFLIPLoss
+            self.flip = HDRFLIPLoss()
             
     @staticmethod
     def add_args(parser):
@@ -134,6 +138,8 @@ class SRNLossCriterion(RenderingCriterion):
         parser.add_argument('--vgg-level', type=int, choices=[1,2,3,4], default=2)
         parser.add_argument('--eval-lpips', action='store_true',
                             help="evaluate LPIPS scores in validation")
+        parser.add_argument('--eval-hdrflip', action='store_true',
+                            help="evaluate HDRFlip scores in validation")
         parser.add_argument('--no-background-loss', action='store_true')
         
     def compute_loss(self, model, net_output, sample, reduce=True):

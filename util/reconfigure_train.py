@@ -9,8 +9,8 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "guitar_random_exr"
-NAME = ""  # postfix for dataset name
+DATA = "guitar_coloc_exr"
+NAME = "test"  # postfix for dataset name
 RES = "64x64"
 PIXELS_PER_VIEW = '60'
 VIEW_PER_BATCH = '1'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
@@ -28,13 +28,14 @@ REDUCE_STEP_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
 HALF_VOXEL_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
 PRUNNING_EVERY_STEPS = '5000'
 PRUNNING_TH = '0.5'  # '0.5'
-SAVE_INTERVAL_UPDATES = '1000'#'750'  # '100'
+SAVE_INTERVAL_UPDATES = '10'#'750'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
-TRAIN_VIEWS = '0..170'  # '0..100'
-VALID_VIEWS = '170..200'  # '100..200
-NUM_WORKERS = '8'  # '0'
+TRAIN_VIEWS = '0..150'  # '0..100'
+VALID_VIEWS = '150..200'  # '100..200
+NUM_WORKERS = '0'  # '0'
 
-PREPROCESS = 'log'  # none/mstd/minmax/log/nsvf(min_color==-1!)
+HDRFLIP = True
+PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #
 MAX_COLOR = '0.8'  # 0.8 - rocket/guitar; 5.0 - sphere
 GAMMA_CORRECTION = '2.0'  # 2.0 - rocket/guitar, 1.0 - sphere
@@ -68,14 +69,14 @@ TASK = 'single_object_light_rendering'
 # LIGHT_INTENSITY = '1000.0'
 # # <!/-- Explicit model with ignoring light interaction -->
 
-# # <!-- Explicit model with NRF (colocated!) light interaction -->
-# ARCH = "mlnrfnrf_base"
-# PREDICT_L = True
-# # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
-# # LIGHT_INTENSITY = '5000.0'  # rocket_exr -> 5k Watt
-# LIGHT_INTENSITY = '300.0'  # guitar_exr -> 0.5k Watt
-# TEXTURE_LAYERS = '5'
-# # <!/-- Explicit model with NRF (colocated!) light interaction -->
+# <!-- Explicit model with NRF (colocated!) light interaction -->
+ARCH = "mlnrfnrf_base"
+PREDICT_L = True
+# LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
+# LIGHT_INTENSITY = '5000.0'  # rocket_exr -> 5k Watt
+LIGHT_INTENSITY = '300.0'  # guitar_exr -> 0.5k Watt
+TEXTURE_LAYERS = '5'
+# <!/-- Explicit model with NRF (colocated!) light interaction -->
 
 # # <!-- Explicit model with VoxelApproximation light interaction -->
 # ARCH = "mlnrfexva_base"
@@ -86,15 +87,15 @@ TASK = 'single_object_light_rendering'
 # TEXTURE_LAYERS = '4'
 # # <!/-- Explicit model with VoxelApproximation light interaction -->
 
-# <!-- Explicit model with Brute Force light interaction -->
-ARCH = "mlnrfexbf_base"
-PREDICT_L = True
-# LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
-# LIGHT_INTENSITY = '1000.0'  # rocket_exr -> 5k Watt
-# LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
-LIGHT_INTENSITY = '300.0'  # guitar_exr -> 0.5k Watt
-TEXTURE_LAYERS = '4'
-# <!/-- Explicit model with Brute Force light interaction -->
+# # <!-- Explicit model with Brute Force light interaction -->
+# ARCH = "mlnrfexbf_base"
+# PREDICT_L = True
+# # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
+# # LIGHT_INTENSITY = '1000.0'  # rocket_exr -> 5k Watt
+# # LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
+# LIGHT_INTENSITY = '300.0'  # guitar_exr -> 0.5k Watt
+# TEXTURE_LAYERS = '4'
+# # <!/-- Explicit model with Brute Force light interaction -->
 
 
 
@@ -158,6 +159,8 @@ parameters += '\n--no-sampling-at-reader'
 parameters += '\n--valid-view-resolution ' + RES
 parameters += '\n--valid-views "' + VALID_VIEWS + '"'
 parameters += '\n--valid-view-per-batch 1'
+if 'HDRFLIP' in locals() and HDRFLIP:
+	parameters += '\n--eval-hdrflip'
 parameters += '\n--transparent-background "' + BG_COLOR + '"'
 # parameters += '\n--no-background-loss'
 parameters += '\n--background-stop-gradient'

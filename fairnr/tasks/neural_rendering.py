@@ -319,6 +319,7 @@ class SingleObjRenderingTask(FairseqTask):
         model.add_eval_scores(logging_output, sample, model.cache, criterion, outdir=self.output_valid)
         if self.writer is not None:
             images = model.visualize(sample, shape=0, view=0, pprc=self.datasets['valid'].dataset.preprocessor)
+            images.update(model.add_eval_images(sample, model.cache, criterion, shape=0, view=0).items())
             if images is not None:
                 write_images(self.writer, images, self._num_updates['step'])
                 self.writer.flush()
