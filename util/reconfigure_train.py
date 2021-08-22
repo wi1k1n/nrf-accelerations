@@ -9,7 +9,7 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "guitar_static_exr"
+DATA = "guitar_coloc_exr"
 NAME = ""  # postfix for dataset name
 RES = "64x64"
 PIXELS_PER_VIEW = '80'
@@ -28,11 +28,11 @@ REDUCE_STEP_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
 HALF_VOXEL_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
 PRUNNING_EVERY_STEPS = '5000'
 PRUNNING_TH = '0.5'  # '0.5'
-SAVE_INTERVAL_UPDATES = '10'#'750'  # '100'
+SAVE_INTERVAL_UPDATES = '1000'#'750'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
 TRAIN_VIEWS = '0..150'  # '0..100'
 VALID_VIEWS = '150..200'  # '100..200
-NUM_WORKERS = '0'  # '0'
+NUM_WORKERS = '8'  # '0'
 
 HDRFLIP = True
 PREPROCESS = 'log'  # none/mstd/minmax/log/nsvf(min_color==-1!)

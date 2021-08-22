@@ -98,7 +98,7 @@ class MLNRFExModel(NSVFModel):
 			images['{}_roughness/{}:HWC'.format(name, img_id)] = {
 				'img': output['roughness'][shape, view].float(),
 				'min_val': 0,
-				'max_val': 0.5
+				'max_val': 1#0.5
 			}
 		return images
 
