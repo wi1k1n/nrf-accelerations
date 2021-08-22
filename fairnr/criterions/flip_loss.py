@@ -391,7 +391,7 @@ def compute_start_stop_exposures(reference, tone_mapper, tmax, tmin):
 	Y_lo = torch.median(Y_ref, dim=2).values.unsqueeze(2).unsqueeze(3)
 	#TODO: Y_lo == 0 if Y_ref contains mostly zeros
 	if Y_lo == 0:
-		Y_lo = torch.median(Y_ref[Y_ref > 0]).expand(Y_lo.size())
+		Y_lo = Y_ref[Y_ref > 0].min().expand(Y_lo.size())
 	stop_exposure = torch.log2(x_min / Y_lo)
 
 	return start_exposure, stop_exposure

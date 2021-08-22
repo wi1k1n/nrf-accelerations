@@ -336,7 +336,7 @@ class BaseModel(BaseFairseqModel):
                     with torch.no_grad():
                         pred = predicts[s, v].transpose(1, 0).reshape(3, -1, width).unsqueeze(0)
                         ref = targets[s, v].transpose(1, 0).reshape(3, -1, width).unsqueeze(0)
-                        flips += [float(criterion.flip(pred, ref).sum())]
+                        flips += [float(criterion.flip(pred, ref).mean())]
 
                 if outdir is not None:
                     def imsave(filename, image):
