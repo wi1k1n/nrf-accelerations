@@ -12,8 +12,8 @@ SAVE_FILE = True
 DATA = "guitar_coloc_exr"
 NAME = "test"  # postfix for dataset name
 RES = "64x64"
-PIXELS_PER_VIEW = '60'
-VIEW_PER_BATCH = '1'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
+PIXELS_PER_VIEW = '80'
+VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
 
 USE_OCTREE = True
 CHUNK_SIZE = '8'  #'256'  # > 1 to save memory to time
@@ -35,7 +35,7 @@ VALID_VIEWS = '150..200'  # '100..200
 NUM_WORKERS = '0'  # '0'
 
 HDRFLIP = True
-PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
+PREPROCESS = 'log'  # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #
 MAX_COLOR = '0.8'  # 0.8 - rocket/guitar; 5.0 - sphere
 GAMMA_CORRECTION = '2.0'  # 2.0 - rocket/guitar, 1.0 - sphere

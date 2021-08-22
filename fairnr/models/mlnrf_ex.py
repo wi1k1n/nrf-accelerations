@@ -53,7 +53,7 @@ class MLNRFExModel(NSVFModel):
 		if 'albedo' in all_results:
 			all_results['albedo'] = fill_in((fullsize, 3), hits, all_results['albedo'], 0.0).view(S, V, P, 3)
 		if 'roughness' in all_results:
-			all_results['roughness'] = fill_in((fullsize, ), hits, all_results['depths'], 0.0).view(S, V, P)
+			all_results['roughness'] = fill_in((fullsize, ), hits, all_results['roughness'], 0.0).view(S, V, P)
 		if 'normal_brdf' in all_results:
 			all_results['normal_brdf'] = fill_in((fullsize, 3), hits, all_results['normal_brdf'], 0.0).view(S, V, P, 3)
 		return all_results
@@ -98,7 +98,7 @@ class MLNRFExModel(NSVFModel):
 			images['{}_roughness/{}:HWC'.format(name, img_id)] = {
 				'img': output['roughness'][shape, view].float(),
 				'min_val': 0,
-				'max_val': 5
+				'max_val': 0.5
 			}
 		return images
 
