@@ -509,12 +509,14 @@ class MSTDPreprocessor(Preprocessor):
         self.axis = 0 if preprocess_data.get('channelwise', None) else None
 
     def preprocess(self, img):
+        mean = torch.mean if torch.is_tensor(img) else np.mean
+        std = torch.std if torch.is_tensor(img) else np.std
         if self.mean is None or self.std is None:
             rgbimg = img[..., 0:3]
             if self.mean is None:
-                self.mean = np.mean(rgbimg, axis=self.axis)
+                self.mean = mean(rgbimg, axis=self.axis)
             if self.std is None:
-                self.std = np.std(rgbimg, axis=self.axis) + 1e-5
+                self.std = std(rgbimg, axis=self.axis) + 1e-5
         img[..., 0:3] = (img[..., 0:3] - self.mean) / self.std
         return img
 
@@ -529,11 +531,13 @@ class LogPreprocessor(Preprocessor):
         self.preprocess_data = {} if preprocess_data is None else preprocess_data
 
     def preprocess(self, img):
-        img[..., 0:3] = np.log(img[..., 0:3] + 1.)
+        log = torch.log if torch.is_tensor(img) else np.log
+        img[..., 0:3] = log(img[..., 0:3] + 1.)
         return img
 
     def preprocessInverse(self, img):
-        img[..., 0:3] = np.exp(img[..., 0:3]) - 1
+        exp = torch.exp if torch.is_tensor(img) else np.exp
+        img[..., 0:3] = exp(img[..., 0:3]) - 1
         return img
 
 class NSVFPreprocessor(Preprocessor):

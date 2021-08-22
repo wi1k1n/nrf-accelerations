@@ -334,8 +334,10 @@ class BaseModel(BaseFairseqModel):
                     rmses += [torch.sqrt(((td - pd) ** 2).mean()).item()]
                 if 'flip' in scores and hasattr(criterion, 'flip'):
                     with torch.no_grad():
-                        pred = predicts[s, v].transpose(1, 0).reshape(3, -1, width).unsqueeze(0)
-                        ref = targets[s, v].transpose(1, 0).reshape(3, -1, width).unsqueeze(0)
+                        pred = criterion.task.datasets['valid'].dataset.preprocessor.preprocessInverse(predicts[s, v])
+                        ref = criterion.task.datasets['valid'].dataset.preprocessor.preprocessInverse(targets[s, v])
+                        pred = pred.transpose(1, 0).reshape(3, -1, width).unsqueeze(0)
+                        ref = ref.transpose(1, 0).reshape(3, -1, width).unsqueeze(0)
                         flips += [float(criterion.flip(pred, ref).mean())]
 
                 if outdir is not None:
