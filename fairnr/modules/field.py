@@ -370,7 +370,7 @@ class RaidanceExplicitLightField(RaidanceField):
             if not self.composite_r:
                 # clr = self.brdf(inputs['light'].unsqueeze(1), inputs['ray'], inputs['normal'], albedo, roughness)
                 clr = self.brdf(inputs['light'].unsqueeze(1), inputs['ray'], normal, albedo, roughness)
-                inputs['texture'] = clr.squeeze()
+                inputs['texture'] = clr.squeeze(1)
 
                 if self.min_color == 0:
                     # inputs['texture'] = torch.sigmoid(inputs['texture'])

@@ -137,11 +137,11 @@ class VolumeRenderer(Renderer):
             outputs['sdf'] = masked_scatter(sample_mask, field_outputs['sdf'])
 
         if 'albedo' in field_inputs:
-            outputs['albedo'] = masked_scatter(sample_mask, field_inputs['albedo'].squeeze())
+            outputs['albedo'] = masked_scatter(sample_mask, field_inputs['albedo'].squeeze(-1))
         if 'roughness' in field_inputs:
             outputs['roughness'] = masked_scatter(sample_mask, field_inputs['roughness'].squeeze(-1))
         if 'normal_brdf' in field_inputs:
-            outputs['normal_brdf'] = masked_scatter(sample_mask, field_inputs['normal_brdf'].squeeze())
+            outputs['normal_brdf'] = masked_scatter(sample_mask, field_inputs['normal_brdf'].squeeze(-1))
         if 'texture' in field_outputs:
             outputs['texture'] = masked_scatter(sample_mask, field_outputs['texture'])
         if 'normal' in field_outputs:
@@ -212,6 +212,11 @@ class VolumeRenderer(Renderer):
             
             if (i < hits.size(1)):
                 size_so_far += hits[:, i].sum()
+
+        # for k in outputs:
+        #     dims = [v.dim() for v in outputs[k]]
+        #     if len(set(dims)) != 1:
+        #         print(k, dims)
 
         outputs = {key: torch.cat(outputs[key], 1) for key in outputs}
         results = {}
