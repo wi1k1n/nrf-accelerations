@@ -429,7 +429,13 @@ class LightVolumeRenderer(VolumeRenderer):
 class LightIVAVolumeRenderer(LightVolumeRenderer):
     def __init__(self, args):
         super().__init__(args)
-        self.voxel_sigma = getattr(args, "voxel_sigma", 0.5)
+        self.voxel_sigma = getattr(args, "voxel_sigma", 0.8)
+
+    @staticmethod
+    def add_args(parser):
+        super(LightIVAVolumeRenderer, LightIVAVolumeRenderer).add_args(parser)
+        parser.add_argument('--voxel-sigma', type=float, default=0.8,
+                            help='voxel sigma value to be used for voxel approximation')
 
     def forward_chunk(self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
             gt_depths=None, output_types=['sigma', 'texture'], global_weights=None, **kwargs):

@@ -11,7 +11,7 @@ SAVE_FILE = True
 
 DATA = "guitar_coloc_exr"
 NAME = ""  # postfix for dataset name
-RES = "128x128"
+RES = "64x64"
 PIXELS_PER_VIEW = '80'
 VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
 
@@ -59,6 +59,7 @@ TASK = 'single_object_light_rendering'
 
 # # <!-- Implicit model with InVoxelApproximation light interaction -->
 # ARCH = "mlnrfiva_base"
+# VOXEL_SIGMA = 0.8
 # # <!/-- Implicit model with InVoxelApproximation light interaction -->
 
 # # <!-- Explicit model with ignoring light interaction -->
@@ -80,6 +81,8 @@ TASK = 'single_object_light_rendering'
 
 # <!-- Explicit model with VoxelApproximation light interaction -->
 ARCH = "mlnrfexva_base"
+PREDICT_L = True
+VOXEL_SIGMA = 0.9
 # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
 # LIGHT_INTENSITY = '500.0'  # rocket_exr -> 5k Watt
 # LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
@@ -93,8 +96,8 @@ TEXTURE_LAYERS = '5'
 # # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
 # # LIGHT_INTENSITY = '1000.0'  # rocket_exr -> 5k Watt
 # # LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
-# LIGHT_INTENSITY = '300.0'  # guitar_exr -> 0.5k Watt
-# TEXTURE_LAYERS = '4'
+# LIGHT_INTENSITY = '500.0'  # guitar_exr -> 0.5k Watt
+# TEXTURE_LAYERS = '5'
 # # <!/-- Explicit model with Brute Force light interaction -->
 
 
@@ -140,6 +143,8 @@ if 'LAMBERT_ONLY' in locals() and LAMBERT_ONLY:
 	parameters += '\n--lambert-only'
 if 'PREDICT_L' in locals() and PREDICT_L:
 	parameters += '\n--predict-l'
+if 'VOXEL_SIGMA' in locals():
+	parameters += '\n--voxel-sigma ' + str(VOXEL_SIGMA)
 if 'COMPOSITE_R' in locals() and COMPOSITE_R:
 	parameters += '\n--composite-r'
 if 'GAMMA_CORRECTION' in locals():
