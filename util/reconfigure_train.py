@@ -21,7 +21,7 @@ LR = '0.0001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
 COLOR_WEIGHT = '1.0'  #'256.0'
-ALPHA_WEIGHT = '1e-2'  #'1ve-3'
+ALPHA_WEIGHT = '1e-1'  #'1ve-3'
 
 
 REDUCE_STEP_SIZE_AT = '5000,25000,50000'  # '5000,25000,75000'
@@ -32,7 +32,7 @@ SAVE_INTERVAL_UPDATES = '1000'#'750'  # '100'
 TOTAL_NUM_UPDATE = '75000'  # 150000
 TRAIN_VIEWS = '0..150'  # '0..100'
 VALID_VIEWS = '150..200'  # '100..200
-NUM_WORKERS = '0'  # '0'
+NUM_WORKERS = '8'  # '0'
 
 HDRFLIP = True
 PREPROCESS = 'log'  # none/mstd/minmax/log/nsvf(min_color==-1!)
@@ -99,6 +99,8 @@ TEXTURE_LAYERS = '5'
 
 
 
+LPIPS = True
+
 SUFFIX = "v1"
 DATASET = "datasets/" + DATA  # "data/Synthetic_NeRF/" + DATA
 SAVE = "checkpoint/" + DATA + (('_' + NAME) if NAME else '')
@@ -161,6 +163,8 @@ parameters += '\n--valid-views "' + VALID_VIEWS + '"'
 parameters += '\n--valid-view-per-batch 1'
 if 'HDRFLIP' in locals() and HDRFLIP:
 	parameters += '\n--eval-hdrflip'
+if 'LPIPS' in locals() and LPIPS:
+	parameters += '\n--eval-lpips'
 parameters += '\n--transparent-background "' + BG_COLOR + '"'
 # parameters += '\n--no-background-loss'
 parameters += '\n--background-stop-gradient'

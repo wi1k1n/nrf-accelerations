@@ -62,7 +62,7 @@ ReconfigureRender() {
 ^!+o::
 ;;; Look for 'menu' button
 CoordMode Pixel
-ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *20 img\overleaf_menu.png
+ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *30 img\overleaf_menu.png
 
 if (ErrorLevel) { ; 'menu' button not found
     Msgbox, Menu button not found!
@@ -82,7 +82,7 @@ sleep, 500
 
 ;;; Look for 'source' button
 CoordMode Pixel
-ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *10 img\overleaf_source.png
+ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *20 img\overleaf_source.png
 
 if (ErrorLevel) { ; 'source' button not found
     Msgbox, Source button not found!
@@ -120,7 +120,7 @@ Send, {Enter}
 
 ;;; Look for 'Save' button in save dialog
 CoordMode Pixel
-ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *10 img\dialog_save.png
+ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *20 img\dialog_save.png
 
 if (ErrorLevel) { ; 'Save' button not found
     Msgbox, Save button not found!

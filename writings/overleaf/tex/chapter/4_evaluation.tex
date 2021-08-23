@@ -198,6 +198,10 @@ Dataset sample images are down-sampled to 256px x 256px to fit the GPU memory li
 
 \im{25\% of the dataset is used for validation, 75\% for training}
 
+\im{log transform!}
+
+\im{show albedo/roughness/normals}
+
 \begin{enumerate}
     \item Loss function: color + beta-regularizer
     \item Parameters: optimizer, lr, batch, coefficients, pruning/refinement iterations
@@ -209,26 +213,46 @@ Dataset sample images are down-sampled to 256px x 256px to fit the GPU memory li
 
 \section{Metrics}
 
-Metrics: MSE, SSIM, FLIPLoss/HDRFlipLoss
+For evaluation of the results the following metrics have been used:
+\begin{enumerate}
+    \item \textit{PSNR} \cite{hore2010image} (Peak Signal to Noise Ratio) is a traditional estimator for image comparison
+    that is based on MSE and concentrated on pixel-by-pixel comparison
+    \item \textit{SSIM} \cite{zhou2004image}, \cite{nilsson2020understanding}, \cite{hore2010image} (Structural Similarity Index Measure) is a perceptual metric
+    that assesses image quality based on perception of the human visual system.
+    \item \textit{LPIPS} \cite{zhang2018perceptual} (Perceptual Similarity) is the metric
+    that utilizes deep features of the pre-trained deep neural networks (Alex-net \cite{krizhevsky2012imagenet} in my experiments)
+    to provide an evaluation that agrees well with humans' assessments.
+    \item \textit{HDRFlipLoss} \cite{theisel2021hdrflip}, \cite{andersson2020flip} is the metric
+    that is aimed to work with HDR images and produce better assessment comparing to other metrics
+    that were originally designed to work with LDR images.
+\end{enumerate}
+% Metrics: MSE, SSIM, FLIPLoss/HDRFlipLoss
 
 
 \section{Experiments}
 
-The experiments involve training models on different synthetic datasets (\im{reference to prev. subsection}) with different parameters
-and quantitative (\im{ref}) and qualitative (\im{ref}) comparisons of those.
+\im{Static datasets does not require light interaction for novel view synthesis since NSVF works pretty well.
+However, it allows to also render novel-light-view images, which cannot be made using NSVF}
+
+\im{Colocated datasets can be useful for comparison in-voxel approximation with NRF+NSVF (which is almost the same as brute-force scheme) approach}
+
+\im{Random datasets: compare brute-force with in-voxel approximation}
+
+% The experiments involve training models on different synthetic datasets (\im{reference to prev. subsection}) with different parameters
+% and quantitative (\im{ref}) and qualitative (\im{ref}) comparisons of those.
 
 
 
 \section{Comparisons}
 
-Following models for comparison:
-\begin{enumerate}
-    \item Vanilla NSVF
-    \item Explicit scheme colocated (NRF+NSVF)
-    \item Explicit scheme 'brute-force'
-    \item Explicit scheme w/in-voxel approximation
-    \item Implicit scheme w/in-voxel approximation
-\end{enumerate}
+% Following models for comparison:
+% \begin{enumerate}
+%     \item Vanilla NSVF
+%     \item Explicit scheme colocated (NRF+NSVF)
+%     \item Explicit scheme 'brute-force'
+%     \item Explicit scheme w/in-voxel approximation
+%     \item Implicit scheme w/in-voxel approximation
+% \end{enumerate}
 
 
 Following datasets for comparison:
@@ -239,12 +263,12 @@ Following datasets for comparison:
     \item \color{orange}{Trophy/donut/tablelamp}
 \end{enumerate}
 
-Following settings:
-\begin{enumerate}
-    \item Static
-    \item Colocated
-    \item Arbitrary
-\end{enumerate}
+% Following settings:
+% \begin{enumerate}
+%     \item Static
+%     \item Colocated
+%     \item Arbitrary
+% \end{enumerate}
 
 
 Table with time/memory consumptions:
