@@ -114,6 +114,8 @@ class SRNLossCriterion(RenderingCriterion):
 
         if args.eval_lpips:
             from lpips_pytorch import LPIPS
+            from torch.hub import set_dir
+            set_dir('/tmp/mazlov/.cache')
             self.lpips = LPIPS(net_type='alex', version='0.1')
 
         if args.eval_hdrflip:

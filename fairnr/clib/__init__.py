@@ -102,9 +102,15 @@ class SparseVoxelOctreeRayIntersect(Function):
         S, N = ray_start.shape[:2]
         K = int(np.ceil(N / G))
         H = K * G
+        # expand rays from N to H by copying
         if H > N:
-            ray_start = torch.cat([ray_start, ray_start[:, :H-N]], 1)
-            ray_dir = torch.cat([ray_dir, ray_dir[:, :H-N]], 1)
+            # handle case when H-N > N
+            T = int(np.ceil(1.0 * (H-N) / N))
+            ray_start = torch.cat([ray_start]+[ray_start[:, :N] for i in range(T)], 1)[:, :H, :]
+            ray_dir = torch.cat([ray_dir]+[ray_dir[:, :N] for i in range(T)], 1)[:, :H, :]
+
+            # ray_start = torch.cat([ray_start, ray_start[:, :H-N]], 1)
+            # ray_dir = torch.cat([ray_dir, ray_dir[:, :H-N]], 1)
         ray_start = ray_start.reshape(S * G, K, 3)
         ray_dir = ray_dir.reshape(S * G, K, 3)
         points = points.expand(S * G, *points.size()[1:]).contiguous()
