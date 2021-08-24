@@ -32,11 +32,11 @@ and can be represented \textit{explicitly} or \textit{implicitly}.
 
 \textit{Voxel grids} (\cite{Lombardi_2019}) is a very common way to describe a geometry of the scene mostly due to its simplicity.
 However, straightforwardly they are highly memory demanding.
-This can be handled applying techniques like multi-resolution approach (\cite{häne2017hierarchical}), octree hierarchies (\cite{riegler2017octnet}, \cite{tatarchenko2017octree})
+This can be handled applying techniques like multi-resolution approach (\cite{häne2017hierarchical}), octree hierarchies (\cite{riegler2017octnet, tatarchenko2017octree})
 or truncated signed distance fields (\cite{truncdistfield1996curless}),
 which in fact already represent geometry implicitly.
 
-Another way to represent a geometry is using \textit{point clouds} (\cite{qi2017pointnet}, \cite{fan2016point}).
+Another way to represent a geometry is using \textit{point clouds} (\cite{qi2017pointnet, fan2016point}).
 They can be easily retrieved using different sensors (e.g. depth cameras),
 therefore they are widely used in robotics and computer graphics fields.
 Point clouds require a complex post-processing step
@@ -55,7 +55,7 @@ tendency to produce self-intersecting meshes or opened surfaces (\cite{groueix20
 \textit{Implicit} methods map points in space to some value,
 which implicitly gives knowledge about the scene.
 
-The most common example of implicit geometry representation is the signed distance field (SDF) (\cite{truncdistfield1996curless}, \cite{Lombardi_2019}),
+The most common example of implicit geometry representation is the signed distance field (SDF) (\cite{truncdistfield1996curless, Lombardi_2019}),
 which is basically a mapping $\mathbb{R}^3 \xrightarrow{} \mathbb{R}$ defining the surface as a level-set (mostly a zero-based).
 
 Occupancy fields (\cite{occupancy2019mescheder}) are introduced as neural networks

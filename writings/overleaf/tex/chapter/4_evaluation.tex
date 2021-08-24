@@ -7,6 +7,7 @@ This chapter addresses implementation details, experiments, ablation studies and
 
 
 \section{Training and validation data}
+\label{sec:datasets}
 
 Each training session consists of optimizing parameters of a separate neural representation from one of proposed methods.
 The dataset for each training session is created on one specific scene and with one specific light setting.
@@ -78,7 +79,7 @@ This is done based on the fact that different methods can only handle datasets w
 
 \begingroup
 \setlength{\tabcolsep}{40pt} % Default value: 6pt
-\begin{figure}
+\begin{figure}[!htb]
     \centering
     \begin{tabular}{ccc}
           \includegraphics[width=0.13\textwidth]{figures/sphere.png}
@@ -102,6 +103,8 @@ This results in such a problem that the datasets that have been used in these wo
 do not include any necessary light information (global position).
 Another limitation of these datasets is that the light source is static upon the dataset samples,
 which results in a sparse light-view sampling of the scene.
+To the date of writing this thesis the datasets from correponding related works \cite{nerv2021}
+still are not publicly available.
 Three different scenes have been used for the evaluation.
 \im{reference figure to show this off - say about tonemapping}
 
@@ -134,7 +137,7 @@ For the group of methods that only consider static illumination of the scene
 the dataset acquisition can be performed in different ways.
 One of these ways is to use a cell phone with its camera to capture the scene.
 The acquired images can then be processed with such techniques as
-structure-from-motion (\cite{Moulon2012}, \cite{Jancosek2011}, \cite{schoenberger2016structure})
+structure-from-motion (\cite{Moulon2012, Jancosek2011, schoenberger2016structure})
 in order to retrieve the camera intrinsics and extrinsics in correspondence with captured images.
 Another way is to use some special hardware setups with calibrated camera positions
 such as gonioreflectometers or e.g. x-rite tac7 (\cite{merzbach2017highquality}).
@@ -167,7 +170,8 @@ The quality of final renders are sensitive to the too complex background behind 
 \section{Implementation details}
 
 All of the proposed methods are implemented on Python
-using PyTorch for neural fields and ray casting procedure.
+using PyTorch \cite{pytorch} and Fairseq \cite{ott2019fairseq} frameworks
+for neural fields and ray casting procedure.
 During training $80$ pixels are first sampled from each of $1$ or $2$ images 
 forming a batch that is used for one training iteration.
 These pixels are used to cast rays through the principle points of the corresponding cameras.
@@ -191,8 +195,12 @@ Tone-mapping using scaling and gamma-correction (differ depending on scene)
 is performed to visualize HDR images (both inputs and outputs).
 
 All of the experiments are held on NVIDIA GTX 1080Ti GPU with 11GB of memory.
-Dataset sample images are down-sampled to 256px x 256px to fit the GPU memory limitations.
-\im{64x64 for 'brute force' scheme}
+Dataset sample images are originally created in 1024x1024px resolution
+and then individually down-sampled to some lower values for each experiment to fit the GPU memory limitations.
+The resolutions from 64x64px (for \textit{brute-force scheme}) up to 512x512px 
+(for methods with lower memory load, such as Vanilla NSVF) are used.
+
+% \im{64x64 for 'brute force' scheme}
 \im{different schemes - different training times. approx ~12 hours}
 \im{inference time estimates}
 
@@ -202,12 +210,12 @@ Dataset sample images are down-sampled to 256px x 256px to fit the GPU memory li
 
 \im{show albedo/roughness/normals}
 
-\begin{enumerate}
-    \item Loss function: color + beta-regularizer
-    \item Parameters: optimizer, lr, batch, coefficients, pruning/refinement iterations
-    \item Software/Hardware setup
-    \item Time estimates
-\end{enumerate}
+% \begin{enumerate}
+%     % \item Loss function: color + beta-regularizer
+%     % \item Parameters: optimizer, lr, batch, coefficients, pruning/refinement iterations
+%     % \item Software/Hardware setup
+%     \item Time estimates
+% \end{enumerate}
 
 
 
@@ -217,24 +225,120 @@ For evaluation of the results the following metrics have been used:
 \begin{enumerate}
     \item \textit{PSNR} \cite{hore2010image} (Peak Signal to Noise Ratio) is a traditional estimator for image comparison
     that is based on MSE and concentrated on pixel-by-pixel comparison
-    \item \textit{SSIM} \cite{zhou2004image}, \cite{nilsson2020understanding}, \cite{hore2010image} (Structural Similarity Index Measure) is a perceptual metric
+    \item \textit{SSIM} \cite{zhou2004image, nilsson2020understanding, hore2010image} (Structural Similarity Index Measure) is a perceptual metric
     that assesses image quality based on perception of the human visual system.
     \item \textit{LPIPS} \cite{zhang2018perceptual} (Perceptual Similarity) is the metric
     that utilizes deep features of the pre-trained deep neural networks (Alex-net \cite{krizhevsky2012imagenet} in my experiments)
     to provide an evaluation that agrees well with humans' assessments.
-    \item \textit{HDRFlipLoss} \cite{theisel2021hdrflip}, \cite{andersson2020flip} is the metric
+    \item \textit{HDRFlipLoss} \cite{theisel2021hdrflip, andersson2020flip} is the metric
     that is aimed to work with HDR images and produce better assessment comparing to other metrics
     that were originally designed to work with LDR images.
 \end{enumerate}
+
+Additionally to the above mentioned metrics the empirical evaluations has to be made
+to assess the quality of the reproduced appearance.
+This can be done by evaluating the model on a given trajectory for camera and light sources.
+This produces the continuous changes in the appearance and reveals all of the artefacts of the produced renders.
+The usage of artificial datasets (\Cref{sec:datasets}) allows to generate the ground truth images
+even for novel light and view conditions, which are not contained in training or validation datasets.
+This cannot be done for real-world images, which makes the whole task of quality assessment more difficult for such datasets.
 % Metrics: MSE, SSIM, FLIPLoss/HDRFlipLoss
 
 
 \section{Experiments}
 
-\im{Static datasets does not require light interaction for novel view synthesis since NSVF works pretty well.
-However, it allows to also render novel-light-view images, which cannot be made using NSVF}
+The diversity of used models and the corresponding applicable datasets
+does not allow to well structure this section.
+A shortage of some baseline results does also contribute to some difficulties in the results quality assessment.
+Therefore this section is formed in the order of increasing complexity of used methods and decreasing evaluation capabilities.
+The following methods are being evaluated in either event:
+\begin{enumerate}
+    \item \textit{Vanilla NSVF} method \cite{liu2021neural} (described in \Cref{subsec:NSVF})
+    \item \textit{Explicit colocated scheme} \cite{bi2020neural, liu2021neural}, which is explained in details in \Cref{subsec:NRF}
+    and is a lighter version of \textit{explicit brute-force scheme}
+    due to reuse of viewing sample points
+    \item \textit{Explicit brute-force scheme} (described in \Cref{sec:explicit_scheme})
+    \item \textit{Explicit approximated scheme}, which is the \textit{explicit brute-force scheme}
+    that uses the in-voxel approximation from \Cref{sec:invoxel}
+    \item \textit{Implicit approximated scheme} \im{most likely not}
+\end{enumerate}
 
-\im{Colocated datasets can be useful for comparison in-voxel approximation with NRF+NSVF (which is almost the same as brute-force scheme) approach}
+\Cref{tab:methods_datasets} shows the applicability of different types of datasets to methods that are used in experiments.
+
+\begin{table*}[!htb]
+    % \setArraystrech{1.5}
+    \centering
+    \caption{\im{Fix width and add description!}}
+    \label{tab:methods_datasets}
+    \begin{tabular*}{\textwidth}{ l | c c c c }
+    	\toprule
+    	 & NSVF \cite{liu2021neural} & Explicit Colocated & Explicit brute-force & Explicit approximated \\
+        \midrule
+        Static dataset & \checkmark & X & \checkmark & \checkmark \\
+    	Colocated dataset & X & \checkmark & \checkmark & \checkmark \\
+    	Arbitrary dataset & X & X & \checkmark & \checkmark \\
+        \midrule
+        Novel views & \checkmark & \checkmark & \checkmark & \checkmark \\
+        Novel lights & X & \checkmark & \checkmark & \checkmark \\
+    	\bottomrule
+    \end{tabular*}
+\end{table*}
+
+
+
+\subsection{Static light setting}
+
+Static light setting is the only type of datasets that can be used
+for training the original NSVF method,
+due to the limitation of the illumination to be static.
+All other methods not only can process this dataset but also render the scene under novel light conditions.
+
+\im{Figure N} shows results ...
+
+\im{Conclusion: static for explicit schemes is a very sparse arbitrary, so difficult to train}
+
+\im{check that I explicitly say somewhere, that semantically 'brute-force' and 'colocated' is THE SAME!}
+
+
+\subsection{Colocated light setting}
+
+\im{Compare timings with the original NRF paper!!!}
+
+Datasets with the colocated light setting can be evaluated on all of listed models except 'Vanilla NSVF'.
+The fact that a very fast 'explicit colocated' scheme can be evaluated on these datasets
+makes them very advantageous for comparing agains other methods.
+Since the 'explicit colocated' scheme is essentially a special case for 'explicit brute-force' scheme
+they perform the same way as long as the sampling parameters for light rays match those for view rays.
+In contrary the performance of 'explicit brute-force' scheme is drastically worse comparing to 'explicit colocated' scheme.
+Hence the main focus here is to compare colocated scheme with the in-voxel approximation scheme.
+
+
+\begin{table*}[!htb]
+    % \setArraystrech{1.5}
+    \centering
+    \caption{Quantitative comparison of the methods}
+    \label{tab:colocated_metrics}
+    \begin{tabular*}{\textwidth}{ l | c c c c | c c c c}
+        & \multicolumn{4}{c}{Rocket} & \multicolumn{4}{c}{Guitar} \\
+    	Method & PSNR$\uparrow$ & SSIM$\uparrow$ & LPIPS$\downarrow$ & HDRFlip$\downarrow$ & PSNR$\uparrow$ & SSIM$\uparrow$ & LPIPS$\downarrow$ & HDRFlip$\downarrow$ \\
+        \midrule
+        NRF & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 \\
+        EXVA & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 \\
+        EXBF & - & - & - & - & - & - & - & - \\
+        \midrule
+        & \multicolumn{4}{c}{Lego} & \multicolumn{4}{c}{Drums} \\
+        \midrule
+        NRF & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 \\
+        EXVA & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 \\
+        EXBF & - & - & - & - & - & - & - & - \\
+    \end{tabular*}
+\end{table*}
+
+
+\subsection{Arbitrary light setting}
+
+Datasets with the arbitrary setting can only be processed with brute-force and voxel-approximation schemes.
+Thus the main idea here is to compare quality and timings between these methods.
 
 \im{Random datasets: compare brute-force with in-voxel approximation}
 

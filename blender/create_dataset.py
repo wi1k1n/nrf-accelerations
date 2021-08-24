@@ -136,42 +136,57 @@ bpy.ops.object.delete({"selected_objects": objs})
 ### Calculate bounding box size
 bbox = None
 
-# First check collections to contain collection 'Shape'
-print("---------------   COLLECTION LIST   ---------------")
-for collection in bpy.data.collections:
-    print(collection.name)
-print()
-collShape = bpy.data.collections.get('Shape')
-objShape = []
-if collShape:
-    for o in collShape.all_objects:
-        objShape.append(o)
-else:
-    print('Collection "Shape" not found, looking for object "Shape"...')
-    # Try to find object with name 'Shape' if collection was not found
-    print("---------------   OBJECT LIST   ---------------")
-    for obj in bpy.context.scene.objects:
-        print(obj.name)
+# First check manually selected properties in .blend model
+bbox0 = bpy.context.scene.get('bbox0')
+bbox1 = bpy.context.scene.get('bbox1')
+bbox2 = bpy.context.scene.get('bbox2')
+bbox3 = bpy.context.scene.get('bbox3')
+bbox4 = bpy.context.scene.get('bbox4')
+bbox5 = bpy.context.scene.get('bbox5')
+if bbox0 and bbox1 and bbox2 and bbox3 and bbox4 and bbox5:
+    bbox = [bbox0, bbox1, bbox2, bbox3, bbox4, bbox5]
+
+
+# Then check collections to contain collection 'Shape' if needed
+if bbox is None:
+    print("---------------   COLLECTION LIST   ---------------")
+    for collection in bpy.data.collections:
+        print(collection.name)
     print()
+    collShape = bpy.data.collections.get('Shape')
+    objShape = []
+    if collShape:
+        for o in collShape.all_objects:
+            objShape.append(o)
+    else:
+        print('Collection "Shape" not found, looking for object "Shape"...')
+        # Try to find object with name 'Shape' if collection was not found
+        print("---------------   OBJECT LIST   ---------------")
+        for obj in bpy.context.scene.objects:
+            print(obj.name)
+        print()
 
-    oShape = bpy.context.scene.objects.get('Shape')
-    assert oShape, 'Object "Shape" not found. Check that there is a collection or object with name "Shape"'
-    objShape.append(oShape)
+        oShape = bpy.context.scene.objects.get('Shape')
+        assert oShape, 'Object "Shape" not found. Check that there is a collection or object with name "Shape"'
+        objShape.append(oShape)
 
-# Iterate over all shapes to create the whole bounding box
-print("---------------   OBJECT LIST (for bbox)   ---------------")
-for obj in objShape:
-    assert obj.type in ('MESH', 'SURFACE'), 'Invalid object type \'' + obj.type + '\'! Please make sure to have only MESH and SURFACE objects!'
-    print('(' + obj.type + ') ' + obj.name)
+    # Iterate over all shapes to create the whole bounding box
+    print("---------------   OBJECT LIST (for bbox)   ---------------")
+    for obj in objShape:
+        # assert obj.type in ('MESH', 'SURFACE'), 'Invalid object type \'' + obj.type + '\'! Please make sure to have only MESH and SURFACE objects!'
+        if not obj.type in ('MESH', 'SURFACE'):
+            print('obj.type == {}. Skipping..'.format(obj.type))
+            continue
+        print('(' + obj.type + ') ' + obj.name)
 
-    # print([['{:.5f}'.format(f) for f in (obj.matrix_world @ Vector(corner))] for corner in obj.bound_box])
-    corners = [obj.matrix_world @ Vector(corner) for corner in obj.bound_box]
-    if not bbox: bbox = corners
-    # print(corners)
-    bbox = [min([cc[i] for cc in corners] + [bbox[i]]) for i in range(3)] + \
-           [max([cc[i] for cc in corners] + [bbox[i+3]]) for i in range(3)]
-    # print(" ".join(['{:.5f}'.format(f) for f in bbox]))
-print()
+        # print([['{:.5f}'.format(f) for f in (obj.matrix_world @ Vector(corner))] for corner in obj.bound_box])
+        corners = [obj.matrix_world @ Vector(corner) for corner in obj.bound_box]
+        if not bbox: bbox = corners
+        # print(corners)
+        bbox = [min([cc[i] for cc in corners] + [bbox[i]]) for i in range(3)] + \
+               [max([cc[i] for cc in corners] + [bbox[i+3]]) for i in range(3)]
+        # print(" ".join(['{:.5f}'.format(f) for f in bbox]))
+    print()
 
 voxel_size = ((bbox[3]-bbox[0]) * (bbox[4]-bbox[1]) * (bbox[5]-bbox[2]) / opts.VOXEL_NUMS) ** (1/3)
 # bbox format: x_min y_min z_min x_max y_max z_max initial_voxel_size
@@ -184,8 +199,13 @@ assert bbox is not None, 'bbox.txt is not created. Check the main shape to have 
 ## DEBUG
 # cb = bpy.ops.mesh.primitive_cube_add(size=1.1, location=((bbox[0]+bbox[3])*0.5, (bbox[1]+bbox[4])*0.5, (bbox[2]+bbox[5])*0.5))
 
-
-modelCenter = ((bbox[0]+bbox[3])*0.5, (bbox[1]+bbox[4])*0.5, (bbox[2]+bbox[5])*0.5)
+centerX = bpy.context.scene.get('centerX')
+centerY = bpy.context.scene.get('centerY')
+centerZ = bpy.context.scene.get('centerZ')
+if centerX and centerY and centerZ:
+    modelCenter = (centerX, centerY, centerZ)
+else:
+    modelCenter = ((bbox[0]+bbox[3])*0.5, (bbox[1]+bbox[4])*0.5, (bbox[2]+bbox[5])*0.5)
 print('Model center: {}'.format(modelCenter))
 
 

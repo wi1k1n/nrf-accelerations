@@ -4,17 +4,17 @@ import re
 options_train = {
 	"START_FROM": 0,
 
-	"PATH_MODEL": 'models/tablelamp.blend',
-	"DATASET_NAME": 'tablelamp_random_exr',
+	"PATH_MODEL": 'models/hotdog.blend',
+	"DATASET_NAME": 'hotdog_coloc_exr',
 	"OUTPUT_DIR": '%DATASET_NAME%',
 	# "PRESET_VIEWS_FOLDER": 'checkpoints/%DATASET_NAME%/mlnrf_base/output_cam',
 	"RESULTS_PATH": 'rgb',
 
 	"VOXEL_NUMS": 64,  # 512,  # can still be later overridden using argument 'VOXEL_NUM'
-	"VIEWS": 500,  # number of renderings. Ignored, if RANDOM_VIEWS == False
-	"RESOLUTION": 256,  # resolution of resulting renders
+	"VIEWS": 200,  # number of renderings. Ignored, if RANDOM_VIEWS == False
+	"RESOLUTION": 512,  # resolution of resulting renders
 	
-	"LIGHT_SETUP": 'random', # none/fixed/colocated/random. Ignored, if RANDOM_VIEWS == False
+	"LIGHT_SETUP": 'colocated', # none/fixed/colocated/random. Ignored, if RANDOM_VIEWS == False
 	"LIGHT_COS_CONSTRAIN": 120, # None/(0 ~ 180). Max angle between cam and light. Ignored, if RANDOM_VIEWS == False
 	# "LIGHT_COS_CONSTRAIN_RND": False,  	# False/(mean, std) (e.g. (0, 3*light_cos_constr). 
 	# 									# If constain is sharp or stochastic
@@ -22,7 +22,7 @@ options_train = {
 
 	"COLOR_DEPTH": 16,  # 8
 	"FORMAT": 'OPEN_EXR',  # 'PNG'/OPEN_EXR'/'HDR' # use 16/32 bit color depth with OPEN_EXR format
-	"CYCLES_SAMPLES": 100,#100,
+	"CYCLES_SAMPLES": 1000,#100,
 	"CYCLES_MAX_BOUNCES": 15,#4,
 
 	# "CAM_DISTANCE": 1.0,
@@ -42,15 +42,17 @@ options_train = {
 options_render = {
 	"START_FROM": 0,
 
-	"PATH_MODEL": 'models/rocket.blend',
-	"DATASET_NAME": 'rocket_coloc_exr_test3',
-	"MOVING_TYPE": 'light',
-	# "MOVING_TYPE": 'cam',
-	"RESOLUTION": 128,  # resolution of resulting renders
+	"PATH_MODEL": 'models/guitar.blend',
+	"DATASET_NAME": 'guitar_coloc_exr',
+	# "MOVING_TYPE": 'light',
+	"MOVING_TYPE": 'cam',
+	"RESOLUTION": 256,  # resolution of resulting renders
+
+	"ARCH": 'mlnrfnrf_base',  # nsvf_base/mlnrf_base/mlnrfiva_base/mlnrfex_base/mlnrfnrf_base/mlnrfexbf_base
+	"POOLS": '../pool/u4106/checkpoint/', # ../pool/u4101/checkpoint/
 
 	"OUTPUT_DIR": '%DATASET_NAME%_target_%MOVING_TYPE%',
-	"ARCH": 'mlnrfexva_base',  # nsvf_base/mlnrf_base/mlnrfiva_base/mlnrfex_base/mlnrfnrf_base
-	"PRESET_VIEWS_FOLDER": 'checkpoints/%DATASET_NAME%/%ARCH%/output_%MOVING_TYPE%',
+	"PRESET_VIEWS_FOLDER": 'checkpoints/%POOLS%%DATASET_NAME%/%ARCH%/output_%MOVING_TYPE%',
 	"VIEWS_PATH": '%PRESET_VIEWS_FOLDER%/pose',
 	"LIGHTS_PATH": '%PRESET_VIEWS_FOLDER%/pose_pl',
 
@@ -58,8 +60,8 @@ options_render = {
 
 	"COLOR_DEPTH": 16,
 	"FORMAT": 'OPEN_EXR',
-	"CYCLES_SAMPLES": 500,#7000,
-	"CYCLES_MAX_BOUNCES": 12,#20,
+	"CYCLES_SAMPLES": 1000,#7000,
+	"CYCLES_MAX_BOUNCES": 20,#20,
 
 	# "CAM_DISTANCE": 1.0,
 	"CAM_HEMISPHERE_ANGLES": [-10, 80],  # in degrees

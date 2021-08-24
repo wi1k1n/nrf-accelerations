@@ -19,7 +19,7 @@ is required to be achieved in order to solve the novel view synthesis problem.
 Given the spatial location $p \in \mathbb{R}^3$ and the 2D viewing direction $(\theta, \phi)$ (or its equivalent 3D Cartesian representation $v \in \mathbb{R}^3$),
 one has to obtain the RGB color value $c$ and the volume density $\sigma$ at this exact point $p$ under the viewing direction $v$.
 To obtain the image of the scene, one can take a pin-hole camera at position $p_0$ and cast rays to the scene: $p(z) = p_0 + z\cdot v$.
-The final visible color value $C(p,v)$ can then be evaluated using volume rendering approach \cite{niemeyer2020differentiable}, \cite{Novak18volumeSTAR} along the ray $p$:
+The final visible color value $C(p,v)$ can then be evaluated using volume rendering approach \cite{niemeyer2020differentiable, Novak18volumeSTAR} along the ray $p$:
 \begin{equation}
     C(p,v) = \int_{0}^{\infty} \omega(p(z)) \cdot c(p(z),v) dz,
     \label{eq:rendering_equation}
@@ -30,7 +30,7 @@ $\omega(p(z))$ is a probability weight function
 \end{equation}
 where $\tau_c(p(z)) = e^{\int_0^z \sigma(p(s)) ds}$ denotes the accumulated transmittance along the ray up to the point $p(z)$, $\sigma(p(z))$ is the volume density at point $p(z)$ and the probability property is held: $\int_0^\infty \omega(p(z))dz = 1$
 
-\begin{figure}[t]
+\begin{figure}[!htb]
     \centering
     \includegraphics[width=0.9\textwidth]{figures/mlp_nerf.png}
     \caption{MLP used in NeRF \cite{mildenhall2020nerf} Dark blue boxes represent hidden layers. Black arrows indicate FC-layers with sigmoid activation, orange arrows - FC-layers without activation. Green boxes are inputs: $p$ is a 3D sample point, $v$ is a 3D vector of viewing direction. Red boxes are the outputs: $\sigma$ is 1D volume density, $c$ is a 3D color value. $\zeta(.)$ stands for positional encoding function that maps inputs into higher dimensional space $\mathbb{R}^{2L}$ (more in \Cref{subsec:pos_enc}}
@@ -52,7 +52,7 @@ One can estimate this integral using a discrete set of densely sampled points as
 Separating each ray into $N$ bins and drawing random samples from each bin
 makes the representation able to learn continuous function
 while only using finite number of samples.
-The estimate for the integral $C(p, v)$ will have a form (\cite{mildenhall2020nerf}, \cite{max1995optical}):
+The estimate for the integral $C(p, v)$ will have a form (\cite{mildenhall2020nerf, max1995optical}):
 
 \begin{equation}
     \label{eq:integral_estimation}
@@ -64,14 +64,14 @@ where $p_i = p(z_i)$ for brevity, $\tau_c(p_i) = \exp (-\sum_{j=0}^i \sigma(p_j)
 \label{subsec:pos_enc}
 
 Neural networks are known as a highly representative class of functions (\cite{hornik1989multilayer}).
-However, recent works (\cite{rahaman2019spectral}, \cite{tancik2020fourfeat}) demonstrate the tendency of
+However, recent works (\cite{rahaman2019spectral, tancik2020fourfeat}) demonstrate the tendency of
 biasing towards low frequency functions during training of deep neural networks.
 The results can be smoothed and blurry as frequency-dependant learning speed
 is much slower for high-frequency parts of the scene.
 \cite{rahaman2019spectral} show that one can highly improve the quality of the MLP outputs
 by using an embedding, which maps inputs to a higher dimensional space before passing them to the MLP.
 
-The positional encoding function $\zeta(p) : \mathbb{R} \xrightarrow{} \mathbb{R}^{2L}$ as proposed by \cite{mildenhall2020nerf}, \cite{vaswani2017attention} is represented by Fourier series in the following form:
+The positional encoding function $\zeta(p) : \mathbb{R} \xrightarrow{} \mathbb{R}^{2L}$ as proposed by \cite{mildenhall2020nerf, vaswani2017attention} is represented by Fourier series in the following form:
 
 \begin{equation}
     \label{eq:positional_encoding}
@@ -160,7 +160,7 @@ and $\zeta(\cdot)$ is a post-processing function,
 which corresponds to positional encoding function explained in \ref{subsec:pos_enc}.
 
 
-\begin{figure}[t]
+\begin{figure}[!htb]
     \label{fig:nsvf_structure}
     \centering
     \includegraphics[width=0.9\textwidth]{figures/vanilla_nsvf.png}
@@ -268,7 +268,7 @@ $L_i(p, l)$ is the radiance that arrives from direction $l$ and can be calculate
 and the transmittance value $\tau_l(p, l)$,
 which indicates the loss of light from the light source to the sample point $p$ along light ray $l$, as follows:
 $L_i(p, l) = \tau_l(p, l) L_l(p, l)$.
-The light attenuation coefficient $f_{att} = \frac{1}{k_c + k_l d + k_q d^2}$ \im{???citation to blog page???} is considered inside the $L_l$ term:
+The light attenuation coefficient $f_{att} = \frac{1}{k_c + k_l d + k_q d^2}$ \cite{madams2011attenuation, madams2011improved} is considered inside the $L_l$ term:
 $L_l(p, l) = f_{att} \cdot I$,
 where $k_c$, $k_l$ and $k_q$ are attenuation factors,
 $I$ is the point light intensity.
@@ -291,7 +291,7 @@ $\tau_l(p'_i, l) = \exp (-\sum_{j=1}^M \sigma(p'_j) \delta'_j)$,
 where $p'(z') = p'_0 + z' \cdot l$ are sample points that are additionaly sampled along the light ray $l$ and $\delta'_j = z'_{j=1} - z'_j$.
 
 
-\begin{figure}[t]
+\begin{figure}[!htb]
     \centering
     \includegraphics[width=0.9\textwidth]{figures/vanilla_nrf.png}
     \caption{MLP structure of the NRF \cite{bi2020neural} approach.
@@ -364,7 +364,7 @@ for the color-based original NeRF approach.
 The usage of gradually refined octrees gives more control over the sampling process
 and makes the whole training phase faster.
 
-\begin{figure}[t]
+\begin{figure}[!htb]
     \centering
     \includegraphics[width=0.9\textwidth]{figures/explicit_scheme.png}
     \caption{Model architecture for the 'explicit scheme'
@@ -463,7 +463,7 @@ These voxels that intersect with the light rays can be used as an estimation of 
 %     \end{tabular}
 %     \caption{caption}
 % \end{figure}
-\begin{figure}
+\begin{figure}[!htbp]
     \begin{tabular}{ccc}
           \includegraphics[width=0.285\textwidth]{figures/sampling_nerf.png}
           & \includegraphics[width=0.26\textwidth]{figures/sampling_nsvf.png}
@@ -538,7 +538,7 @@ Although, the NRF approach is formulated in general form
 when any differentiable appearance model can be used for final radiance evaluation,
 the result is still limited by the chosen BRDF.
 
-\begin{figure}[t]
+\begin{figure}[!htb]
     \centering
     \includegraphics[width=0.9\textwidth]{figures/implicit_scheme.png}
     \caption{Network architecture for the implicit scheme.
