@@ -313,26 +313,11 @@ In contrary the performance of 'explicit brute-force' scheme is drastically wors
 Hence the main focus here is to compare colocated scheme with the in-voxel approximation scheme.
 
 
-\begin{table*}[!htb]
-    % \setArraystrech{1.5}
-    \centering
-    \caption{Quantitative comparison of the methods}
-    \label{tab:colocated_metrics}
-    \begin{tabular*}{\textwidth}{ l | c c c c | c c c c}
-        & \multicolumn{4}{c}{Rocket} & \multicolumn{4}{c}{Guitar} \\
-    	Method & PSNR$\uparrow$ & SSIM$\uparrow$ & LPIPS$\downarrow$ & HDRFlip$\downarrow$ & PSNR$\uparrow$ & SSIM$\uparrow$ & LPIPS$\downarrow$ & HDRFlip$\downarrow$ \\
-        \midrule
-        NRF & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 \\
-        EXVA & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 \\
-        EXBF & - & - & - & - & - & - & - & - \\
-        \midrule
-        & \multicolumn{4}{c}{Lego} & \multicolumn{4}{c}{Drums} \\
-        \midrule
-        NRF & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 \\
-        EXVA & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 \\
-        EXBF & - & - & - & - & - & - & - & - \\
-    \end{tabular*}
-\end{table*}
+\CatchFileDef{\catchcolocmetrics}{tex/objects/coloc_metrics.tex}{}
+\catchcolocmetrics
+
+\CatchFileDef{\catchcolocresults}{tex/objects/coloc_results.tex}{}
+\catchcolocresults
 
 
 \subsection{Arbitrary light setting}
