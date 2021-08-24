@@ -2,46 +2,64 @@
 \begin{table*}[!htb]
     % \setArraystrech{1.5}
     \centering
-    \caption{Quantitative comparison of the methods}
+    \caption{Quantitative comparison of the methods
+    \im{MORE EXPLANATIONS!!!}}
     \label{tab:colocated_metrics}
-    \begin{tabular*}{\textwidth}{ l | c c c c | c c c c}
-        & \multicolumn{4}{c}{Rocket (150k/150k/50k)} & \multicolumn{4}{c}{Guitar (150k/125k/30k)} \\
-    	Method & PSNR$\uparrow$ & SSIM$\uparrow$ & LPIPS$\downarrow$ & HDRFlip$\downarrow$ & PSNR$\uparrow$ & SSIM$\uparrow$ & LPIPS$\downarrow$ & HDRFlip$\downarrow$ \\
+    \begin{tabular*}{\textwidth}{ l | l | c c c c | c c c }
+    	Dataset & Method & PSNR$\uparrow$ & SSIM$\uparrow$ & LPIPS$\downarrow$ & HDRFlip$\downarrow$ & Iters. & Res. & Time \\
+        % & \multicolumn{5}{c}{Rocket (150k/150k/50k)} \\
         \midrule
-        NRF & 28.98 & 0.95 & 0.071 & 0. 47 & 29.4 & 0.96 & 0.042 & 0.057 \\
-        EXVA & 30.52 & 0.95 & 0.061 & 0.05 & 29.22 & 0.96 & 0.044 & 0.061 \\
-        EXBF & 26.8 & 0.94 & 0.03 & 0.09 & 25.28 & 0.93 & 0.03 & 0.12 \\
+        \multirow{3}{*}{Rocket}
+        & ExCol & 28.98 & \textbf{0.95} & 0.071 & \textbf{0.047} & 150k & 256px & 10h \\
+        & ExVA & \textbf{30.52} & 0.95 & 0.061 & 0.050 & 150k & 256px & 14h \\
+        & ExBF & 26.80 & 0.94 & \textbf{0.030} & 0.090 & 50k & 64px & 6h30m \\
         \midrule
-        & \multicolumn{4}{c}{Lego (125k/50k/50k)} & \multicolumn{4}{c}{Hotdog (-/-/-)} \\
+        % & \multicolumn{5}{c}{Guitar (150k/150k/30k)} \\
+        \multirow{3}{*}{Guitar}
+        & ExCol & \textbf{29.40} & \textbf{0.96} & 0.042 & \textbf{0.057} & 150k & 256px & 10h30m \\
+        & ExVA & 29.22 & 0.96 & 0.043 & 0.059 & 150k & 256px & 20h \\
+        & ExBF & 25.28 & 0.93 & \textbf{0.030} & 0.120 & 30k & 64px & 8h \\
+        % \midrule
+    % 	Dataset & Method & PSNR$\uparrow$ & SSIM$\uparrow$ & LPIPS$\downarrow$ & HDRFlip$\downarrow$ & Time \\
+        % & \multicolumn{5}{c}{Lego (125k/50k/50k)} \\
         \midrule
-        NRF & 27.02 & 0.93 & 0.07 & 0.1 & - & - & - & - \\
-        EXVA & 25.95 & 0.92 & 0.09 & 0.11 & - & - & - & - \\
-        EXBF & 20.54 & 0.85 & 0.05 & 0.18 & - & - & - & - \\
+        \multirow{3}{*}{Lego}
+        & ExCol & \textbf{27.02} & \textbf{0.93} & 0.07 & \textbf{0.10} & 150k & 256px & 13h \\
+        & ExVA & 25.95 & 0.92 & 0.09 & 0.11 & 50k & 256px & 4h30m \\
+        & ExBF & 20.54 & 0.85 & \textbf{0.05} & 0.18 & 50k & 64px & \\
+        \midrule
+        % & \multicolumn{5}{c}{Hotdog (-/-/-)} \\
+        \multirow{3}{*}{Hotdog}
+        & ExCol & - & - & - & - & - & 256px & - \\
+        & ExVA & - & - & - & - & - & 256px & - \\
+        & ExBF & - & - & - & - & - & 64px & - \\
     \end{tabular*}
 \end{table*}
 \endgroup
 
 % NRF/Guitar/256:   u4101 -> guitar_coloc_exr
-%       150k:   29.40 & 0.96 & 0.042 & 0.057
-%       125k:   29.38 & 0.96 & 0.042 & 0.057
-%       30k:    26.26 & 0.93 & 0.1 & 0.095
+%       150k:   29.40 & 0.96 & 0.042 & 0.057 & 10h30m
+%       125k:   29.38 & 0.96 & 0.042 & 0.057 & 8h30m
+%       30k:    26.26 & 0.93 & 0.1 & 0.095 & 1h
 % EXVA/Guitar/256:  u4102 -> guitar_coloc_exr
-%       125k:   29.22 & 0.96 & 0.044 & 0.061
-%       30k:    26.12 & 0.93 & 0.10 & 0.099
+%       150k:   29.22 & 0.96 & 0.043 & 0.059 & 20h
+%       125k:   29.22 & 0.96 & 0.044 & 0.061 & 16h
+%       30k:    26.12 & 0.93 & 0.10 & 0.099 & 1h30m
 % EXVA/Rocket/256:  u4103 -> rocket_coloc_exr
-%       150k:   30.52 & 0.95 & 0.061 & 0.05
-%       50k:    29.14 & 0.94 & 0.083 & 0.058
+%       150k:   30.52 & 0.95 & 0.061 & 0.05 & 14h
+%       50k:    29.14 & 0.94 & 0.083 & 0.058 & 3h
 % NRF/Rocket/256:   u4104 -> rocket_coloc_exr
-%       150k:   28.98 & 0.95 & 0.071 & 0.047
-%       50k:    27.69 & 0.936 & 0.088 & 0.053
+%       150k:   28.98 & 0.95 & 0.071 & 0.047 & 10h
+%       50k:    27.69 & 0.936 & 0.088 & 0.053 & 2h30m
 % NRF/Lego/256:     u4105 -> lego_coloc_exr
-%       125k:   27.02 & 0.93 & 0.07 & 0.1
-%       50k:    25.57 & 0.91 & 0.09 & 0.11
+%       150k:   27.06 & 0.93 & 0.07 & 0.1 & 13h
+%       125k:   27.02 & 0.93 & 0.07 & 0.1 & 11h
+%       50k:    25.57 & 0.91 & 0.09 & 0.11 & 3h
 % EXVA/Lego/256:    u4106 -> lego_coloc_exr
-%       50k:    25.95 & 0.92 & 0.09 & 0.11
+%       50k:    25.95 & 0.92 & 0.09 & 0.11 & 4h30m
 % EXBF/Lego/64:     u4107 -> lego_coloc_exr
-%       50k:    20.54 & 0.85 & 0.05 & 0.18
+%       50k:    20.54 & 0.85 & 0.05 & 0.18 & -
 % EXBF/Rocket/64:   u4108 -> rocket_coloc_exr
-%       50k:    26.8 & 0.94 & 0.03 & 0.09
+%       50k:    26.8 & 0.94 & 0.03 & 0.09 & 6h30m
 % EXBF/Guitar/64:   u4109 -> guitar_coloc_exr
-%       30k:    25.28 & 0.93 & 0.03 & 0.12
+%       30k:    25.28 & 0.93 & 0.03 & 0.12 & 8h

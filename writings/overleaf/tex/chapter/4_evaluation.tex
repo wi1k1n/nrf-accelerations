@@ -77,23 +77,7 @@ This is done based on the fact that different methods can only handle datasets w
 
 
 
-\begingroup
-\setlength{\tabcolsep}{40pt} % Default value: 6pt
-\begin{figure}[!htb]
-    \centering
-    \begin{tabular}{ccc}
-          \includegraphics[width=0.13\textwidth]{figures/sphere.png}
-          & \includegraphics[width=0.1\textwidth]{figures/rocket.png}
-          & \includegraphics[width=0.13\textwidth]{figures/guitar.png}
-          \\(a) Sphere & (b) Rocket & (c) Guitar
-    \end{tabular}
-    \caption{
-    Preview samples of the created datasets.
-    \im{how to align sphere in center?}
-}
-\label{fig:dataset_preview}
-\end{figure}
-\endgroup
+
 
 \subsection{Scenes}
 
@@ -105,30 +89,49 @@ Another limitation of these datasets is that the light source is static upon the
 which results in a sparse light-view sampling of the scene.
 To the date of writing this thesis the datasets from correponding related works \cite{nerv2021}
 still are not publicly available.
-Three different scenes have been used for the evaluation.
-\im{reference figure to show this off - say about tonemapping}
+Four different scenes have been used for the evaluation (\Cref{fig:dataset_preview}).
 
-\textbf{Sphere}
 
-The \textit{sphere} scene consists solely of a sphere,
-which shares Lambertian reflectance (\cite{blinn1982light}) with some specular and roughness components.
-This scene is mostly used as a baseline as it is a very simple
-both geometrically and in terms of appearance.
+% \CatchFileDef{\catchdatasetpreview}{tex/objects/figure_dataset_preview.tex}{}
+% \catchdatasetpreview
+\input{tex/objects/figure_dataset_preview}
+
+% \textbf{Sphere}
+
+% The \textit{sphere} scene consists solely of a sphere,
+% which shares Lambertian reflectance (\cite{blinn1982light}) with some specular and roughness components.
+% This scene is mostly used as a baseline as it is a very simple
+% both geometrically and in terms of appearance.
 
 \textbf{Rocket}
 
-The \textit{rocket} scene contains a single object,
-which exhibits complicated geometry and realistic non-Lambertian materials.
+The \textit{rocket} scene (\Cref{fig:dataset_preview} (a)) contains a single object,
+which exhibits geometry of medium complexity and realistic non-Lambertian materials.
 This scene contains global geometry complications (rocket wings) and some fine details (rivets on the rocket shell).
 The surface of the rocket shows moderate level of specularities (in comparison with sphere scene)
 
 \textbf{Guitar}
 
-The \textit{guitar} scene is created for testing models ability
-to reproduce highly specular BRDFs.
+The \textit{guitar} scene (\Cref{fig:dataset_preview} (b)) is created for testing models ability
+to reproduce highly specular surface behavior.
 Complex geometry also allows to asses how model handles geometrical features on different scales.
 For example strings can be barely seen on renders and they would presumably the most troublesome geometrical part of the whole scene.
 
+\textbf{Lego}
+
+\textit{Lego} scene (\Cref{fig:dataset_preview} (c)) is the reproduction of the model
+that have been used in a former NeRF work \cite{mildenhall2020nerf}.
+The dataset is recreated under a specific illumination,
+which consists of only one point light source.
+The object exhibits a very complex geometry on all scales.
+The appearance of the surface does not show any complications.
+
+\textbf{Hotdog}
+
+\textit{Hotdog} scene (\Cref{fig:dataset_preview} (d)) is also a reproduction of the model
+from the NeRF work with only one point light source.
+The reflectance behavior of objects on this scene is more sphisticated
+coparing to the \textit{lego} scene while the geometry is simpler.
 
 
 \subsection{Real-world dataset handling}
@@ -223,16 +226,20 @@ The resolutions from 64x64px (for \textit{brute-force scheme}) up to 512x512px
 
 For evaluation of the results the following metrics have been used:
 \begin{enumerate}
-    \item \textit{PSNR} \cite{hore2010image} (Peak Signal to Noise Ratio) is a traditional estimator for image comparison
-    that is based on MSE and concentrated on pixel-by-pixel comparison
-    \item \textit{SSIM} \cite{zhou2004image, nilsson2020understanding, hore2010image} (Structural Similarity Index Measure) is a perceptual metric
+    \item \textit{PSNR}$\uparrow$ \cite{hore2010image} (Peak Signal to Noise Ratio) is a traditional estimator for image comparison
+    that is based on MSE and concentrated on pixel-by-pixel comparison.
+    Higher value is better.
+    \item \textit{SSIM}$\uparrow$ \cite{zhou2004image, nilsson2020understanding, hore2010image} (Structural Similarity Index Measure) is a perceptual metric
     that assesses image quality based on perception of the human visual system.
-    \item \textit{LPIPS} \cite{zhang2018perceptual} (Perceptual Similarity) is the metric
+    Higher value is better.
+    \item \textit{LPIPS}$\downarrow$ \cite{zhang2018perceptual} (Perceptual Similarity) is the metric
     that utilizes deep features of the pre-trained deep neural networks (Alex-net \cite{krizhevsky2012imagenet} in my experiments)
     to provide an evaluation that agrees well with humans' assessments.
-    \item \textit{HDRFlipLoss} \cite{theisel2021hdrflip, andersson2020flip} is the metric
+    Lower value is better.
+    \item \textit{HDRFlipLoss}$\downarrow$ \cite{theisel2021hdrflip, andersson2020flip} is the metric
     that is aimed to work with HDR images and produce better assessment comparing to other metrics
     that were originally designed to work with LDR images.
+    Lower value is better.
 \end{enumerate}
 
 Additionally to the above mentioned metrics the empirical evaluations has to be made
@@ -253,36 +260,114 @@ A shortage of some baseline results does also contribute to some difficulties in
 Therefore this section is formed in the order of increasing complexity of used methods and decreasing evaluation capabilities.
 The following methods are being evaluated in either event:
 \begin{enumerate}
-    \item \textit{Vanilla NSVF} method \cite{liu2021neural} (described in \Cref{subsec:NSVF})
-    \item \textit{Explicit colocated scheme} \cite{bi2020neural, liu2021neural}, which is explained in details in \Cref{subsec:NRF}
+    \item Vanilla \textit{NSVF} method \cite{liu2021neural} (described in \Cref{subsec:NSVF})
+    \item Explicit colocated scheme (\textit{ExCol}) \cite{bi2020neural, liu2021neural}, which is explained in details in \Cref{subsec:NRF}
     and is a lighter version of \textit{explicit brute-force scheme}
     due to reuse of viewing sample points
-    \item \textit{Explicit brute-force scheme} (described in \Cref{sec:explicit_scheme})
-    \item \textit{Explicit approximated scheme}, which is the \textit{explicit brute-force scheme}
+    \item Explicit brute-force scheme (\textit{ExBF}) (described in \Cref{sec:explicit_scheme})
+    \item Explicit approximated scheme (\textit{ExVA}), which is the \textit{explicit brute-force scheme}
     that uses the in-voxel approximation from \Cref{sec:invoxel}
-    \item \textit{Implicit approximated scheme} \im{most likely not}
+    \item Implicit approximated scheme (\textit{ImVA}) \im{most likely not}
 \end{enumerate}
+
+
+% \CatchFileDef{\catchmethodsdatasets}{tex/objects/figure_dataset_preview.tex}{}
+% \catchmethodsdatasets
+\input{tex/objects/table_light_settings}
 
 \Cref{tab:methods_datasets} shows the applicability of different types of datasets to methods that are used in experiments.
 
-\begin{table*}[!htb]
-    % \setArraystrech{1.5}
-    \centering
-    \caption{\im{Fix width and add description!}}
-    \label{tab:methods_datasets}
-    \begin{tabular*}{\textwidth}{ l | c c c c }
-    	\toprule
-    	 & NSVF \cite{liu2021neural} & Explicit Colocated & Explicit brute-force & Explicit approximated \\
-        \midrule
-        Static dataset & \checkmark & X & \checkmark & \checkmark \\
-    	Colocated dataset & X & \checkmark & \checkmark & \checkmark \\
-    	Arbitrary dataset & X & X & \checkmark & \checkmark \\
-        \midrule
-        Novel views & \checkmark & \checkmark & \checkmark & \checkmark \\
-        Novel lights & X & \checkmark & \checkmark & \checkmark \\
-    	\bottomrule
-    \end{tabular*}
-\end{table*}
+
+
+
+
+
+\subsection{Colocated light setting}
+
+Datasets with the colocated light setting can be evaluated by all of the listed models except \textit{NSVF}.
+The fact that a very fast \textit{ExCol} scheme can be evaluated on these datasets
+makes them very advantageous for comparing against other methods.
+Since the \textit{ExCol} scheme is essentially a special case for \textit{ExBF} scheme
+they perform the same way as long as the sampling for light rays is performed the same way as for view rays.
+In contrary, the performance of \textit{ExBF} scheme is drastically worse comparing to \textit{ExCol} scheme.
+Hence the main focus here is to compare colocated scheme with the in-voxel approximation scheme.
+
+
+
+% \CatchFileDef{\catchcolocmetrics}{tex/objects/coloc_metrics.tex}{}
+% \catchcolocmetrics
+\input{tex/objects/coloc_metrics}
+
+\Cref{tab:colocated_metrics} gives an overview of quantitative results of evaluation methods on colocated datasets.
+Four aforementioned metrics are calculated on renders over the validation dataset.
+The \textit{ExCol} scheme is the fastest among specified methods,
+since it does not evaluate any overhead related to sampling light rays
+as the view samples are simply reused as samples for light rays.
+The \textit{ExVA} scheme is an approximation of \textit{ExCol} method
+that uses the distance of travel of light rays inside the voxels scaled by some constant sigma value.
+The implementation implies light rays intersection with the octree,
+which is a fairly fast task, although it still substantially drops the performance.
+The approximation scheme \textit{ExVA} is from $1.4$ to $2$ times slower
+than the fastest \textit{ExCol} depending on the scene.
+% The best values are denoted in bold.
+The \textit{ExCol} scheme does produce mostly better results,
+which should be similar to \textit{ExBF} method.
+However, the \textit{ExBF} method has a massive overhead in sampling light rays
+and evaluating model on these samples,
+which makes it naturally impractical.
+Training of \textit{ExBF} model even on 64px images takes $1.5$ times more time
+than training approximation \textit{ExVA} scheme on 256px images.
+In these experiments the \textit{ExBF} scheme did not manage
+to converge completely due to the hardware memory limitations.
+Interestingly the \textit{ExBF} method performed better according to
+LPIPS metric, even though it did not converge completely.
+This could be the result of same nature of the LPIPS metric
+that uses deep features for the evaluation.
+Some outputs of these experiments are selected from the validation dataset
+and overviewed in \Cref{tab:coloc_allresults}.
+% \textit{ExCol} and \textit{ExVA} methods have been trained using 256x256px images
+% while the brute-force scheme \textit{ExBF} was only trained using 64x64px images.
+% The reason for that is a huge need of the \textit{ExBF} method for memory,
+% which is limited by the hardware.
+The refinement procedure is performed on 5k, 25k and 50k iterations.
+For the \textit{ExBF} method the third refinement procedure requires too much memory,
+so the training only consists of 50k iterations.
+
+
+% \CatchFileDef{\catchcolocresults}{tex/objects/coloc_results.tex}{}
+% \catchcolocresults
+\input{tex/objects/coloc_results}
+
+
+\subsubsection{ExCol vs. NRF}
+
+The \textit{ExCol} scheme is originally based on NRF framework \cite{bi2020neural},
+which extends the whole problem to consider reflectance of the object in the scene.
+However, \textit{ExCol} method in turn uses NSVF framework for increasing the efficiency of sampling.
+Although \cite{bi2020neural} do not provide the datasets from their experiments,
+some rough time estimation comparison can be done.
+It takes approximately 48 hours for NRF model to get trained on some scenes
+similar to those that are used in this thesis.
+As it can be seen from \Cref{tab:colocated_metrics}
+the \textit{ExCol} can get trained in approximately 12 hours,
+which is $4$ times faster than original NRF approach.
+
+
+
+
+\subsection{Arbitrary light setting}
+
+Datasets with the arbitrary setting can only be processed with brute-force \textit{ExBF} and voxel-approximation \textit{ExVA} schemes.
+Thus the main idea here is to compare quality and the timings between these methods.
+
+
+\im{RESULTS metrics+renders: check quality from u4108: exva lego 256px, timings can be compared on 64px results: exva u4104 vs exvf u4109}
+
+\im{Random datasets: compare brute-force with in-voxel approximation}
+
+% The experiments involve training models on different synthetic datasets (\im{reference to prev. subsection}) with different parameters
+% and quantitative (\im{ref}) and qualitative (\im{ref}) comparisons of those.
+
 
 
 
@@ -299,70 +384,6 @@ All other methods not only can process this dataset but also render the scene un
 
 \im{check that I explicitly say somewhere, that semantically 'brute-force' and 'colocated' is THE SAME!}
 
-
-\subsection{Colocated light setting}
-
-\im{Compare timings with the original NRF paper!!!}
-
-Datasets with the colocated light setting can be evaluated on all of listed models except 'Vanilla NSVF'.
-The fact that a very fast 'explicit colocated' scheme can be evaluated on these datasets
-makes them very advantageous for comparing agains other methods.
-Since the 'explicit colocated' scheme is essentially a special case for 'explicit brute-force' scheme
-they perform the same way as long as the sampling parameters for light rays match those for view rays.
-In contrary the performance of 'explicit brute-force' scheme is drastically worse comparing to 'explicit colocated' scheme.
-Hence the main focus here is to compare colocated scheme with the in-voxel approximation scheme.
-
-
-\CatchFileDef{\catchcolocmetrics}{tex/objects/coloc_metrics.tex}{}
-\catchcolocmetrics
-
-\CatchFileDef{\catchcolocresults}{tex/objects/coloc_results.tex}{}
-\catchcolocresults
-
-
-\subsection{Arbitrary light setting}
-
-Datasets with the arbitrary setting can only be processed with brute-force and voxel-approximation schemes.
-Thus the main idea here is to compare quality and timings between these methods.
-
-\im{Random datasets: compare brute-force with in-voxel approximation}
-
-% The experiments involve training models on different synthetic datasets (\im{reference to prev. subsection}) with different parameters
-% and quantitative (\im{ref}) and qualitative (\im{ref}) comparisons of those.
-
-
-
-\section{Comparisons}
-
-% Following models for comparison:
-% \begin{enumerate}
-%     \item Vanilla NSVF
-%     \item Explicit scheme colocated (NRF+NSVF)
-%     \item Explicit scheme 'brute-force'
-%     \item Explicit scheme w/in-voxel approximation
-%     \item Implicit scheme w/in-voxel approximation
-% \end{enumerate}
-
-
-Following datasets for comparison:
-\begin{enumerate}
-    \item BRDF sphere
-    \item Rocket
-    \item Guitar
-    \item \color{orange}{Trophy/donut/tablelamp}
-\end{enumerate}
-
-% Following settings:
-% \begin{enumerate}
-%     \item Static
-%     \item Colocated
-%     \item Arbitrary
-% \end{enumerate}
-
-
-Table with time/memory consumptions:
-
-\im{I'M TABLE!}
 
 
 \section{Discussion}

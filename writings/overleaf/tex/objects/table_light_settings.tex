@@ -1,0 +1,18 @@
+\begin{table*}[!htb]
+    % \setArraystrech{1.5}
+    \centering
+    \caption{The applicability of different types of datasets to methods}
+    \label{tab:methods_datasets}
+    \begin{tabular*}{\textwidth}{ l | c c c c }
+    	\toprule
+    	 & NSVF \cite{liu2021neural} & ExCol (ours) & ExBF (ours) & ExVA (ours) \\
+        \midrule
+        Static light & \checkmark & X & \checkmark & \checkmark \\
+    	Colocated light & X & \checkmark & \checkmark & \checkmark \\
+    	Arbitrary light & X & X & \checkmark & \checkmark \\
+        \midrule
+        Novel views & \checkmark & \checkmark & \checkmark & \checkmark \\
+        Novel lights & X & \checkmark & \checkmark & \checkmark \\
+    	\bottomrule
+    \end{tabular*}
+\end{table*}
