@@ -42,7 +42,7 @@ of an implicit function $F = F_\Theta$ with parameters $\Theta$.
 The scheme structure of original NeRF's MLP is outlined in \Cref{fig:mlp_nerf}.
 The position $p(z)$ is first encoded using position encoding function $\zeta(\cdot)$ (positional encoding is described in section \ref{subsec:pos_enc}) and then is processed with 8 fully-connected neural layers with ReLU activations.
 The resulting feature vector is then concatenated with positionally encoded vector direction $v$
-before the the volume density $\sigma(p(z))$ and the color value $c(p(z), v)$ is outputed.
+before the volume density $\sigma(p(z))$ and the color value $c(p(z), v)$ is outputed.
 The important concept here is that $\sigma$ only depends on point $p(z)$
 whilst the color value $c$ is view dependant as well.
 This setting is required to encourage the MLP to be multi-view consistent.
@@ -53,7 +53,6 @@ Separating each ray into $N$ bins and drawing random samples from each bin
 makes the representation able to learn continuous function
 while only using finite number of samples.
 The estimate for the integral $C(p, v)$ will have a form (\cite{mildenhall2020nerf, max1995optical}):
-
 \begin{equation}
     \label{eq:integral_estimation}
     C(p, v) \approx \sum_{i=1}^{N} \tau_c(p_i) (1 - \exp (-\sigma(p_i) \delta_i)) c(p_i, v),
@@ -72,18 +71,18 @@ is much slower for high-frequency parts of the scene.
 by using an embedding, which maps inputs to a higher dimensional space before passing them to the MLP.
 
 The positional encoding function $\zeta(p) : \mathbb{R} \xrightarrow{} \mathbb{R}^{2L}$ as proposed by \cite{mildenhall2020nerf, vaswani2017attention} is represented by Fourier series in the following form:
-
 \begin{equation}
     \label{eq:positional_encoding}
-    \zeta(p) = (\sin(2^0\pi p), \cos(2^0\pi p), ..., \sin(2^{L-1}\pi p), \cos(2^{L-1}\pi p))
+    \zeta(x) = (\sin(2^0\pi x), \cos(2^0\pi x), ..., \sin(2^{L-1}\pi x), \cos(2^{L-1}\pi x))
 \end{equation}
+The 3D Cartesian coordinates of $p$ and $v$ are then separately transformed using $\zeta(\cdot)$ and concatenated.
 
 
 \subsection{Hierarchical sampling}
 \label{subsec:hierarchy_sampling}
 
 The proposed approach is ineffective in a way that it tends to generate a lot of unimportant samples
-that lie on a free space and do not make contribute much.
+that lie on a free space and do not contribute much.
 To solve that authors propose the hierarchical volume sampling algorithm (similar to \cite{levoy1990efficient}),
 when another "coarse" neural network is used in order to roughly estimate volume densities along the ray.
 This insight is then used to perform a more informed sampling of main ("fine") network.
@@ -140,7 +139,7 @@ The main contribution is the usage of sparse voxel octrees (\cite{laine2011Effic
 that are efficiently used for training MLPs with shared parameters.
 
 This approach requires a slight elaboration on the problem formulation.
-Let the whole scene being fully contained in a set of $K$ sparse voxels: $\mathbb{V} = \{V_k\}_{k=1}^K$.
+Let the whole scene be fully contained in a set of $K$ sparse voxels: $\mathbb{V} = \{V_k\}_{k=1}^K$.
 The scene can then be represented as a set of voxel-bounded implicit functions
 \begin{equation}
     F(p, v) = F_\Theta^i(g_i(p), \zeta(v)), \forall p \in V_i,
@@ -164,7 +163,8 @@ which corresponds to positional encoding function explained in \ref{subsec:pos_e
     \label{fig:nsvf_structure}
     \centering
     \includegraphics[width=0.9\textwidth]{figures/vanilla_nsvf.png}
-    \caption{Network structure of the NSVF approach \cite{liu2021neural}.
+    \caption{Network structure of the NSVF approach
+(the figure is adapted from \cite{liu2021neural}).
 Same notation as for \Cref{fig:mlp_nerf} is used.
 Dotted lines denote semantic parts of the presented structure:
 pink, green and blue dotted lines stand for encoder, density predictor and texture predictor respectively.
@@ -179,6 +179,8 @@ The density predictor (green dotted line) remains the same.
 The texture predictor (blue dotted line) is deeper comparing to the NeRF model.
 The overall model structure is slightly shallower comparing to the original NeRF network,
 which is still sufficient due to the distributed way of storing voxel embeddings in the voxel vertices.
+Without voxel embeddings the model contains approximately 0.5M learnable parameters,
+which is lower than in the original NeRF model.
 
 The volumetric rendering itself does not undergo any significant changes
 except for some additional steps that have to be performed.
@@ -196,7 +198,7 @@ that have an accumulated transmittance lower than some threshold.
 \label{subsec:pruning}
 
 The training on the scene begins with the octree,
-which consists of $N$ voxels that fit in bounding box of the whole scene
+which consists of $N=N^3_0$ voxels that fit in bounding box of the whole scene
 and cover all parts of the scene.
 One can get rid of non-essential voxels by performing a \textit{self-pruning} procedure.
 This technique leverages the property of neural radiance fields
@@ -310,7 +312,7 @@ The architecture of the MLP is outlined in \Cref{fig:nrf_structure}.
 The deeper structure is used as the model capacity has to be increased
 due to higher complexity of the task.
 For each view sample point $p$ model outputs both normal vector $n$ and parameters $R$,
-which are requires by the selected BRDF model.
+which are required by the selected BRDF model.
 For the microfacet BRDF (\cite{walter2007microfacet}) $R$ consists of 3-dimensional albedo value
 and 1-dimensional roughness value.
 
@@ -319,7 +321,7 @@ and 1-dimensional roughness value.
 This formulation covers the general case when light source can be located at arbitrary position ('arbitrary setting').
 Since the $l$ and $v$ vectors are different,
 the additional sampling of light ray for each view sample point is required.
-It makes this problem infeasible.
+It makes this problem impractical. %infeasible.
 However, \cite{bi2020neural} show that one specific light setting exist,
 which can be used to handle this problem.
 When the light ray $l$ coincide with the view ray $v$,
@@ -334,10 +336,12 @@ and flash lights that are placed close to each other.
 On the scale of the scene this displacement can be neglected and the setting can be considered to be co-located.
 
 The co-located setting results in a very sparse sampling of the scene in terms of light-view directions.
-During training there basically are no other samples than those
+During training there are no other samples
 where angle between light and view rays is greater than zero.
 This fact negatively affects the overall training performance,
-although \cite{bi2020neural} proves that even with these restrictions
+although \cite{bi2020neural} claim
+%proves
+that even with these restrictions
 the network is still able to generalize and reconstruct the scene appearance in high quality.
 Authors also show some renders where the 'arbitrary setting' had been used during prediction phase.
 
@@ -349,7 +353,7 @@ Authors also show some renders where the 'arbitrary setting' had been used durin
 \label{sec:explicit_scheme}
 
 The described above methods have already achieved some appealing results.
-However, all of them have their own limitations that in either event reduce the performance either qualitatively or quantitatively.
+However, all of them have their own limitations that in either event reduce the performance either qualitatively (no light interaction) or quantitatively (too slow).
 The explained below solution is constructed to take advantages from both NRF and NSVF approaches.
 This method is later referred as 'brute-force scheme' as it performs the light rays sampling without any approximation techniques.
 
@@ -357,9 +361,9 @@ Since the NRF approach \cite{bi2020neural} is based on NeRF, it inherits its poo
 and forces it to be only applicable for the 'co-located setting'.
 Although the authors are even able to render the scene within 'arbitrary setting'
 when only being trained on the co-located dataset,
-the sparsity of the training dataset is still highly affects network's generalization opportunities.
+the sparsity of the training dataset still highly affects network's generalization opportunities.
 
-\cite{liu2021neural} in turn propose the technique for increasing the training time and effectiveness of the training
+\cite{liu2021neural} in turn propose the technique for increasing the effectiveness of the training
 for the color-based original NeRF approach.
 The usage of gradually refined octrees gives more control over the sampling process
 and makes the whole training phase faster.
@@ -480,7 +484,7 @@ The 2D sketch schemes are used instead of 3D visualizations for simplicity.
 Blue lines represent view rays $p(z)$ with direction vector $v$,
 purple lines stand for light rays $p'(z)$ with light direction vector $l$
 (only two of those are shown for brevity).
-Right dots represent sampled view points $p_i$, yellow dots stand for light sample points $p'_i$.
+Red dots represent sampled view points $p_i$, yellow dots stand for light sample points $p'_i$.
 Scheme (a) shows the original NeRF sampling technique without \textit{hierarchy sampling} (\Cref{subsec:hierarchy_sampling}).
 Scheme (b) correspond to the NSVF sampling technique
 that only occurs inside intersected voxels (represented by green boxes).
@@ -491,8 +495,8 @@ when point light source is positioned at the same location as camera.
 In this case light sample points (yellow dots) coincide with the view sample points (red dots).
 Scheme (e) correspond to the proposed in this work 'brute-force' approach
 when light rays sampling is reduced by using the same voxel structure as in NSVF (fig. (b)).
-Scheme (f) shows sampling in proposed in this work in-voxel approximation scheme.
-View rays are sampled in a similar way as in NSVF approach
+Scheme (f) shows sampling proposed in this work in-voxel approximation scheme.
+View rays are sampled equally as in NSVF approach
 while light ray transmittances are estimated using travelled distances $d_{V_i}$
 of the light ray inside voxels.
 }
@@ -520,8 +524,9 @@ as some coarse value would already give an acceptable level of certainty.
 Some other options can be applied here such as:
 \begin{enumerate}
     \item calculate $\hat{\sigma}_{V_k}$ using points sampled in centers of voxels $V_k \in \mathbb{V}^*$
-    \item calculate mean $\hat{\sigma}_{V_k}$ value from points of intersection of light ray with voxels $V_k \in \mathbb{V}^*$
+    \item calculate mean $\hat{\sigma}_{V_k}$ value from points of intersection of light ray with voxels $V_k \in \mathbb{V}^*$ (requires handling of edge cases)
     \item assign $\hat{\sigma}_{V_k} = \const, \forall V_k \in \mathbb{V}^*$
+    \item use $\hat{\sigma}_{V_k}$ that was calculated during pruning stage
 \end{enumerate}
 
 
@@ -550,7 +555,9 @@ are provided in advance into texture predictor.
     \label{fig:implicit_scheme}
 \end{figure}
 
-To expand these limitations one can shift the appearance evaluation burden to the deep neural network,
+To avoid
+%expand
+these limitations one can shift the appearance evaluation burden to the deep neural network,
 which is able to get trained for a very complex appearance representations.
 This 'implicit scheme' would have a simpler neural network structure,
 which is shown on \Cref{fig:implicit_scheme}.
