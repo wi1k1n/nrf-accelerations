@@ -330,7 +330,7 @@ class LightNeuralRenderer(NeuralRenderer):
             targetFiles = glob.glob(os.path.join(self.targets_path, image_name + '.*'))
             assert len(targetFiles) == 1, 'Error occured while loading target image!'
             w, h = sample['size'][shape][0][:2].cpu().numpy().astype(np.int)
-            targetRGB, _, _ = load_rgb(targetFiles[0], (w, h))
+            targetRGB, _, _ = load_rgb(targetFiles[0], (w, h), with_alpha=False)
             targetRGB = torch.Tensor(targetRGB.transpose(1, 2, 0)).reshape(w * h, -1)
 
             targetRGB = recover_image(targetRGB, min_val=self.min_color, max_val=self.max_color, width=w).permute(2, 0, 1)

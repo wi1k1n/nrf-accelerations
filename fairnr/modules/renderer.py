@@ -449,50 +449,53 @@ class LightIVAVolumeRenderer(LightVolumeRenderer):
         if not 'texture' in output_types:
             return super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
                                                    early_stop, output_types)
-        ######### <LIGHT_RAYS>
-        # need to intersect light rays with the octree here first
-        sampled_xyz = ray(ray_start.unsqueeze(1), ray_dir.unsqueeze(1), samples['sampled_point_depth'].unsqueeze(2))
-
-        point_light_xyz = samples['point_light_xyz']
-        # light_dirs = point_light_xyz - sampled_xyz
-        # light_start = sampled_xyz
-        light_dirs = sampled_xyz - point_light_xyz
-        light_start = point_light_xyz
-        # [shapes x views x rays x xyz]
-        light_start, light_dirs, light_intersection_outputs, light_hits = \
-            input_fn.light_ray_intersect(light_start.unsqueeze(0),
-                                         light_dirs.unsqueeze(0), encoder_states)
-
-        # [views*rays x sample_points x light_ray_voxel_intersections]
-        light_intersection_outputs = {
-            name: outs.reshape(*sampled_xyz.size()[:-1], -1) for name, outs in light_intersection_outputs.items()}
-        # light_start, light_dirs = light_start.reshape(*sampled_xyz.size()), light_dirs.reshape(*sampled_xyz.size())
-        # light_hits = light_hits.reshape(*sampled_xyz.size()[:2])
-
-        light_min_depth = light_intersection_outputs['min_depth']
-        light_max_depth = light_intersection_outputs['max_depth']
-        # light_voxel_idx = light_intersection_outputs['intersected_voxel_idx']
-
-        transmittances = torch.exp(-torch.sum((light_max_depth - light_min_depth) * self.voxel_sigma, axis=-1))
-
-        # light_mask = light_voxel_idx.ne(-1)
-        # transmittances = torch.zeros(sampled_xyz.size()[:2]).to(sampled_xyz.device)
-        # for i, ray_hits in enumerate(light_hits):
-        #     for j, hit in enumerate(ray_hits):
-        #         if not hit: continue
-        #         mask = light_mask[0, 0, :]
-        #         min_d, max_d = light_min_depth[i, j, mask], \
-        #                                 light_max_depth[i, j, mask]
-        #         # transmittances[i, j] = torch.sum((max_d - min_d) / voxel_size_norm * self.voxel_sigma)
-        #         transmittances[i, j] = torch.exp(-torch.sum((max_d - min_d) * self.voxel_sigma))
-        # outputs['light_transmittance'] = transmittances
-
-        ######### </LIGHT_RAYS>
 
         outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
                                                early_stop, output_types)
 
-        outputs['light_transmittance'] = transmittances
+        ######### <LIGHT_RAYS>
+        if outputs is not None:
+            # need to intersect light rays with the octree here first
+            sampled_xyz = ray(ray_start.unsqueeze(1), ray_dir.unsqueeze(1), samples['sampled_point_depth'].unsqueeze(2))
+
+            point_light_xyz = samples['point_light_xyz']
+            # light_dirs = point_light_xyz - sampled_xyz
+            # light_start = sampled_xyz
+            light_dirs = sampled_xyz - point_light_xyz
+            light_start = point_light_xyz
+            # [shapes x views x rays x xyz]
+            light_start, light_dirs, light_intersection_outputs, light_hits = \
+                input_fn.light_ray_intersect(light_start.unsqueeze(0),
+                                             light_dirs.unsqueeze(0), encoder_states)
+
+            # [views*rays x sample_points x light_ray_voxel_intersections]
+            light_intersection_outputs = {
+                name: outs.reshape(*sampled_xyz.size()[:-1], -1) for name, outs in light_intersection_outputs.items()}
+            # light_start, light_dirs = light_start.reshape(*sampled_xyz.size()), light_dirs.reshape(*sampled_xyz.size())
+            # light_hits = light_hits.reshape(*sampled_xyz.size()[:2])
+
+            light_min_depth = light_intersection_outputs['min_depth']
+            light_max_depth = light_intersection_outputs['max_depth']
+            # light_voxel_idx = light_intersection_outputs['intersected_voxel_idx']
+
+            transmittances = torch.exp(-torch.sum((light_max_depth - light_min_depth) * self.voxel_sigma, axis=-1))
+
+            # light_mask = light_voxel_idx.ne(-1)
+            # transmittances = torch.zeros(sampled_xyz.size()[:2]).to(sampled_xyz.device)
+            # for i, ray_hits in enumerate(light_hits):
+            #     for j, hit in enumerate(ray_hits):
+            #         if not hit: continue
+            #         mask = light_mask[0, 0, :]
+            #         min_d, max_d = light_min_depth[i, j, mask], \
+            #                                 light_max_depth[i, j, mask]
+            #         # transmittances[i, j] = torch.sum((max_d - min_d) / voxel_size_norm * self.voxel_sigma)
+            #         transmittances[i, j] = torch.exp(-torch.sum((max_d - min_d) * self.voxel_sigma))
+            # outputs['light_transmittance'] = transmittances
+
+            ######### </LIGHT_RAYS>
+
+
+            outputs['light_transmittance'] = transmittances
 
         return outputs, _evals
 

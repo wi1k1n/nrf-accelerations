@@ -87,7 +87,7 @@ def load_exr(path, with_alpha=True):
         a = np.frombuffer(exr.channel('A'), dtype=tps[ch['A'].type.v])
         img = np.stack((r, g, b, a)).reshape(4, sz[0]*sz[1]).T
     else:
-        img = np.stack((r, g, b, np.ones((sz[0], sz[1])))).reshape(3, sz[0]*sz[1]).T
+        img = np.stack((r, g, b, np.ones((sz[0]*sz[1])))).reshape(4, sz[0]*sz[1]).T
     img = img.reshape(sz[0], sz[1], -1).astype('float32')
     return img
 

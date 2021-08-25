@@ -3,7 +3,7 @@ import numpy as np
 import open3d as o3d
 import plotly.graph_objects as go
 
-MODEL = 'rocket_test'
+MODEL = 'lego'
 PATH = 'D:\\edu\\UniBonn\\Study\\thesis\\codes\\blender\\datasets\\' + MODEL
 # PATH = 'D:\\edu\\UniBonn\\Study\\thesis\\codes\\realdata\\flower_dome\\dataset\\zoom_0'
 CAM_ICONS = True

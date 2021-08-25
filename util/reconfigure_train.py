@@ -9,40 +9,40 @@ COPY2CLIPBOARD = False  # after running the script the configuration is inserted
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "lego_random_exr"
+DATA = "rocket_static_exr"
 NAME = ""  # postfix for dataset name
-RES = "64x64"
+RES = "512x512"
 PIXELS_PER_VIEW = '80'
 VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
 
 USE_OCTREE = True
 CHUNK_SIZE = '2'  #'256'  # > 1 to save memory to time
-LR = '0.00015'  # 0.001
+LR = '0.0001'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
 COLOR_WEIGHT = '1.0'  #'256.0'
 ALPHA_WEIGHT = '1e-3'  #'1e-3'
 
 
-# REDUCE_STEP_SIZE_AT = '5000,25000,50000'
-# HALF_VOXEL_SIZE_AT = '5000,25000,50000'
-# PRUNNING_EVERY_STEPS = '5000'
-REDUCE_STEP_SIZE_AT = '20000,50000,100000'  # '5000,25000,75000'
-HALF_VOXEL_SIZE_AT = '20000,50000,100000'  # '5000,25000,75000'
-PRUNNING_EVERY_STEPS = '10000'
+REDUCE_STEP_SIZE_AT = '5000,25000,50000'
+HALF_VOXEL_SIZE_AT = '5000,25000,50000'
+PRUNNING_EVERY_STEPS = '5000'
+# REDUCE_STEP_SIZE_AT = '10000,50000,100000'  # '5000,25000,75000'
+# HALF_VOXEL_SIZE_AT = '10000,50000,100000'  # '5000,25000,75000'
+# PRUNNING_EVERY_STEPS = '10000'
 
 PRUNNING_TH = '0.5'  # '0.5'
 SAVE_INTERVAL_UPDATES = '1000'#'750'  # '100'
 TOTAL_NUM_UPDATE = '150000'  # 150000
-TRAIN_VIEWS = '0..475'  # '0..100'
-VALID_VIEWS = '475..500'  # '100..200
+TRAIN_VIEWS = '0..160'  # '0..100'
+VALID_VIEWS = '160..200'  # '100..200
 NUM_WORKERS = '8'  # '0'
 
 HDRFLIP = True
-PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
+PREPROCESS = 'log'  # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #
 MAX_COLOR = '0.8'  # 0.8 - rocket/guitar/lego/hotdog; 5.0 - sphere; 0.3 - drums; 0.6 - lego-random
-GAMMA_CORRECTION = '1.0'  # 2.0 - rocket/guitar/drums; 1.0 - sphere/lego; 1.5 - hotdog
+GAMMA_CORRECTION = '2.0'  # 2.0 - rocket/guitar/drums; 1.0 - sphere/lego; 1.5 - hotdog
 BG_COLOR = '0.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
 SIGMA_NOISE = True
 # SIGMA_NOISE_LIGHT = False  # not implemented yet
@@ -52,10 +52,10 @@ TRACE_NORMAL = False
 LAMBERT_ONLY = False
 TASK = 'single_object_light_rendering'
 
-# # <!-- Original NSVF from facebook -->
-# ARCH = "nsvf_base"
-# TASK = 'single_object_rendering'
-# # <!/-- Original NSVF from facebook -->
+# <!-- Original NSVF from facebook -->
+ARCH = "nsvf_base"
+TASK = 'single_object_rendering'
+# <!/-- Original NSVF from facebook -->
 
 # # <!-- Implicit model with ignoring light interaction -->
 # ARCH = "mlnrf_base"
@@ -91,25 +91,25 @@ TASK = 'single_object_light_rendering'
 # PREDICT_L = True
 # VOXEL_SIGMA = 0.5
 # # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
-# # LIGHT_INTENSITY = '500.0'  # rocket_exr -> 5k Watt
+# LIGHT_INTENSITY = '500.0'  # 500 excol; rocket_exr -> 5k Watt
 # # LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
 # # LIGHT_INTENSITY = '300.0'  # guitar_exr -> 0.5k Watt
-# LIGHT_INTENSITY = '20.0'  # lego -> 0.7k Watt
+# # LIGHT_INTENSITY = '20.0'  # 20 exbf/exva; lego -> 0.7k Watt
 # # LIGHT_INTENSITY = '500.0'  # hotdog -> 0.7k Watt
 # TEXTURE_LAYERS = '5'
 # # <!/-- Explicit model with VoxelApproximation light interaction -->
 
-# <!-- Explicit model with Brute Force light interaction -->
-ARCH = "mlnrfexbf_base"
-PREDICT_L = True
-# LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
-# LIGHT_INTENSITY = '500.0'  # rocket_exr -> 5k Watt
-# LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
-# LIGHT_INTENSITY = '200.0'  # guitar_exr -> 0.5k Watt
-LIGHT_INTENSITY = '20.0'  # lego -> 0.7k Watt
-# LIGHT_INTENSITY = '300.0'  # hotdog -> 0.7k Watt
-TEXTURE_LAYERS = '5'
-# <!/-- Explicit model with Brute Force light interaction -->
+# # <!-- Explicit model with Brute Force light interaction -->
+# ARCH = "mlnrfexbf_base"
+# PREDICT_L = True
+# # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
+# # LIGHT_INTENSITY = '500.0'  # rocket_exr -> 5k Watt
+# # LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
+# # LIGHT_INTENSITY = '200.0'  # guitar_exr -> 0.5k Watt
+# LIGHT_INTENSITY = '20.0'  # lego -> 0.7k Watt
+# # LIGHT_INTENSITY = '300.0'  # hotdog -> 0.7k Watt
+# TEXTURE_LAYERS = '5'
+# # <!/-- Explicit model with Brute Force light interaction -->
 
 
 
