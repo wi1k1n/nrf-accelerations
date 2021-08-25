@@ -2,7 +2,8 @@
 \chapter{Evaluation}
 \label{chap:evaluation}
 
-This chapter addresses implementation details, experiments, ablation studies and achieved results.
+This chapter addresses the implementation details,
+datasets, metrics and experiments with demonstration of the achieved results.
 
 
 
@@ -28,6 +29,7 @@ to initialize the octree for the NSVF method and all of the proposed methods as 
 $200$ sample images are used in datasets with 'static' and 'colocated' light settings.
 For the 'arbitrary' light setting each dataset consists of $500$ sample images
 for having more dense light-view sampling distribution.
+These sample images are then split into training (75\%) and validation (25\%) sets.
 
 
 \subsection{Light settings}
@@ -178,8 +180,8 @@ for neural fields and ray casting procedure.
 During training $80$ pixels are first sampled from each of $1$ or $2$ images 
 forming a batch that is used for one training iteration.
 These pixels are used to cast rays through the principle points of the corresponding cameras.
-These rays are then intersect the octree, which is initialized with $4^3$ voxels ($4$ voxels for each axis).
-These rays are then being sampled on the intersection intervals with the step size $0.125$.
+These rays are then intersect the octree, which is initialized with $N_0^3 = 4^3$ voxels ($4$ voxels for each axis).
+These rays are then sampled on the intersection intervals with the step size $0.125$.
 The following procedure differs depending on the method
 and include additional light ray casting, intersecting and sampling for the 'brute-force' scheme and BRDF evaluation for the 'explicit schemes'.
 Alpha compositing is performed after the color (or radiance) values are achieved.
@@ -187,11 +189,11 @@ These values are then being supervised with the ground truth values using fine-n
 \begin{equation}
     \mathcal{L} = \sum_{(p_0,v)\in\mathcal{B}} \norm{ C(p, v) - C^*(p, v) } + \beta(\log(\tau_c(p, v)) + \log(1 - \tau_c(p, v))),
 \end{equation}
-with $\beta = 1e-3$ that is used in the experiments.
+with $\beta = 10^{-3}$ that is used in the experiments.
 
 Adam optimizer is used as an optimization algorithm for learning parameters $(\Theta, I)$ ($I$ is light intensity value).
-Learning rate for the optimizer is initialized with value $1e-4$
-and polynomially decays to value $1e-6$ over 75k iterations.
+Learning rate for the optimizer is initialized with value $10^{-4}$
+and polynomially decays to value $10^{-6}$ over 100k iterations.
 Refinement procedure as well as reducing ray casting step are performed on iterations 5k, 25k and 50k.
 Self-pruning is performed every 5k iterations.
 Tone-mapping using scaling and gamma-correction (differ depending on scene)
@@ -202,16 +204,22 @@ Dataset sample images are originally created in 1024x1024px resolution
 and then individually down-sampled to some lower values for each experiment to fit the GPU memory limitations.
 The resolutions from 64x64px (for \textit{brute-force scheme}) up to 512x512px 
 (for methods with lower memory load, such as Vanilla NSVF) are used.
+The \textit{log-transform} transformation is applied at the pre-processing phase
+to prepare the HDR data before it is processed by the model:
+\begin{equation}
+    c = \log (c^{HDR} + 1),
+\end{equation}
+where $c^{HDR}$ is the color value of the HDR input
+and $c$ is the color value that is used for model supervision.
+The inverse-log-transform is performed on the model outputs at the post-processing stage.
+
 
 % \im{64x64 for 'brute force' scheme}
-\im{different schemes - different training times. approx ~12 hours}
-\im{inference time estimates}
+% \im{different schemes - different training times. approx ~12 hours}
 
-\im{25\% of the dataset is used for validation, 75\% for training}
 
-\im{log transform!}
+% \im{log transform!}
 
-\im{show albedo/roughness/normals}
 
 % \begin{enumerate}
 %     % \item Loss function: color + beta-regularizer
@@ -395,6 +403,9 @@ All other methods not only can process this dataset but also render the scene un
     \item In-Voxel approximation: different sigma strategies
     \item Implicit scheme with tangential coordinate system
 \end{enumerate}
+
+\im{inference time estimates}
+\im{show albedo/roughness/normals}
 
 
 % \section{Colocated setting flaws}

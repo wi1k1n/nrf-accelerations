@@ -12,24 +12,24 @@ SAVE_FILE = True
 DATA = "lego_random_exr"
 NAME = ""  # postfix for dataset name
 RES = "64x64"
-PIXELS_PER_VIEW = '128'
-VIEW_PER_BATCH = '4'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
+PIXELS_PER_VIEW = '80'
+VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
 
 USE_OCTREE = True
 CHUNK_SIZE = '2'  #'256'  # > 1 to save memory to time
-LR = '0.0001'  # 0.001
+LR = '0.00015'  # 0.001
 VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 
 COLOR_WEIGHT = '1.0'  #'256.0'
 ALPHA_WEIGHT = '1e-3'  #'1e-3'
 
 
-REDUCE_STEP_SIZE_AT = '5000,25000,50000'
-HALF_VOXEL_SIZE_AT = '5000,25000,50000'
-PRUNNING_EVERY_STEPS = '5000'
-# REDUCE_STEP_SIZE_AT = '10000,50000,100000'  # '5000,25000,75000'
-# HALF_VOXEL_SIZE_AT = '10000,50000,100000'  # '5000,25000,75000'
-# PRUNNING_EVERY_STEPS = '10000'
+# REDUCE_STEP_SIZE_AT = '5000,25000,50000'
+# HALF_VOXEL_SIZE_AT = '5000,25000,50000'
+# PRUNNING_EVERY_STEPS = '5000'
+REDUCE_STEP_SIZE_AT = '20000,50000,100000'  # '5000,25000,75000'
+HALF_VOXEL_SIZE_AT = '20000,50000,100000'  # '5000,25000,75000'
+PRUNNING_EVERY_STEPS = '10000'
 
 PRUNNING_TH = '0.5'  # '0.5'
 SAVE_INTERVAL_UPDATES = '1000'#'750'  # '100'
@@ -39,7 +39,7 @@ VALID_VIEWS = '475..500'  # '100..200
 NUM_WORKERS = '8'  # '0'
 
 HDRFLIP = True
-PREPROCESS = 'log'  # none/mstd/minmax/log/nsvf(min_color==-1!)
+PREPROCESS = 'none'  # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #
 MAX_COLOR = '0.8'  # 0.8 - rocket/guitar/lego/hotdog; 5.0 - sphere; 0.3 - drums; 0.6 - lego-random
 GAMMA_CORRECTION = '1.0'  # 2.0 - rocket/guitar/drums; 1.0 - sphere/lego; 1.5 - hotdog
