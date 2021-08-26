@@ -160,7 +160,6 @@ which corresponds to positional encoding function explained in \ref{subsec:pos_e
 
 
 \begin{figure}[!htb]
-    \label{fig:nsvf_structure}
     \centering
     \includegraphics[width=0.9\textwidth]{figures/vanilla_nsvf.png}
     \caption{Network structure of the NSVF approach
@@ -169,6 +168,7 @@ Same notation as for \Cref{fig:mlp_nerf} is used.
 Dotted lines denote semantic parts of the presented structure:
 pink, green and blue dotted lines stand for encoder, density predictor and texture predictor respectively.
 \textit{Trilinear interpolation} block denotes interpolation of the sample point $p$ between voxel embeddings.}
+    \label{fig:nsvf_structure}
 \end{figure}
 
 The proposed network structure is outlined in \Cref{fig:nsvf_structure}.

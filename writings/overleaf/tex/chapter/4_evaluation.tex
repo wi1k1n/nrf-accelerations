@@ -291,6 +291,7 @@ The following methods are being evaluated in either event:
 
 
 \subsection{Colocated light setting}
+\label{subsec:experiments_coloc}
 
 Datasets with the colocated light setting can be evaluated by all of the listed models except \textit{NSVF}.
 The fact that a very fast \textit{ExCol} scheme can be evaluated on these datasets
@@ -365,8 +366,26 @@ which is $4$ times faster than original NRF approach.
 
 \subsection{Arbitrary light setting}
 
-Datasets with the arbitrary setting can only be processed with brute-force \textit{ExBF} and voxel-approximation \textit{ExVA} schemes.
-Thus the main idea here is to compare quality and the timings between these methods.
+Datasets with the arbitrary setting can only be processed with 
+brute-force \textit{ExBF} and voxel-approximation \textit{ExVA} schemes
+since the light source is not co-located with the camera,
+which is the requirement for the \textit{ExCol} scheme.
+The \textit{ExBF} method is an impractically slow generalization for the \textit{ExCol}.
+Thus the \textit{ExVA} is the main method for achieving renders on this type of datasets.
+Although \textit{ExVA} is an approximation,
+which theoretically produces worse results than the 'brute-force' or 'colocated' schemes,
+experiments with the colocated datasets (\Cref{subsec:experiments_coloc}) showed
+that evaluations are very similar between \textit{ExVA} and \textit{ExCol}
+by assessing both using metrics (\Cref{tab:colocated_metrics}) or empirically (\Cref{tab:coloc_allresults}).
+
+
+
+
+\input{tex/objects/arb_selective_results}
+
+% \input{tex/objects/arb_maps}
+
+\input{tex/objects/arb_dynamic_light}
 
 
 \im{RESULTS metrics+renders: check quality from u4108: exva lego 256px, timings can be compared on 64px results: exva u4104 vs exvf u4109}
