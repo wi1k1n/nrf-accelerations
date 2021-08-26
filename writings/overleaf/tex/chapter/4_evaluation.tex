@@ -38,7 +38,7 @@ Different light settings are required due to a diversity of tasks that different
 The illumination of the scene is set using point light source.
 The intensity of the light source varies for different scenes and is chosen empirically.
 The positioning of the light source is performed according to the chosen light setting.
-Three different light settings are used in order to create three versions of each dataset.
+Three different light settings are used in order to create three versions of each dataset (\Cref{fig:light_settings}).
 This is done based on the fact that different methods can only handle datasets with different settings:
 \begin{enumerate}
     \item \textbf{Static setting}
@@ -76,6 +76,7 @@ This is done based on the fact that different methods can only handle datasets w
     and both explicit and implicit schemes with in-voxel approximation.
 \end{enumerate}
 
+\input{tex/objects/light_settings}
 
 
 
@@ -343,23 +344,34 @@ For the \textit{ExBF} method the third refinement procedure requires too much me
 so the training only consists of 50k iterations.
 
 
-% \CatchFileDef{\catchcolocresults}{tex/objects/coloc_results.tex}{}
-% \catchcolocresults
 \input{tex/objects/coloc_results}
+
+Some selected views from these experiments are presented for the comparison in \Cref{tab:coloc_allresults}.
+The \textit{ExBF} results are originally in 64px resolution and scaled up for clearer comparison.
+The main focus is to compare results of \textit{ExCol} and \textit{ExVA} schemes.
+The approximation scheme seems to produce results on the same level of quality as the colocated method.
+Both schemes are occasionally lacking specularities (rocket left)
+and fail reproducing very fine details of the Lego dataset.
+However, this can be the result of underfitting of this exact experiment.
+
 
 
 \subsubsection{ExCol vs. NRF}
 
 The \textit{ExCol} scheme is originally based on NRF framework \cite{bi2020neural},
-which extends the whole problem to consider reflectance of the object in the scene.
+which extends the problem of novel view rendering to
+'novel view-light rendering' by considering reflectance of the objects in the scene.
 However, \textit{ExCol} method in turn uses NSVF framework for increasing the efficiency of sampling.
 Although \cite{bi2020neural} do not provide the datasets from their experiments,
 some rough time estimation comparison can be done.
-It takes approximately 48 hours for NRF model to get trained on some scenes
-similar to those that are used in this thesis.
-As it can be seen from \Cref{tab:colocated_metrics}
-the \textit{ExCol} can get trained in approximately 12 hours,
+It takes approximately 48 hours for the NRF model to get trained on 4 GPUs NVIDIA RTX 2080Ti.
+This hardware setup is much more powerful than the hardware used in this thesis.
+Nevertheless as it can be seen from \Cref{tab:colocated_metrics}
+the \textit{ExCol} can get trained in approximately 12 hours on a single GPU NVIDIA 1080Ti,
 which is $4$ times faster than original NRF approach.
+Even considering the differences in the datasets and quantitative differences in achieved results,
+the efficiency improvement is fairly distinct.
+Unfortunately, \cite{bi2020neural} do not provide any metrics values to compare our results with.
 
 
 
@@ -377,6 +389,36 @@ which theoretically produces worse results than the 'brute-force' or 'colocated'
 experiments with the colocated datasets (\Cref{subsec:experiments_coloc}) showed
 that evaluations are very similar between \textit{ExVA} and \textit{ExCol}
 by assessing both using metrics (\Cref{tab:colocated_metrics}) or empirically (\Cref{tab:coloc_allresults}).
+
+\Cref{tab:arb_selective_results} gives an overview on the results of two mentioned above methods
+trained on Lego dataset with an arbitrary light setting.
+Images labeled with \textit{HDRFlip} are the difference images produced within HDRFlipLoss \cite{andersson2020flip, theisel2021hdrflip}
+between target images and corresponding renders.
+The \textit{ExBF} method is again trained only on 64px images due to hardware limitations.
+The down-sampled version of target image is used to calculate HDRFlip image for \textit{ExBF}.
+It can be seen that the model did reproduce the scene with fairly high quality,
+although it produces more errors on darker views with some highly specular flares (3rd line of images in table).
+Please note that images on the 3rd line are post-processed by scaling and applying gamma-correction ($\gamma = 2.5$)
+and in reality they contain very dark object with a very bright spot of light reflection.
+
+
+\subsubsection{Novel light synthesis}
+
+Although \cite{bi2020neural} claim that deep neural network from their framework
+can generalize to some arbitrary light position while only being trained on coinciding light-view positions,
+the quality of this generalization is still doubtful.
+Datasets that were created with the arbitrary light setting
+contain denser light-view sample space than those created with colocated setting.
+This results in a higher quality of novel-light synthesized views.
+\Cref{tab:arb_dynamic_light} contains five images, evaluated from the same novel (has not been used during training) camera position.
+Each of these images is lit from the light source that is located at the novel light position.
+Light rays to the center of the scene form with a view ray to the center of scene angles
+that are denoted under each column of images.
+It can be clearly seen that \textit{ExVA} method outperforms \textit{ExCol}.
+The major difference is in the capability of rendering shadows (non-zero angles)
+while for the zero-angle view both methods perform with approximately the same quality.
+Please note that for this experiment \textit{ExCol} has been trained on the dataset with colocated light setting
+whilst \textit{ExVA} has been trained on the dataset with arbitrary light setting.
 
 
 
@@ -403,14 +445,11 @@ by assessing both using metrics (\Cref{tab:colocated_metrics}) or empirically (\
 Static light setting is the only type of datasets that can be used
 for training the original NSVF method,
 due to the limitation of the illumination to be static.
-All other methods not only can process this dataset but also render the scene under novel light conditions.
+All other methods not only can process this dataset but also render the scene under novel light conditions.$\sup$
 
 \im{Figure N} shows results ...
 
 \im{Conclusion: static for explicit schemes is a very sparse arbitrary, so difficult to train}
-
-\im{check that I explicitly say somewhere, that semantically 'brute-force' and 'colocated' is THE SAME!}
-
 
 
 \section{Discussion}
