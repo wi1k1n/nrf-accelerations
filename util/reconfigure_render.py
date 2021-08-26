@@ -7,11 +7,11 @@ COPY2CLIPBOARD = False
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "lego_random_exr"
-NAME = "u4108"  # postfix for dataset name
+DATA = "lego_coloc_exr"
+NAME = "u4105"  # postfix for dataset name
 RENDER_OUTPUT = "output"  # output if empty
 RES = "256x256"
-RENDER_PATH_LIGHT = False  # True - light source is moving, False - camera is moving
+RENDER_PATH_LIGHT = True  # True - light source is moving, False - camera is moving
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/'\
 # 			   + DATA + '_' + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
 # TARGETS_PATH = 'datasets/' + DATA + ('_' if NAME else '') + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
@@ -60,22 +60,13 @@ TRACE_NORMAL = False
 # LAMBERT_ONLY = False
 # # <!/-- Explicit model with ignoring light interaction -->
 
-# # <!-- Explicit model with NRF (colocated!) light interaction -->
-# ARCH = "mlnrfnrf_base"
-# # <!/-- Explicit model with ignoring light interaction -->
-
-# <!-- Explicit model with VoxelApproximation light interaction -->
-ARCH = "mlnrfexva_base"
-# LAMBERT_ONLY = False
-# VOXEL_SIGMA = 0.5
-# # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
-# LIGHT_INTENSITY = '500.0'  # 500 excol; rocket_exr -> 5k Watt
-# # LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
-# # LIGHT_INTENSITY = '300.0'  # guitar_exr -> 0.5k Watt
-# LIGHT_INTENSITY = '20.0'  # 20 exbf/exva; lego -> 0.7k Watt
-# # LIGHT_INTENSITY = '500.0'  # hotdog -> 0.7k Watt
-# TEXTURE_LAYERS = '5'
+# <!-- Explicit model with NRF (colocated!) light interaction -->
+ARCH = "mlnrfnrf_base"
 # <!/-- Explicit model with ignoring light interaction -->
+
+# # <!-- Explicit model with VoxelApproximation light interaction -->
+# ARCH = "mlnrfexva_base"
+# # <!/-- Explicit model with ignoring light interaction -->
 
 # # <!-- Explicit model with Brute Force light interaction -->
 # ARCH = "mlnrfexbf_base"
@@ -101,8 +92,8 @@ MODEL_PATH = SAVE + '/' + MODEL + '/' + CHECKPOINT
 # RENDER_PATH_ARGS = '{\'radius\':4,\'h\':2,\'o\':(0,0,0)}'
 # RENDER_AT_VECTOR = '"(0,0,0)"'
 # Lego
-# RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.0,\'o\':(0,0,0)}"'
-RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':-1.5,\'o\':(0,0,0)}"'
+RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.0,\'o\':(0,0,0)}"'
+# RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':-1.5,\'o\':(0,0,0)}"'
 RENDER_AT_VECTOR = '"(0, 0, 0)"'
 
 RENDER_PATH_STYLE = 'circle'

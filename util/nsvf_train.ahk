@@ -28,6 +28,17 @@ return
 ReconfigureRender()
 return
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Reconfigure valid ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+^!+y::
+; Only run reconfiguration script
+ReconfigureValid()
+return
+
+
+
 ReconfigureTrain() {
     SetWorkingDir, D:\edu\UniBonn\Study\thesis\codes\NSVF
     RunWait, C:\Python37\python.exe "D:/edu/UniBonn/Study/thesis/codes/NSVF/util/reconfigure_train.py"
@@ -53,6 +64,11 @@ Train(w8time := 0) {
 ReconfigureRender() {
     SetWorkingDir, D:\edu\UniBonn\Study\thesis\codes\NSVF
     RunWait, C:\Python37\python.exe "D:/edu/UniBonn/Study/thesis/codes/NSVF/util/reconfigure_render.py"
+    return
+}
+ReconfigureValid() {
+    SetWorkingDir, D:\edu\UniBonn\Study\thesis\codes\NSVF
+    RunWait, C:\Python37\python.exe "D:/edu/UniBonn/Study/thesis/codes/NSVF/util/reconfigure_valid.py"
     return
 }
 
