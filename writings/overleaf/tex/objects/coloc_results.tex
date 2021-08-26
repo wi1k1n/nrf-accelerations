@@ -84,7 +84,17 @@
         
 
     \end{tabular*}
-    \caption{\im{Fix width and add description!}}
+    \caption{The overview of some
+    of the novel view synthesis results achieved with our methods.
+    Columns correspond to the schemes that have been used to obtain results.
+    The number of training iterations is denoted below each result to have better understanding about model convergence.
+    \textit{ExCol} and \textit{ExVA} schemes have been processed with 256px images
+    while \textit{ExBF} was only trained on 64px images due to hardware limitations.
+    The \textit{ExCol} and \textit{ExVA} methods generally produce similar results.
+    The colocated scheme is able to reproduce fine details slightly better.
+    \textit{ExBF} handles poorly geometry of Lego and Hotdog datasets,
+    which results in some lacking parts of the scene.
+    The \textit{ExBF} are generally underfitted as training is very slow and is hard in terms of hardware.}
     \label{tab:coloc_allresults}
 \end{figure}
 \endgroup

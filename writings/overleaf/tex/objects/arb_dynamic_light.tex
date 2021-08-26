@@ -26,13 +26,19 @@
         & \includegraphics[width=0.19\textwidth]{figures/results/arb_set/dynamic_light/targ_vc0_ld-60.png}
         & \includegraphics[width=0.19\textwidth]{figures/results/arb_set/dynamic_light/targ_vc0_ld0.png}
         & \includegraphics[width=0.19\textwidth]{figures/results/arb_set/dynamic_light/targ_vc0_ld60.png} 
-        & \includegraphics[width=0.19\textwidth]{figures/results/arb_set/dynamic_light/targ_vc0_ld90.png} \\
+        & \includegraphics[width=0.19\textwidth]{figures/results/arb_set/dynamic_light/targ_vc0_ld90.png} \\[-4pt]
         
-        -90 & -60 & 0 & 60 & 90
+        -90\textdegree & -60\textdegree & 0\textdegree & 60\textdegree & 90\textdegree
         
 
     \end{tabular*}
-    \caption{\im{Fix width and add description!}}
+    \caption{Novel view-light synthesis results.
+The \textit{ExCol} model is trained on dataset with colocated light setting
+while \textit{ExVA} mode is trained on dataset with arbitrary light setting.
+Both camera view as well as light source location are novel for both methods.
+Camera is fixed at the same position along all columns.
+Point light source location is changing along all columns:
+inclination angle $\phi = \const$, azimuthal angle $\theta$ is changing from -90\textegree to 90\textdegree. On central column light source is co-located with camera.}
     \label{tab:arb_dynamic_light}
 \end{figure}
 \endgroup

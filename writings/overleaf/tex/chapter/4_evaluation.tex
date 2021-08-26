@@ -266,17 +266,29 @@ This cannot be done for real-world images, which makes the whole task of quality
 The diversity of used models and the corresponding applicable datasets
 does not allow to well structure this section.
 A shortage of some baseline results does also contribute to some difficulties in the results quality assessment.
-Therefore this section is formed in the order of increasing complexity of used methods and decreasing evaluation capabilities.
+Therefore this section if formed in the order of decreasing number of applicable methods (due to its limitations).
+% Therefore this section is formed in the order of increasing complexity of used methods and decreasing evaluation capabilities.
 The following methods are being evaluated in either event:
 \begin{enumerate}
-    \item Vanilla \textit{NSVF} method \cite{liu2021neural} (described in \Cref{subsec:NSVF})
-    \item Explicit colocated scheme (\textit{ExCol}) \cite{bi2020neural, liu2021neural}, which is explained in details in \Cref{subsec:NRF}
-    and is a lighter version of \textit{explicit brute-force scheme}
-    due to reuse of viewing sample points
-    \item Explicit brute-force scheme (\textit{ExBF}) (described in \Cref{sec:explicit_scheme})
-    \item Explicit approximated scheme (\textit{ExVA}), which is the \textit{explicit brute-force scheme}
-    that uses the in-voxel approximation from \Cref{sec:invoxel}
-    \item Implicit approximated scheme (\textit{ImVA}) \im{most likely not}
+    \item Vanilla \textit{NSVF} method \cite{liu2021neural} (described in \Cref{subsec:NSVF}).
+    The fastest implementation (among other listed methods),
+    however can only be processed with static light dataset.
+    \item \textbf{Ex}plicit \textbf{Col}ocated scheme (\textit{ExCol}) \cite{bi2020neural, liu2021neural}, which is explained in details in \Cref{subsec:NRF}.
+    This is a 'lighter' version of \textit{explicit brute-force scheme}
+    due to reuse of viewing sample points.
+    The second fastest implementation as it does only contain
+    a small overhead of evaluating BRDF instead of directly predicting colors.
+    However, similarly to \textit{NSVF} can only be evaluated on one type of dataset: with colocated light setting.
+    \item \textbf{Ex}plicit \textbf{B}rute-\textbf{F}orce scheme (\textit{ExBF}) (described in \Cref{sec:explicit_scheme}).
+    The generalization of \textit{ExCol}.
+    The slowest implementation with the highest memory demand,
+    highly impractical especially with the aforementioned hardware setup.
+    \item \textbf{Ex}plicit \textbf{V}oxel-\textbf{A}pproximated scheme (\textit{ExVA}), which is the \textit{explicit brute-force scheme}
+    that uses the in-voxel approximation from \Cref{sec:invoxel}.
+    Implementation involves the same complexity as \textit{ExCol},
+    however also includes light rays octree intersection overhead,
+    which makes it slower than \textit{ExCol}.
+    % \item Implicit approximated scheme (\textit{ImVA}) \im{most likely not}
 \end{enumerate}
 
 
@@ -284,7 +296,7 @@ The following methods are being evaluated in either event:
 % \catchmethodsdatasets
 \input{tex/objects/table_light_settings}
 
-\Cref{tab:methods_datasets} shows the applicability of different types of datasets to methods that are used in experiments.
+Please refer to \Cref{tab:methods_datasets} for the visual representation of applicability of different types of datasets to methods mentioned above methods.
 
 
 
@@ -308,7 +320,7 @@ Hence the main focus here is to compare colocated scheme with the in-voxel appro
 % \catchcolocmetrics
 \input{tex/objects/coloc_metrics}
 
-\Cref{tab:colocated_metrics} gives an overview of quantitative results of evaluation methods on colocated datasets.
+An overview of quantitative results of evaluation methods on colocated datasets is presented in \Cref{tab:colocated_metrics}.
 Four aforementioned metrics are calculated on renders over the validation dataset.
 The \textit{ExCol} scheme is the fastest among specified methods,
 since it does not evaluate any overhead related to sampling light rays
@@ -409,17 +421,39 @@ can generalize to some arbitrary light position while only being trained on coin
 the quality of this generalization is still doubtful.
 Datasets that were created with the arbitrary light setting
 contain denser light-view sample space than those created with colocated setting.
-This results in a higher quality of novel-light synthesized views.
-\Cref{tab:arb_dynamic_light} contains five images, evaluated from the same novel (has not been used during training) camera position.
-Each of these images is lit from the light source that is located at the novel light position.
-Light rays to the center of the scene form with a view ray to the center of scene angles
-that are denoted under each column of images.
-It can be clearly seen that \textit{ExVA} method outperforms \textit{ExCol}.
-The major difference is in the capability of rendering shadows (non-zero angles)
-while for the zero-angle view both methods perform with approximately the same quality.
+This results in higher quality of novel-light synthesized views.
+\Cref{tab:arb_dynamic_light} contains five columns,
+which contain images evaluated from the same novel (has not been used during training) camera position: $\phi = 0$ and $\theta = 0$.
+Each of these images is lit from the light source,
+which novel locations are different along different columns.
+The light source's location is defined by two angles:
+inclination angle $\phi = \const$ and azimuthal angle $\theta$
+that takes values from -90\textdegree to 90\textdegree.
+In central column the light source is co-located with camera,
+which completely coincides with the light setting used for training \textit{ExCol}
+(although this view is novel for the method).
+Both camera and light positions are the same for renders inside each column.
 Please note that for this experiment \textit{ExCol} has been trained on the dataset with colocated light setting
 whilst \textit{ExVA} has been trained on the dataset with arbitrary light setting.
 
+
+It can be clearly seen that \textit{ExVA} method outperforms \textit{ExCol}.
+The major difference is in the capability of rendering shadows (non-zero angles)
+while for the zero-angle view both methods perform with approximately the same quality.
+However, the sigma field of \textit{ExVA} did not converge completely on the front part of base of the model.
+\textit{ExCol} renders this part without any difficulties.
+This difference is most likely due to more consistent lighting of this part
+captured in the colocated light dataset comparing to those in arbitrary light dataset.
+Another noticable difference is that \textit{ExVA} better handles fine details on the scene.
+This can be explained by the fact that these fine features appear
+in the arbitrary light dataset its own shadows casted in different directions (depending on light source location),
+which encourages the density predictor to better distinguish geometrical features from appearance effects.
+Note that due to the colocated nature of training dataset for the \textit{ExCol}
+the model does not happen to meet any shadows at all.
+Another inquiring tendency is how drastically quality of the \textit{ExCol} predictions drops
+when the azimuthal angle difference between camera and light source is increasing.
+This can also be explained by an infinitely (\im{1 out of infinity.. or is it to brave expression? :)})
+sparse light-view space of the colocated light dataset.
 
 
 

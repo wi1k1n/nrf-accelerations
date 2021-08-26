@@ -135,13 +135,36 @@ spherical basis functions - spherical harmonics (SH) \cite{mohlenkamp1997spheric
 The SH coefficients together with volume density values are then used
 for building the PlenOctree.
 
+\cite{rebain2020derf} split the scene into parts by applying spatial decomposition.
+These parts are then processed with smaller networks, which allows to achieve near-constant inference time.
+The outputs of these networks are later composited using Painter's algorithm \cite{deBerg2008}.
+
 Another way to speed NeRFs up is to rethink the integral estimation using Monte Carlo sampling.
 AutoInt \cite{lindell2021autoint} estimate the rendering integral from NeRF
 by building grad networks that can estimate any definite integral in two evaluations of the network.
 With this approach the training time can be 10 times smaller comparing to original NeRF.
 
 Another branch of works focuses on extending the relighting limitations for NeRF-based approaches.
-...
+\cite{bi2020neural} reformulates the rendering equation for considering a single light source on the scene.
+Although, in general this is highly impractical, one specific case
+when the light source is co-located with the camera can be evaluated
+without any sufficient overhead comparing to the NeRF work.
+This approach implies the appearance to be modelled using any differentiable BRDF model.
+In former work \cite{bi2020deep} the authors reconstructs discrete reflectance volumes,
+which results in its main limitation of fixed volume resolution.
+
+
+
+\cite{Zhang2021lighttransport} introduce a semi-parametric approach
+for learning light transports using neural representations.
+Authors use special hardware setup for capturing training images under known illumination.
+The approach consists of observation and query paths.
+The observation path encodes K nearby observations into multiscale features,
+which are then concatenated and used in the query path as feature activations.
+The query path predicts residual maps from novel light and view directions
+and resample the texture-space rendering back to the camera space
+where it is supervised by the ground truth images.
+
 
 
 
