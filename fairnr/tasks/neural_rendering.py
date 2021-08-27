@@ -417,7 +417,11 @@ class SingleObjLightRenderingTask(SingleObjRenderingTask):
             path_gen=get_trajectory(args.render_path_style)(
                 **eval(args.render_path_args)
             ),
-            moving_light=args.render_path_light,
+            path_light_gen=get_trajectory(args.render_light_path_style)(
+                **eval(args.render_light_path_args)
+            ),
+            speed_light=args.render_light_angular_speed,
+            # moving_light=args.render_path_light,
             targets_path=args.targets_path,
             at=eval(args.render_at_vector),
             up=eval(args.render_up_vector),

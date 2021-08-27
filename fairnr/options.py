@@ -49,8 +49,13 @@ def add_rendering_args(parser):
     group.add_argument("--render-views", type=str, default=None, 
                         help="views sampled for rendering, you can set specific view id, or a range")
 
-    group.add_argument('--render-path-light', action='store_true',
-                        help='either the light or the camera is moving')
+    # group.add_argument('--render-path-light', action='store_true',
+    #                     help='either the light or the camera is moving')
+    group.add_argument("--render-light-path-style", default="circle", choices=["circle", "zoomin_circle", "zoomin_line"], type=str)
+    group.add_argument("--render-light-path-args", default="{'radius': 2.5, 'h': 0.0}",
+                       help="specialized arguments for rendering light paths")
+    group.add_argument("--render-light-angular-speed", default=1, type=float, metavar="D",
+                       help="angular speed when rendering light around the object")
     group.add_argument('--targets-path', type=str, default=None,
                         help='path to folder with target images')
     group.add_argument('--render-dry-run', action='store_true',

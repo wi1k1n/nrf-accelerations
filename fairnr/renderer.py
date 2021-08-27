@@ -130,7 +130,7 @@ class NeuralRenderer(object):
         else:
             raise NotImplementedError
 
-    def prepare_sample(self, shape, smpl, **kwargs):
+    def prepare_sample(self, shape, smpl, step, next_step, **kwargs):
         return smpl
 
     @torch.no_grad()    
@@ -187,7 +187,7 @@ class NeuralRenderer(object):
                 }
                 # if 'extrinsics_pl' in sample:
                 #     _sample.update({'extrinsics_pl': _sample['extrinsics']})
-                _sample = self.prepare_sample(shape, _sample, **kwargs)
+                _sample = self.prepare_sample(shape, _sample, step, next_step, **kwargs)
                 with data_utils.GPUTimer() as timer:
                     if not self.dry_run:
                         outs = model(**_sample)
@@ -284,7 +284,9 @@ class NeuralRenderer(object):
 
 class LightNeuralRenderer(NeuralRenderer):
     def __init__(self, *args, **kwargs):
-        self.moving_light = kwargs.pop('moving_light', False)
+        # self.moving_light = kwargs.pop('moving_light', False)
+        self.path_light_gen = kwargs.pop('path_light_gen', trajectory.circle())
+        self.speed_light = kwargs.pop('speed_light', 2)
         self.targets_path = kwargs.pop('targets_path', None)
         super().__init__(*args, **kwargs)
 
@@ -292,23 +294,39 @@ class LightNeuralRenderer(NeuralRenderer):
     def generate(self, models, sample, **kwargs):
         return super().generate(models, sample, **kwargs)
 
-    def generate_rays(self, *args, **kwargs):
-        return super().generate_rays(*args, **kwargs)
+    def generate_rays(self, t, intrinsics, img_size, inv_RT=None, action='none'):
+        return super().generate_rays(t, intrinsics, img_size, inv_RT, action)
 
-    def prepare_sample(self, shape, sample, **kwargs):
-        if self.moving_light:
-            _, inv_RT = self.generate_rays(0,
-                                        sample['intrinsics'][shape],
-                                        sample['size'][shape, 0],
-                                        self.test_poses[0] if self.test_poses is not None else None)
-            sample.update({'extrinsics_pl': sample['extrinsics']})
-            sample.update({'extrinsics': inv_RT.unsqueeze(0).expand(self.beam, -1, -1).unsqueeze(0)})
-        else:
-            _, inv_RT = self.generate_rays(0,
-                                        sample['intrinsics'][shape],
-                                        sample['size'][shape, 0],
-                                        self.test_poses[0] if self.test_poses is not None else None)
-            sample.update({'extrinsics_pl': inv_RT.unsqueeze(0).expand(self.beam, -1, -1).unsqueeze(0)})
+    def prepare_sample(self, shape, sample, step, next_step, **kwargs):
+        # Calculate light trajectory
+        inv_RTs = []
+        for t in range(step, next_step):
+            cam_pos = torch.tensor(self.path_light_gen(t * self.speed_light / 180 * np.pi, ),
+                        device=sample['intrinsics'][shape].device, dtype=sample['intrinsics'][shape].dtype)
+            # cam_rot = geometry.look_at_rotation(cam_pos, at=self.at, up=self.up, inverse=True, cv=True)
+
+            # inv_RT = cam_pos.new_zeros(4, 4)
+            # inv_RT[:3, :3] = cam_rot
+            inv_RT = torch.eye(4, device=cam_pos.device, dtype=cam_pos.dtype)
+            inv_RT[:3, 3] = cam_pos
+            # inv_RT[3, 3] = 1
+            inv_RTs.append(inv_RT)
+        sample.update({'extrinsics_pl': torch.stack(inv_RTs, 0).unsqueeze(0)})
+
+
+        # if self.moving_light:
+        #     _, inv_RT = self.generate_rays(0,
+        #                                 sample['intrinsics'][shape],
+        #                                 sample['size'][shape, 0],
+        #                                 self.test_poses[0] if self.test_poses is not None else None)
+        #     sample.update({'extrinsics_pl': sample['extrinsics']})
+        #     sample.update({'extrinsics': inv_RT.unsqueeze(0).expand(self.beam, -1, -1).unsqueeze(0)})
+        # else:
+        #     _, inv_RT = self.generate_rays(0,
+        #                                 sample['intrinsics'][shape],
+        #                                 sample['size'][shape, 0],
+        #                                 self.test_poses[0] if self.test_poses is not None else None)
+        #     sample.update({'extrinsics_pl': inv_RT.unsqueeze(0).expand(self.beam, -1, -1).unsqueeze(0)})
         return sample
 
     def save_additional(self, shape, k, step, sample, output_path, image_name, **kwargs):

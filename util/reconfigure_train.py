@@ -11,9 +11,9 @@ SAVE_FILE = True
 
 DATA = "guitar_static_exr"
 NAME = ""  # postfix for dataset name
-RES = "256x256"
-PIXELS_PER_VIEW = '80'
-VIEW_PER_BATCH = '2'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
+RES = "128x128"
+PIXELS_PER_VIEW = '128'
+VIEW_PER_BATCH = '8'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
 
 USE_OCTREE = True
 CHUNK_SIZE = '2'  #'256'  # > 1 to save memory to time
@@ -41,7 +41,7 @@ NUM_WORKERS = '8'  # '0'
 HDRFLIP = True
 PREPROCESS = 'log'  # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #
-MAX_COLOR = '0.8'  # 0.8 - rocket/guitar/lego/hotdog; 5.0 - sphere; 0.3 - drums; 0.6 - lego-random
+MAX_COLOR = '1.0'  # 0.8 - rocket/guitar/lego/hotdog; 5.0 - sphere; 0.3 - drums; 0.6 - lego-random
 GAMMA_CORRECTION = '2.0'  # 2.0 - rocket/guitar/drums; 1.0 - sphere/lego; 1.5 - hotdog
 BG_COLOR = '0.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
 SIGMA_NOISE = True
@@ -91,9 +91,9 @@ ARCH = "mlnrfexva_base"
 PREDICT_L = True
 VOXEL_SIGMA = 0.5
 # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
-LIGHT_INTENSITY = '40.0'  # 500 excol; rocket_exr -> 5k Watt
+# LIGHT_INTENSITY = '40.0'  # 500 excol; rocket_exr -> 5k Watt
 # LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
-# LIGHT_INTENSITY = '300.0'  # guitar_exr -> 0.5k Watt
+LIGHT_INTENSITY = '50.0'  # guitar_exr -> 0.5k Watt
 # LIGHT_INTENSITY = '200.0'  # 20 exbf/exva; lego -> 0.7k Watt
 # LIGHT_INTENSITY = '500.0'  # hotdog -> 0.7k Watt
 TEXTURE_LAYERS = '5'

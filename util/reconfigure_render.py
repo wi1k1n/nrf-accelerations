@@ -7,27 +7,27 @@ COPY2CLIPBOARD = False
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "lego_coloc_exr"
-NAME = "u4105"  # postfix for dataset name
-RENDER_OUTPUT = "output"  # output if empty
+DATA = "guitar_static_exr"
+NAME = "u4103"  # postfix for dataset name
+RENDER_OUTPUT = "test2"  # output if empty
 RES = "256x256"
-RENDER_PATH_LIGHT = True  # True - light source is moving, False - camera is moving
+# RENDER_PATH_LIGHT = True  # True - light source is moving, False - camera is moving
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/'\
 # 			   + DATA + '_' + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
 # TARGETS_PATH = 'datasets/' + DATA + ('_' if NAME else '') + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
-TARGETS_PATH = 'datasets/' + DATA + ('_' if NAME else '') + 'target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
+TARGETS_PATH = 'datasets/' + DATA + ('_' if NAME else '') + 'target_' + ('light' if True else 'cam') + '/target'
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/guitar_coloc_exr_target_cam/target'
 # TARGETS_PATH = '/tmp/mazlov/blender/guitar_coloc_exr_target_cam/target'
 DRY_RUN = False  # only create camera/light positions and do not evaluate model
 
 CHUNK_SIZE = '2'
-RENDER_BEAM = '1'  # should be an even divisor of NUM_FRAMES TODO: fix it
-NUM_WORKERS = '0'
+RENDER_BEAM = '2'  # should be an even divisor of NUM_FRAMES TODO: fix it
+NUM_WORKERS = '8'
 
 PREPROCESS = 'log' # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #
 MAX_COLOR = '0.8'  # 0.8 - rocket/guitar/lego/hotdog; 5.0 - sphere; 0.3 - drums; 0.6 - lego-random
-GAMMA_CORRECTION = '1.0'  # 2.0 - rocket/guitar/drums; 1.0 - sphere/lego; 1.5 - hotdog
+GAMMA_CORRECTION = '2.0'  # 2.0 - rocket/guitar/drums; 1.0 - sphere/lego; 1.5 - hotdog
 BG_COLOR = '0.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
 
 TASK = 'single_object_light_rendering'
@@ -60,13 +60,13 @@ TRACE_NORMAL = False
 # LAMBERT_ONLY = False
 # # <!/-- Explicit model with ignoring light interaction -->
 
-# <!-- Explicit model with NRF (colocated!) light interaction -->
-ARCH = "mlnrfnrf_base"
-# <!/-- Explicit model with ignoring light interaction -->
-
-# # <!-- Explicit model with VoxelApproximation light interaction -->
-# ARCH = "mlnrfexva_base"
+# # <!-- Explicit model with NRF (colocated!) light interaction -->
+# ARCH = "mlnrfnrf_base"
 # # <!/-- Explicit model with ignoring light interaction -->
+
+# <!-- Explicit model with VoxelApproximation light interaction -->
+ARCH = "mlnrfexva_base"
+# <!/-- Explicit model with ignoring light interaction -->
 
 # # <!-- Explicit model with Brute Force light interaction -->
 # ARCH = "mlnrfexbf_base"
@@ -85,20 +85,26 @@ MODEL_PATH = SAVE + '/' + MODEL + '/' + CHECKPOINT
 # # RENDER_PATH_ARGS = '{\'radius\':1.5,\'h\':3,\'o\':(-0.1,0.05,1.25)}'  # top diagonal view
 # RENDER_PATH_ARGS = '{\'radius\':4.5,\'h\':0.0,\'o\':(-0.1,0.05,1.25)}'
 # RENDER_AT_VECTOR = '"(-0.1,0.05,1.25)"'
-# # Guitar
-# RENDER_PATH_ARGS = '"{\'radius\':0.8,\'h\':1.0,\'o\':(0,-0.06,0.5)}"'
-# RENDER_AT_VECTOR = '"(0, -0.06, 0.575)"'
+# Guitar
+RENDER_AT_VECTOR = '"(0, -0.06, 0.575)"'
+# RENDER_PATH_ARGS = '"{\'radius\':0.8,\'h\':1.0,\'o\':(0,-0.06,0.5),\'t0\':0}"'
+# RENDER_LIGHT_PATH_ARGS = '"{\'radius\':0.8,\'h\':1.0,\'o\':(0,-0.06,0.5),\'t0\':0}"'
+RENDER_PATH_ARGS = '"{\'radius\':1.7,\'h\':0.5,\'o\':(0,-0.06,0.5),\'t0\':-90}"'
+RENDER_LIGHT_PATH_ARGS = '"{\'radius\':1.7,\'h\':0.5,\'o\':(0,-0.06,0.5),\'t0\':-90}"'
 # ## BRDF_Sphere
 # RENDER_PATH_ARGS = '{\'radius\':4,\'h\':2,\'o\':(0,0,0)}'
 # RENDER_AT_VECTOR = '"(0,0,0)"'
-# Lego
-RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.0,\'o\':(0,0,0)}"'
-# RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':-1.5,\'o\':(0,0,0)}"'
-RENDER_AT_VECTOR = '"(0, 0, 0)"'
+# # Lego
+# RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.0,\'o\':(0,0,0),\'t0\':-45}"'
+# # RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':-1.5,\'o\':(0,0,0)}"'
+# RENDER_AT_VECTOR = '"(0, 0, 0)"'
+# RENDER_LIGHT_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.0,\'o\':(0,0,0),\'t0\':0}"'
 
+NUM_FRAMES = '24' #180
 RENDER_PATH_STYLE = 'circle'
-NUM_FRAMES = '12' #180
-RENDER_SPEED = '30'
+RENDER_SPEED = '0'
+RENDER_LIGHT_PATH_STYLE = 'circle'
+RENDER_LIGHT_SPEED = '15'
 
 
 RAYMARCHING_TOLERANCE = '0.01'
@@ -125,13 +131,16 @@ if DRY_RUN:
 parameters += '\n--path ' + MODEL_PATH
 parameters += '\n--task ' + TASK
 if not RENDER_OUTPUT: RENDER_OUTPUT = "output"
-parameters += '\n--render-output ' + SAVE + '/' + ARCH + '/' + RENDER_OUTPUT + ('_light' if RENDER_PATH_LIGHT else '_cam')
+parameters += '\n--render-output ' + SAVE + '/' + ARCH + '/' + RENDER_OUTPUT + ('_light' if True else '_cam')
 parameters += '\n--render-path-style ' + RENDER_PATH_STYLE
 parameters += '\n--render-path-args ' + RENDER_PATH_ARGS
 parameters += '\n--render-at-vector ' + RENDER_AT_VECTOR
 parameters += '\n--render-angular-speed ' + RENDER_SPEED
-if RENDER_PATH_LIGHT:
-	parameters += '\n--render-path-light'
+# if RENDER_PATH_LIGHT:
+# 	parameters += '\n--render-path-light'
+parameters += '\n--render-light-path-style ' + RENDER_LIGHT_PATH_STYLE
+parameters += '\n--render-light-path-args ' + RENDER_LIGHT_PATH_ARGS
+parameters += '\n--render-light-angular-speed ' + RENDER_LIGHT_SPEED
 parameters += '\n--render-num-frames ' + NUM_FRAMES
 if TARGETS_PATH:
 	parameters += '\n--targets-path ' + TARGETS_PATH

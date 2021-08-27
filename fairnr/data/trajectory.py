@@ -24,13 +24,14 @@ def get_trajectory(name):
 
 @register_traj('circle')
 def circle(radius=3.5, h=0.0, axis='z', t0=0, r=1, o=(0,0,0)):
+    ra = lambda t: t * np.pi / 180.0
     # o - origin point
     if axis == 'z':
-        return lambda t: [radius * np.cos(r * t+t0) + o[0], radius * np.sin(r * t+t0) + o[1], h + o[2]]
+        return lambda t: [radius * np.cos(r * t+ra(t0)) + o[0], radius * np.sin(r * t+ra(t0)) + o[1], h + o[2]]
     elif axis == 'y':
-        return lambda t: [radius * np.cos(r * t+t0) + o[0], h + o[1], radius * np.sin(r * t+t0) + o[2]]
+        return lambda t: [radius * np.cos(r * t+ra(t0)) + o[0], h + o[1], radius * np.sin(r * t+ra(t0)) + o[2]]
     else:
-        return lambda t: [h + o[0], radius * np.cos(r * t+t0) + o[1], radius * np.sin(r * t+t0) + o[2]]
+        return lambda t: [h + o[0], radius * np.cos(r * t+ra(t0)) + o[1], radius * np.sin(r * t+ra(t0)) + o[2]]
 
 
 @register_traj('zoomin_circle')
