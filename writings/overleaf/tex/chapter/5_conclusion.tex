@@ -1,11 +1,81 @@
-
 \chapter{Conclusion}
 \label{chap:conclusion}
 
-This chapter concludes
+This thesis focuses on a comprehensive problem of 3D scene reconstruction.
+The existing prior works propose different approaches to handle this challenging task,
+however most of them do not give enough quality and performance to be practical.
+This work directly addresses the limitations of NeRF-based \cite{mildenhall2020nerf} methods
+and elaborates on their extension to also handle Reflectance Fields similarly as proposed by \cite{bi2020neural}.
+
+
+\section{Contribution}
+
+The main efficiency improvement is connected with using the Neural Sparse Voxel Fields \cite{liu2021neural},
+i.e. voxel octree structure together with the encoding
+based on the feature vectors that are stored in voxel corners
+and corresponding framework consisting of such procedures as \textit{self-puning} and \textit{refinement}.
+This approach is fused with reformulation of the rendering equation (\Cref{eq:nerf_function})
+to consider a single point light source that illuminates the scene as proposed by \cite{bi2020neural}.
+This method is called \textit{ExCol} and is the fastest implementation
+(among other proposed solutions) that is able to reconstruct the scene under novel light-view conditions.
+This scheme nonetheless retains the limitation of the dataset that can be used for training:
+it should only consist of co-located light sources
+(e.g. sharing the same location with the camera in each image sample).
+
+The 'brute-force scheme' (\textit{ExBF}) is proposed as an \textit{ExCol} generalization
+that is able to handle an arbitrary light training data
+(i.e. when light source is not restricted to be located at the same position with the camera).
+However, this method implies casting many light rays that in turn have to be sampled and evaluated by the model.
+This method can be considered applicable, especially on some powerful hardware setups with multiple high-end GPUs,
+and comparing with general formulation of the NRF method \cite{bi2020neural},
+the complete impracticality is alleviated and better results can be achieved.
+However, it is still highly memory-exhausting, slow when using within accessible hardware setups and thus fairly unstable on training.
+
+Therefore, the approximation to this scheme that leverages the usage of voxel octree structure is proposed.
+The 'brute-force scheme' with the in-voxel approximation is referred as \textit{ExVA}.
+The most computationally expensive part of \textit{ExBF} is the process of
+obtaining volume densities for the light rays.
+The entire approximation idea is driven by the assumption
+that light rays play the secondary role in the contribution to the finally observed value.
+Under this assumption it is claimed that volume transmittance for the light rays
+can be estimated by the distance of travel of the light rays inside the octree voxels (\Cref{eq:light_ray_transmittance}).
+This allows to almost completely eliminate any overheads comparing to \textit{ExCol}.
+Only light rays intersection with the octree is left,
+which is efficiently handled using AABB ray intersection algorithm.
+
+The experiments are held to compare performance of corresponding schemes.
+Although \textit{ExBF} scheme is the most general and considered to produce the most accurate results,
+it appears with a questionable applicability and does not impress with the achieved results.
+The \textit{ExVA} scheme shows appealing results with approximately the same quality as the accurate and fast \textit{ExCol}.
+However, \textit{ExCol} implies no limitation for the training dataset,
+which is a severe drawback of the \textit{ExCol} method.
+In general case comparison of the novel light-view synthesis \textit{ExVA} 
+even outperforms \textit{ExCol} by leveraging denser light-view space of the arbitrary light dataset.
+
+
+
+\section{Extension points}
+
+The proposed solutions already achieves considerable improvements in quality and performance.
+It can be further developed with a perspective for accelerating training and inference phases
+as well as for improving the quality of the predictions.
+
+One way is to adopt the technique proposed by \cite{rebain2020derf},
+which applies Voronoi-based decomposition for splitting the scene inte sub-scenes
+and then applying multiple networks on these parts.
+With this done training time is expected to decrease by 2-3 times.
+
+Another extension can be performed by incorporating the auto integration technique proposed by \cite{lindell2021autoint},
+which increases the speed of the rendering integral estimation.
+In original work the increase of efficiency is up to a factor of 10.
+
+The usage of different BRDF model can be considered for achieving better results.
+For example, in this work the GGX distribution \cite{walter2007microfacet}
+is used for specular term of the microfacet BRDF model.
+However, the better results might be obtained by using the symmertric variant of distribution - SGGX \cite{heitz2015sggx}.
+
+\im{using more light sources?? (e.g. 2 point lights would create even more denser view-light space, while i think \textit{ExVA} is still computationally able to deal with it)}
 
 
 
 % \lipsum[1-15]
-
-

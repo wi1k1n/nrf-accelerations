@@ -232,6 +232,7 @@ The inverse-log-transform is performed on the model outputs at the post-processi
 
 
 \section{Metrics}
+\label{sec:metrics}
 
 For evaluation of the results the following metrics have been used:
 \begin{enumerate}
@@ -359,12 +360,21 @@ so the training only consists of 50k iterations.
 \input{tex/objects/coloc_results}
 
 Some selected views from these experiments are presented for the comparison in \Cref{tab:coloc_allresults}.
-The \textit{ExBF} results are originally in 64px resolution and scaled up for clearer comparison.
-The main focus is to compare results of \textit{ExCol} and \textit{ExVA} schemes.
-The approximation scheme seems to produce results on the same level of quality as the colocated method.
+The main focus on this figure is to compare results of \textit{ExCol} and \textit{ExVA} schemes.
+The \textit{ExBF} did not show high quality results.
+The main limitation is that this scheme is very memory-demanding and fairly slow.
+Images in 64px resolution have been used for the \textit{ExBF} scheme.
+The synthesized views are also in the same resolution and scaled up for clearer comparison.
+For Lego and Hotdog datasets \textit{ExBF} failed some parts of scene geometry 
+(the corresponding voxels have been removed during the pruning stage).
+When comparing \textit{ExCol} with \textit{ExVA},
+the approximation scheme produces results on the same level of quality as the colocated method.
+One can find \textit{ExCol} to reproduce views with more details,
+however the differences are truly slight and can be the deviation between training iterations.
 Both schemes are occasionally lacking specularities (rocket left)
-and fail reproducing very fine details of the Lego dataset.
-However, this can be the result of underfitting of this exact experiment.
+and failing to reproduce very fine details of the Lego dataset.
+The very bright spot on the Lego renders (bottom) is also reproduced incorrectly,
+however this is likely due to the model being underfitted.
 
 
 
@@ -452,7 +462,7 @@ Note that due to the colocated nature of training dataset for the \textit{ExCol}
 the model does not happen to meet any shadows at all.
 Another inquiring tendency is how drastically quality of the \textit{ExCol} predictions drops
 when the azimuthal angle difference between camera and light source is increasing.
-This can also be explained by an infinitely (\im{1 out of infinity.. or is it to brave expression? :)})
+This can also be explained by an infinitely (\im{1 out of infinity.. or is it too brave expression? :)})
 sparse light-view space of the colocated light dataset.
 
 
@@ -479,7 +489,20 @@ sparse light-view space of the colocated light dataset.
 Static light setting is the only type of datasets that can be used
 for training the original NSVF method,
 due to the limitation of the illumination to be static.
-All other methods not only can process this dataset but also render the scene under novel light conditions.$\sup$
+However, this type of dataset appear to be challenging for the novel light-view synthesis task.
+Although, the sampling in the light-view space is denser comparing with the colocated setting
+where no other than coincided light and view rays exist,
+the scene is lit with the light from only one side.
+This poorly affects the shadowed side as it always appears in the dataset darkened.
+The underlying effect is the worse capabilities of the model to converge on the sigma field,
+which plays a significant role in the final appearance estimation.
+The \textit{ExVA} and \textit{ExBF} models are highly unstable in training on this type of datasets
+and cannot reliably get trained.
+
+This problem is exaggerated by the consideration of using a single light source to illuminate the scene
+that comes with formulating the rendering equation \cref{eq:integral_estimation_nrf}.
+In the NeRF and NSVF methods the global static illumination is considered,
+which is not limited my only one light source and can be very complex.
 
 \im{Figure N} shows results ...
 
@@ -489,14 +512,15 @@ All other methods not only can process this dataset but also render the scene un
 \section{Discussion}
 
 \begin{enumerate}
-    \item HDR inputs: preprocessing (log-transform)
+    % \item HDR inputs: preprocessing (log-transform)
     \item Background color problem?
     -- NSVF used way bigger batch size (32 images instead of 2 in my case) and 2048 rays in each image (80 in my case)
-    \item In-Voxel approximation: different sigma strategies
+    % \item In-Voxel approximation: different sigma strategies
     \item Implicit scheme with tangential coordinate system
 \end{enumerate}
 
 \im{inference time estimates}
+
 \im{show albedo/roughness/normals}
 
 

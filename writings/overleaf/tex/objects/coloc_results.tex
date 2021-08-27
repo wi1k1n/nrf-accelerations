@@ -24,7 +24,7 @@
         \begin{tabular}{cc}
             \includegraphics[width=0.1\textwidth]{figures/results/col_set/guitar0_exbf_32k.png} & \includegraphics[width=0.1\textwidth]{figures/results/col_set/guitar8_exbf_32k.png}
         \end{tabular} \\[-5pt]
-        & 150k & 125k & 30k \\
+        & 150k & 150k & 30k \\
         
         
         %%%%% ROCKET %%%%%
@@ -69,7 +69,7 @@
             \includegraphics[width=0.2\textwidth]{figures/results/col_set/lego9_exbf_62k_voxeldefect.png} \\[-6pt]
             \includegraphics[width=0.2\textwidth]{figures/results/col_set/lego1_exbf_62k_voxeldefect.png}
         \end{tabular} \\[-5pt]
-        & 60k & 50k & 50k \\
+        & 50k & 50k & 50k \\
         
         %%%%% HOTDOG %%%%%
         \includegraphics[width=0.2\textwidth]{figures/results/col_set/hotdog2_targ_256px.png}
@@ -80,12 +80,11 @@
         &
         \includegraphics[width=0.2\textwidth]{figures/results/col_set/hotdog2_exbf_68k.png}
         \\ [-5pt]
-        & \im{targ} & \im{targ} & \im{targ} \\
+        & 70k & 70k & 70k \\
         
 
     \end{tabular*}
-    \caption{The overview of some
-    of the novel view synthesis results achieved with our methods.
+    \caption{The overview of some novel view synthesis results achieved with our methods trained on colocated light setting datasets.
     Columns correspond to the schemes that have been used to obtain results.
     The number of training iterations is denoted below each result to have better understanding about model convergence.
     \textit{ExCol} and \textit{ExVA} schemes have been processed with 256px images
@@ -93,7 +92,8 @@
     The \textit{ExCol} and \textit{ExVA} methods generally produce similar results.
     The colocated scheme is able to reproduce fine details slightly better.
     \textit{ExBF} handles poorly geometry of Lego and Hotdog datasets,
-    which results in some lacking parts of the scene.
+    which results in some lacking parts of the scene
+    (corresponding voxels have been pruned).
     The \textit{ExBF} are generally underfitted as training is very slow and is hard in terms of hardware.}
     \label{tab:coloc_allresults}
 \end{figure}

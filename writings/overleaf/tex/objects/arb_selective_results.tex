@@ -38,7 +38,18 @@
         
 
     \end{tabular*}
-    \caption{\im{Fix width and add description!}}
+    \caption{The overview of some novel light-view synthesis results
+    achieved with our methods trained on arbitrary light setting Lego dataset for 100k iterations.
+    Rows correspond to one specific light-view location.
+    Central column contains target images,
+    synthesized images are on the sides from central column.
+    First and last columns contain difference images
+    calculated between corresponding predictions and target images using HDRFlipLoss (\Cref{sec:metrics}).
+    256px images have been used for \textit{ExVA} scheme,
+    while \textit{ExBF} method only used 64px images due to hardware limitations.
+    Renders from the third row have been post-processed (gamma-correction with $\gamma = 2.5$ and scaling)
+    since the original view is very dark with very bright spot from the reflection of the light source.
+    }
     \label{tab:arb_selective_results}
 \end{figure}
 \endgroup

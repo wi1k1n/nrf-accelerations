@@ -511,6 +511,7 @@ but should give a fair estimation for the light ray transmittances.
 In this case the travelled distance $d_{V_k}$ of the ray inside voxel $V_k$
 can be used to weigh some value $\hat{\sigma_{V_k}}$ (\Cref{fig:samplings} f):
 \begin{equation}
+    \label{eq:light_ray_transmittance}
     \tau_l(p_i, l) = \exp \sum_{V_k \in \mathbb{V}^*} -\hat{\sigma}_{V_k} \cdot d_{V_k},
 \end{equation}
 where $\tau_l(p_i, l)$ is the light transmittance value at the view sample point $p_i$
