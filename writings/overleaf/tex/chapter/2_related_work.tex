@@ -65,7 +65,7 @@ instead of learning voxelized representations
 that results only in fixed resolution.
 
 
-\im{Eigher reference brdf models here, or as it comes to them}
+\im{Either reference brdf models here, or as it comes to them}
 
 
 
@@ -79,7 +79,7 @@ The rendering techniques is used in order to get novel views of the scene.
 To make training possible the rendering process has to be formulated in a differentiable way.
 This allows to use loss functions that minimizes the differences between generated views and ground truth 2D images.
 
-\cite{niemeyer2020differentiable} introduces the volumetric rendering method,
+\cite{niemeyer2020differentiable} introduce the volumetric rendering method,
 that uses the differentiable rendering functions,
 allowing the implicit neural geometry representations to be optimized
 with only 2D supervision instead of requiring 3D ground truth models.
@@ -92,7 +92,7 @@ The appearance is not explicitly modelled, meaning that the view- and lighting-d
 
 The Scene Representations Networks (SRNs) are introduced by \cite{sitzmann2019srns}.
 The recurrent neural networks lie in the core of this approach.
-Camera extrinsics and intrinsics is passed as inputs into the network,
+Camera extrinsics and intrinsics are passed as inputs into the network,
 which is then evaluated for all the samples along the ray,
 trying to decided where the surface is located.
 The network produces the feature vector which is then decoded into a single color value for that point on the surface.
@@ -135,7 +135,7 @@ spherical basis functions - spherical harmonics (SH) \cite{mohlenkamp1997spheric
 The SH coefficients together with volume density values are then used
 for building the PlenOctree.
 
-\cite{rebain2020derf} split the scene into parts by applying spatial decomposition.
+In DeRF approach \cite{rebain2020derf} the scene is separated into parts by applying spatial decomposition.
 These parts are then processed with smaller networks, which allows to achieve near-constant inference time.
 The outputs of these networks are later composited using Painter's algorithm \cite{deBerg2008}.
 
@@ -144,7 +144,23 @@ AutoInt \cite{lindell2021autoint} estimate the rendering integral from NeRF
 by building grad networks that can estimate any definite integral in two evaluations of the network.
 With this approach the training time can be 10 times smaller comparing to original NeRF.
 
+\cite{zhang2020nerf} elaborate on shape-radiance ambiguity
+and propose the NeRF++ approach, which uses a separate NeRF to predict background,
+which increases performance for the unbounded scenes where the dynamic depth range can be very high.
+
+
+
+
 Another branch of works focuses on extending the relighting limitations for NeRF-based approaches.
+\cite{martinbrualla2021nerfw} was one of the first works based on original NeRF approach.
+The proposed technique with more complex model structure
+that separately renders static and transient elements of the scene
+and then being composited.
+The key idea is to optimize uncertainty image, which is used to weigh target image.
+The difference between this target image and the composited outputs is minimized during training.
+The proposed solution is able to outperform original NeRF in terms of quality
+when applied for the datasets with less controlled multi-view collections.
+
 \cite{bi2020neural} reformulates the rendering equation for considering a single light source on the scene.
 Although, in general this is highly impractical, one specific case
 when the light source is co-located with the camera can be evaluated
@@ -152,6 +168,19 @@ without any sufficient overhead comparing to the NeRF work.
 This approach implies the appearance to be modelled using any differentiable BRDF model.
 In former work \cite{bi2020deep} the authors reconstructs discrete reflectance volumes,
 which results in its main limitation of fixed volume resolution.
+
+\cite{nerv2021} with the NeRV approach addresses the relighting problem
+by extending the original NeRF method with a second MLP
+that predicts the visibility field.
+The 'one-bounce' indirect illumination is considered in this approach.
+
+Neural Reflectance Decomposition (NeRD) \cite{boss2020nerd} uses two networks:
+'coarse' Sampling and 'fine' Decomposition networks to decompose the scene into
+spatially varying BRDF material properties.
+The approach does not limit illumination conditions.
+
+In NeRFactor \cite{nerfactor} the surface representation is extracted from the NeRF scene representation.
+Scene geometry is refined simultaneously with the spatially-varying reflectance and environment lighting.
 
 
 
@@ -168,16 +197,17 @@ where it is supervised by the ground truth images.
 
 
 
-\sm{sounds like a good listing}
-{\color{teal}
-\begin{enumerate}
-    \item Explicit/implicit scene representations
-    \item Neural Radiance Field (Scene Representation Networks, Local Light Field Fusion ..->.. NeRF)
-    \item Positional encoding (Fourier Features Let Networks Learn...) % How it is performed and what for? The background research behind this.
-    \item NeRF optimizations (NSVF, FastNeRF, KiloNeRFAutomatic Integration and others)
-    \item Rendering under novel lighting conditions (NRF, DRF, Deep Voxels, NeRD, NeRV, NeRFactor etc)
-\end{enumerate}
-}
+
+% \sm{sounds like a good listing}
+% {\color{teal}
+% \begin{enumerate}
+%     \item Explicit/implicit scene representations
+%     \item Neural Radiance Field (Scene Representation Networks, Local Light Field Fusion ..->.. NeRF)
+%     \item Positional encoding (Fourier Features Let Networks Learn...) % How it is performed and what for? The background research behind this.
+%     \item NeRF optimizations (NSVF, FastNeRF, KiloNeRFAutomatic Integration and others)
+%     \item Rendering under novel lighting conditions (NRF, DRF, Deep Voxels, NeRD, NeRV, NeRFactor etc)
+% \end{enumerate}
+% }
 
 
 % \lipsum[1-15]

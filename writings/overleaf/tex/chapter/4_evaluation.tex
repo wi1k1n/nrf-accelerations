@@ -289,7 +289,11 @@ The following methods are being evaluated in either event:
     Implementation involves the same complexity as \textit{ExCol},
     however also includes light rays octree intersection overhead,
     which makes it slower than \textit{ExCol}.
-    % \item Implicit approximated scheme (\textit{ImVA}) \im{most likely not}
+    \item \textbf{Im}plicit \textbf{N}eural \textbf{F}ield scheme (\textit{ImNF}) (described in \Cref{sec:implicit_scheme}).
+    This method is based on Vanilla NSVF approach
+    that is also provided with the light direction vectors and distance values to the light source.
+    This scheme is considered to implicitly represent the appearance of the scene
+    and can handle on all of the listed dataset settings.
 \end{enumerate}
 
 
@@ -496,17 +500,40 @@ the scene is lit with the light from only one side.
 This poorly affects the shadowed side as it always appears in the dataset darkened.
 The underlying effect is the worse capabilities of the model to converge on the sigma field,
 which plays a significant role in the final appearance estimation.
-The \textit{ExVA} and \textit{ExBF} models are highly unstable in training on this type of datasets
-and cannot reliably get trained.
+This problem affects both schemes \textit{ExVA} and \textit{NSVF}.
+However, the incorrect scene geometry will seriously affect the scene under novel lighting
+as the shadows will move revealing incorrect parts of the geometry prediction.
+% The \textit{ExVA} and \textit{ExBF} models are highly unstable in training on this type of datasets
+% and cannot reliably get trained.
 
 This problem is exaggerated by the consideration of using a single light source to illuminate the scene
 that comes with formulating the rendering equation \cref{eq:integral_estimation_nrf}.
 In the NeRF and NSVF methods the global static illumination is considered,
 which is not limited my only one light source and can be very complex.
 
-\im{Figure N} shows results ...
+\input{tex/objects/static_valid_results}
 
-\im{Conclusion: static for explicit schemes is a very sparse arbitrary, so difficult to train}
+Some comparisons of evaluations of these two methods are presented in \Cref{fig:static_valid_results}.
+The training was performed on static light datasets with 128px images.
+Each row contains evaluation outputs for two methods \textit{ExVA} and \textit{NSVF} in subrows.
+Columns correspond to different types of evaluation outputs.
+\textit{Normal} is the normal map (in the viewing coordinate frame)
+that is calculated from the sigma field.
+\textit{Depth} is the corresponding predicted depth map.
+Last column contains voxel representation of the scene at the end of training.
+
+It can be easily seen that both methods struggle
+with correctly predicting shadowed parts of the scenes
+(holes in hotdog dataset, missing part of base in lego dataset bottom subrow).
+Although the geometry fails, the produced renderings
+of the NSVF method match target images with fairly high accuracy.
+The reason for that is the static lighting, which is 'baked' into the scene appearance.
+In contrary, the \textit{ExVA} method implements BRDF model,
+which relies on geometry and is especially sensitive to correct normal estimation
+on spots with high light contribution (i.e. flares from the light source).
+This behaviour can be seen on hotdog dataset (bottom subrow)
+and guitar dataset (top subrow).
+In general \textit{NSVF} outperforms \textit{ExVA} on this dataset light setting.
 
 
 \section{Discussion}
@@ -521,7 +548,7 @@ which is not limited my only one light source and can be very complex.
 
 \im{inference time estimates}
 
-\im{show albedo/roughness/normals}
+% \im{show albedo/roughness/normals}
 
 
 % \section{Colocated setting flaws}
