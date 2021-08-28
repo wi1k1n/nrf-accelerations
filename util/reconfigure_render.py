@@ -7,10 +7,10 @@ COPY2CLIPBOARD = False
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "lego_static_exr"
-NAME = "u4102"  # postfix for dataset name
+DATA = "lego_random_exr"
+NAME = "u4107"  # postfix for dataset name
 RENDER_OUTPUT = "test"  # output if empty
-RES = "128x128"
+RES = "256x256"
 # RENDER_PATH_LIGHT = True  # True - light source is moving, False - camera is moving
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/'\
 # 			   + DATA + '_' + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
@@ -46,9 +46,9 @@ TRACE_NORMAL = False
 # TASK = 'single_object_rendering'
 # # <!/-- Original NSVF from facebook -->
 
-# # <!-- Implicit model with ignoring light interaction -->
-# ARCH = "mlnrf_base"
-# # <!/-- Implicit model with ignoring light interaction -->
+# <!-- Implicit model with ignoring light interaction -->
+ARCH = "mlnrf_base"
+# <!/-- Implicit model with ignoring light interaction -->
 
 # # <!-- Implicit model with InVoxelApproximation light interaction -->
 # ARCH = "mlnrfiva_base"
@@ -64,9 +64,9 @@ TRACE_NORMAL = False
 # ARCH = "mlnrfnrf_base"
 # # <!/-- Explicit model with ignoring light interaction -->
 
-# <!-- Explicit model with VoxelApproximation light interaction -->
-ARCH = "mlnrfexva_base"
-# <!/-- Explicit model with ignoring light interaction -->
+# # <!-- Explicit model with VoxelApproximation light interaction -->
+# ARCH = "mlnrfexva_base"
+# # <!/-- Explicit model with ignoring light interaction -->
 
 # # <!-- Explicit model with Brute Force light interaction -->
 # ARCH = "mlnrfexbf_base"
@@ -81,30 +81,38 @@ MODEL = ARCH + "v1"
 CHECKPOINT = 'checkpoint_last.pt'  # 'checkpoint_last.pt'
 MODEL_PATH = SAVE + '/' + MODEL + '/' + CHECKPOINT
 
-# # Rocket
+####################################################
+#### Rocket
 # # RENDER_PATH_ARGS = '{\'radius\':1.5,\'h\':3,\'o\':(-0.1,0.05,1.25)}'  # top diagonal view
 # RENDER_PATH_ARGS = '{\'radius\':4.5,\'h\':0.0,\'o\':(-0.1,0.05,1.25)}'
 # RENDER_AT_VECTOR = '"(-0.1,0.05,1.25)"'
-# # Guitar
+####################################################
+#### Guitar
 # RENDER_AT_VECTOR = '"(0, -0.06, 0.575)"'
 # # RENDER_PATH_ARGS = '"{\'radius\':0.8,\'h\':1.0,\'o\':(0,-0.06,0.5),\'t0\':0}"'
 # # RENDER_LIGHT_PATH_ARGS = '"{\'radius\':0.8,\'h\':1.0,\'o\':(0,-0.06,0.5),\'t0\':0}"'
 # RENDER_PATH_ARGS = '"{\'radius\':1.7,\'h\':0.5,\'o\':(0,-0.06,0.5),\'t0\':-90}"'
 # RENDER_LIGHT_PATH_ARGS = '"{\'radius\':1.7,\'h\':0.5,\'o\':(0,-0.06,0.5),\'t0\':-90}"'
-# ## BRDF_Sphere
+####################################################
+#### BRDF_Sphere
 # RENDER_PATH_ARGS = '{\'radius\':4,\'h\':2,\'o\':(0,0,0)}'
 # RENDER_AT_VECTOR = '"(0,0,0)"'
-# Lego  (pl: (-2.2 2.7 2.7) -> (a=129.17; h=2.7)
-RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17}"'
-# RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':-1.5,\'o\':(0,0,0)}"'
+####################################################
+#### Lego  (pl: (-2.2 2.7 2.7) -> (a=129.17; h=2.7)
 RENDER_AT_VECTOR = '"(0, 0, 0)"'
-RENDER_LIGHT_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17}"'
+# RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17}"'
+# RENDER_LIGHT_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17}"'
+RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.0,\'o\':(0,0,0),\'t0\':0}"'
+RENDER_LIGHT_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.0,\'o\':(0,0,0),\'t0\':0}"'
+# # !!Static Light!!
+# RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17}"'
+# RENDER_LIGHT_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17}"'
 
-NUM_FRAMES = '24' #180
+NUM_FRAMES = '12' #180
 RENDER_PATH_STYLE = 'circle'
 RENDER_SPEED = '0'
 RENDER_LIGHT_PATH_STYLE = 'circle'
-RENDER_LIGHT_SPEED = '15'
+RENDER_LIGHT_SPEED = '30'
 
 
 RAYMARCHING_TOLERANCE = '0.01'
