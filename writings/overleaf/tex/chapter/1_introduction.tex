@@ -82,7 +82,7 @@ The goal of this thesis is to develop a solution
 that is able to model scene geometry and appearance with view- and light-dependant effects
 implying both co-located and non-colocated light sources.
 This is done by utilizing the usage of neural sparse voxel fields (NSVF) \cite{liu2021neural}
-with such a problem formulation that considers a single point light source illumination \cite{bi2020neural}.
+with such a problem formulation that considers a single non-static point light source illumination \cite{bi2020neural}.
 This method is called \textit{ExCol} (Explicit Colocated) and is only capable
 to be processed within the co-located setting as in NRF approach.
 
@@ -97,18 +97,21 @@ and approximates light transmittance by the distance that light ray has travelle
 This method seems to be able to perform at the same level of quality as the initial \textit{ExBF} scheme,
 though drastically outperforming it in terms of efficiency.
 
-\im{say about ImNRF}
+Additionally the implicit neural reflectance representation \textit{ImNRF} is proposed,
+which sacrifices controlling capabilities of the neural representation
+for being the fastest implementation among presented schemes
+and having less limitations in complexity of representing appearances.
+
 
 To summarize, the contributions of this work are:
 \begin{enumerate}
     \item An acceleration technique \textit{ExCol} for the NRF approach
-    based on Neural Sparce Voxel Fields
+    based on NSVF
     \item The approximation scheme \textit{ExVA}
     for the generalization \textit{ExBF} of proposed \textit{ExCol}
     that achieves comparable results with only a minor overhead
-    \item The implicit scheme \textit{ImNRF} \im{continue}
-    % \item The implementation of all of the listed schemes: \textit{ExCol}, \textit{ExBF} and \textit{ExVA}
-    \item Extension from LDR to HDR data
+    \item The implicit scheme \textit{ImNRF} that extends NSVF to be able to learn light interaction
+    \item Extension for these methods from LDR to HDR data
 \end{enumerate}
 
 

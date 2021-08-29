@@ -563,15 +563,26 @@ these limitations one can shift the appearance evaluation burden to the deep neu
 which is able to get trained for a very complex appearance representations.
 This 'implicit scheme' would have a simpler neural network structure,
 which is shown on \Cref{fig:implicit_scheme}.
-The light interaction is performed here implicitly by providing 
-the network the light direction $l$ as well as distance from sample point to the light source $d_i = \norm{p^l_k - p_i}$
+The light interaction is performed here implicitly by providing the network
+with the light direction $l$ as well as distance from sample point to the light source $d_i = \norm{p^l_k - p_i}$
 as denoted on figure.
 Light ray direction $l$ is also positionally encoded with the same $L$ as view ray direction $v$ is.
+Although, the shadowing is not explicitly modelled,
+the network is expected to learn this effect by itself.
 
-Another property of this technique will be the increased complexity of the learning function,
-which would expect the network structure with greater capacity.
+The main downside of this scheme comes from its advantage.
+Implicit representation significantly decreases the amount of control over the learned field.
+In other words, bigger amount of parameters that are responsible for one or another effects on the scene
+are hidden in the weights of model and cannot be easily attained.
 
-\im{\textit{Disadvantage: almost no control over implicit representation}}
+Another characteristic of this scheme is that it does not imply any kind of regularization.
+This means that the network is not guaranteed to be able to extract the appearance of the scene.
+This behavior can be clearly seen from the experiments of the \textit{ImNRF} on the colocated light dataset \Cref{subsec:experiments_coloc}.
+
+% Another property of this technique will be the increased complexity of the learning function,
+% which would expect the network structure with greater capacity.
+
+% \im{\textit{Disadvantage: almost no control over implicit representation}}
 
 
 
