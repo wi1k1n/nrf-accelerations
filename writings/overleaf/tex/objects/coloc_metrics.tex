@@ -8,45 +8,51 @@
         
         \multirow{4}{*}{Rocket}
         % & ExCol & 28.98 & 0.95 & 0.071 & 0.047 & 150k & 256px & 10h \\
-        & ExCol & 27.69 & 0.94 & 0.088 & \textbf{0.053} & 50k & 256px & \textbf{2h30m} \\
+        & ExCol & 27.69 & 0.94 & 0.088 & 0.053 & 50k & 256px & 2h30m \\
         % & ExVA & 30.52 & 0.950 & 0.061 & 0.050 & 150k & 256px & 14h \\
         & ExVA & 29.14 & 0.94 & 0.083 & 0.058 & 50k & 256px & 3h \\
-        & ExBF & 26.80 & 0.94 & \textbf{0.030} & 0.090 & 50k & \color{gray}64px & \color{gray}6h30m \\
-        & ImNRF & \textbf{30.54} & \textbf{0.97} & 0.033 & 0.055 & 50k & \color{burgundy}128px & \color{burgundy}2h \\
+        & ImNRF & \textbf{29.87} & \textbf{0.95} & \textbf{0.061} & \textbf{0.049} & 50k & 256px & 2h \\
+        & \color{gray}ExBF & \color{gray}26.80 & \color{gray}0.94 & \color{gray}0.030 & 0.\color{gray}090 & \color{gray}50k & \color{gray}64px & \color{gray}6h30m \\
         \midrule
         
         \multirow{4}{*}{Guitar}
-        & ExCol & 29.40 & 0.96 & 0.042 & \textbf{0.057} & 150k & 256px & 10h30m \\
+        & ExCol & 29.40 & 0.96 & 0.042 & 0.057 & 150k & 256px & 10h30m \\
         & ExVA & 29.22 & 0.96 & 0.043 & 0.059 & 150k & 256px & 20h \\
+        & ImNRF & \textbf{32.56} & \textbf{0.98} & \textbf{0.017} & \textbf{0.042} & 150k & 256px & \color{bronze}20h' \\
         & \color{gray}ExBF & \color{gray}25.28 & \color{gray}0.93 & \color{gray}0.030 & \color{gray}0.120 & \color{gray}30k & \color{gray}64px & \color{gray}8h \\
-        & ImNRF & \textbf{30.32} & \textbf{0.97} & \textbf{0.018} & 0.059 & 111k & \color{burgundy}128px & \color{burgundy}8h \\
         \midrule
         
         \multirow{4}{*}{Lego}
         % & ExCol & 27.02 & 0.93 & 0.07  & 0.10 & 150k & 256px & 13h \\
-        & ExCol & 25.57 & 0.91 & 0.090 & 0.110 & 50k & 256px & \textbf{3h} \\
+        & ExCol & 25.57 & 0.91 & 0.090 & 0.110 & 50k & 256px & 3h \\
         & ExVA & 25.95 & 0.92 & 0.090 & 0.110 & 50k & 256px & 4h30m \\
-        & ExBF & 20.76 & 0.85 & \textbf{0.053} & 0.179 & 50k & \color{gray}64px & \color{gray}6h \\
-        & ImNRF & \textbf{26.99} & \textbf{0.93} & 0.066 & \textbf{0.099} & 50k & 256px & 5h \\
+        & ImNRF & \textbf{26.99} & \textbf{0.93} & \textbf{0.066} & \textbf{0.099} & 50k & 256px & 2h30m \\
+        & \color{gray}ExBF & \color{gray}20.76 & \color{gray}0.85 & \color{gray}0.053 & \color{gray}0.179 & \color{gray}50k & \color{gray}64px & \color{gray}6h \\
         \midrule
         
         \multirow{4}{*}{Hotdog}
-        & ExCol & 32.80 & 0.96 & 0.040 & 0.075 & 70k & 256px & \textbf{6h} \\
+        & ExCol & 32.80 & 0.96 & 0.040 & 0.075 & 70k & 256px & 6h \\
         & ExVA & 32.57 & 0.96 & 0.040 & \textbf{0.073} & 70k & 256px & \color{gray}25h$^*$ \\
-        & ExBF & 24.68 & 0.88 & 0.059 & 0.150 & 70k & \color{gray}64px & \color{gray}16h \\
-        & ImNRF & \textbf{32.87} & \textbf{0.97} & \textbf{0.013} & 0.102 & 70k & \color{burgundy}128px & \color{burgundy}6h30m \\
+        & ImNRF & \textbf{33.90} & \textbf{0.97} & \textbf{0.026} & 0.089 & 70k & 256px & \color{bronze}11h' \\
+        & \color{gray}ExBF & \color{gray}24.68 & \color{gray}0.88 & \color{gray}0.059 & \color{gray}0.150 & \color{gray}70k & \color{gray}64px & \color{gray}16h \\
     \end{tabular*}
     \caption{Quantitative comparison of evaluations on colocated datasets (25\% of the whole dataset or 50 sample views).
     \textit{ExBF} scheme is only trained on 64px images due to hardware limitations
-    while \textit{ExCol} and \textit{ExVA} methods proceed with 256px images.
-    Both \textit{ExCol} and \textit{ExVA} schemes produce very close results,
+    while other methods proceed with 256px images
+    (except \textit{ImNRF} on rocket dataset, which metrics are given for reference only).
+    Time consumption involves training time as well as regular validation time (performed every 1k iterations).
+    Reported {\color{bronze}time'} for \textit{ImNRF} method is generally non-demonstrative
+    due to the unreasonable usage of too low chunking rates, which led to unrealized potential.
+    \textit{ExCol} and \textit{ExVA} schemes generally produce very close results,
     although \textit{ExVA} is an approximation of the general case of \textit{ExCol} method.
-    The overhead of additional calculations of \textit{ExVA} results in higher training timings.
-    Although the 'brute-force scheme usually takes 2-3 times more time
-    for training on 4 times smaller inputs (64px instead of 256px).
+    The overhead of additional calculations of \textit{ExVA} results in more time consumption.
+    \textit{ImNRF} stands out from other methods by achieving better results.
+    % Although the 'brute-force scheme usually takes 2-3 times more time
+    % for training on 4 times smaller inputs (64px instead of 256px).
     Time measurement for \textit{ExVA} method on Hotdog dataset is not plausible
     due to adjacent circumstances limiting the hardware performance for this experiment.
-    \im{REVIEW ImNRF: waiting for results from guitar (u4103) and hotdog (u4108) in 256px}}
+    % \im{REVIEW ImNRF: waiting for results from guitar (u4103) and hotdog (u4108) in 256px}
+    }
     \label{tab:colocated_metrics}
 \end{table*}
 \endgroup
@@ -92,18 +98,29 @@
 %       68k:    24.68 & 0.88 & 0.059 & 0.15 & 70k & 64px & 16h
 
 
-% ImNRF/Rocket/128:   u4102 -> rocket_coloc_exr
-% 150k ~ 9h30m
-%       129k:   33.83 & 0.98 & 0.015 & 0.045 & 130k & 128px & 8h
-%       50k:    30.535 & 0.966 & 0.033 & 0.055 & 50k & 128px & 2h
-% ImNRF/Guitar/128:   u4104 -> guitar_coloc_exr
-% 150k ~ 11h30m
-%       111k:   30.32 & 0.97 & 0.018 & 0.059 & 111k & 128px & 8h
+% ImNRF/Rocket/256:   u4101 -> rocket_coloc_exr
+% 150k ~ 
+%       50k:    29.87 & 0.947 & 0.061 & 0.049 & 50k & 256px & 2h
+% ImNRF/Guitar/256:   u4103 -> guitar_coloc_exr
+%       150k:   32.56 & 0.98 & 0.017 & 0.042 & 150k & 256px & 20h
 % ImNRF/Lego/256:   u4106 -> lego_coloc_exr
 % 150k ~ ?
-%       57k:   27.63 & 0.94 & 0.057 & 0.098 & 57k & 256px & 6h30m
-%       50k:   26.99 & 0.93 & 0.066 & 0.099 & 50k & 256px & 5h
-% ImNRF/Hotdog/128:   u4108 -> hotdog_coloc_exr
+%       57k:   27.63 & 0.94 & 0.057 & 0.098 & 57k & 256px & 6h30m (from inefficient chunk rates)
+%       50k:   26.99 & 0.93 & 0.066 & 0.099 & 50k & 256px & 2.30h
+% ImNRF/Hotdog/256:   u4108 -> hotdog_coloc_exr
 % 150k ~ 
-%       88k:   33.33 & 0.98 & 0.012 & 0.099 & 88k & 128px & 8h
-%       70k:   32.87 & 0.97 & 0.013 & 0.102 & 70k & 128px & 6h30m
+%       110k:   34.81 & 0.98 & 0.021 & 0.083 & 110k & 256px & 20h30m
+%       70k:    33.90 & 0.97 & 0.026 & 0.089 & 70k & 256px & 11h
+
+
+        % ImNRF/Rocket/128:   u4102 -> rocket_coloc_exr
+        % 150k ~ 9h30m
+        %       129k:   33.83 & 0.98 & 0.015 & 0.045 & 130k & 128px & 8h
+        %       50k:    30.535 & 0.966 & 0.033 & 0.055 & 50k & 128px & 2h
+        % ImNRF/Guitar/128:   u4104 -> guitar_coloc_exr
+        % 150k ~ 11h30m
+        %       111k:   30.32 & 0.97 & 0.018 & 0.059 & 111k & 128px & 8h
+        % ImNRF/Hotdog/128:   u4108 -> hotdog_coloc_exr
+        % 150k ~ 
+        %       88k:   33.33 & 0.98 & 0.012 & 0.099 & 88k & 128px & 8h
+        %       70k:   32.87 & 0.97 & 0.013 & 0.102 & 70k & 128px & 6h30m

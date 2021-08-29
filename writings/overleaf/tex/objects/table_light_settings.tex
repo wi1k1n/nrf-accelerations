@@ -1,8 +1,6 @@
 \begin{table*}[!htb]
     % \setArraystrech{1.5}
     \centering
-    \caption{The applicability of different types of datasets to methods}
-    \label{tab:methods_datasets}
     \setlength\tabcolsep{5pt}
     \begin{tabular*}{\textwidth}{ l | c c c c c }
     	\toprule
@@ -13,7 +11,13 @@
     	Arbitrary light & X & X & \checkmark & \checkmark & \checkmark \\
         \midrule
         Novel views & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
-        Novel lights & X & \checkmark & \checkmark & \checkmark & \checkmark \\
+        Novel lights & X & \checkmark & \checkmark & \checkmark & \checkmark$^*$ \\
     	\bottomrule
     \end{tabular*}
+    \caption{The applicability of different types of datasets to methods.
+    As can be seen from experiments below (\im{reference?}),
+    \textit{ImNRF's} ability for view synthesis under novel light conditions
+    is highly sensitive to the type of training dataset.
+    }
+    \label{tab:methods_datasets}
 \end{table*}

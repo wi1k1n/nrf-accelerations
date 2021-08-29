@@ -42,7 +42,7 @@ of an implicit function $F = F_\Theta$ with parameters $\Theta$.
 The scheme structure of original NeRF's MLP is outlined in \Cref{fig:mlp_nerf}.
 The position $p(z)$ is first encoded using position encoding function $\zeta(\cdot)$ (positional encoding is described in section \ref{subsec:pos_enc}) and then is processed with 8 fully-connected neural layers with ReLU activations.
 The resulting feature vector is then concatenated with positionally encoded vector direction $v$
-before the volume density $\sigma(p(z))$ and the color value $c(p(z), v)$ is outputed.
+before the volume density $\sigma(p(z))$ and the color value $c(p(z), v)$ is output.
 The important concept here is that $\sigma$ only depends on point $p(z)$
 whilst the color value $c$ is view dependant as well.
 This setting is required to encourage the MLP to be multi-view consistent.

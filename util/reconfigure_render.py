@@ -7,8 +7,8 @@ COPY2CLIPBOARD = False
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "lego_random_exr"
-NAME = "u4107"  # postfix for dataset name
+DATA = "lego_coloc_exr"
+NAME = "u4106"  # postfix for dataset name
 RENDER_OUTPUT = "test"  # output if empty
 RES = "256x256"
 # RENDER_PATH_LIGHT = True  # True - light source is moving, False - camera is moving

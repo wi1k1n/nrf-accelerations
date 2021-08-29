@@ -5,8 +5,40 @@
 \label{sec:summary}
 %\addcontentsline{toc}{chapter}{Zusammenfassung}
 
-This is a summary of all the cool stuff I did in this thesis.
+
+Photo-realistic scene reconstruction under novel viewing and illumination conditions
+is a challenging long-standing problem in computer graphics.
+Recent studies in this field has shown the applicability of deep neural networks
+to learn an implicit neural representations of the scene
+containing both geometric and appearance information about the scene.
+
+Most works focus on extracting radiance fields under static illumination of the scene.
+\cite{mildenhall2020nerf} presented the state-of-the-art approach NeRF,
+that learns continuous volumetric scene representation from the set of known 2D views.
+This allows to reconstruct learned scene from novel view points,
+however proposed approach suffers from inefficiency.
+To improve NeRF's performance \cite{liu2021neural} show the application of octrees
+to learn Neural Sparse Voxel Fields (NSVF) that achieve up to 10 times better performance.
+
+However, learned with NSVF radiance fields are still not implying any light interaction that allows
+to model light-dependant effects and reconstruct the scene under novel illumination conditions.
+\cite{bi2020neural} propose Neural Reflectance Fields (NRF)
+that consider a single non-static point light illumination on the scene
+and imply additionally sampling light rays, which drastically increases method complexity.
+
+In this work the performance limitation is addressed and several methods
+that allows to increase NRF's efficiency are offered.
+Explicit schemes \textit{ExCol} and \textit{ExBF} are meant to accelerate NRF approach
+using voxel octree structure, similarly to NSVF approach.
+Explicit scheme \textit{ExVA} offers the in-voxel approximation,
+which makes the \textit{ExBF} method more practical.
+Another \textit{ImNRF} method is based on the original NSVF approach
+and implies learning an implicit neural reflectance representation of the scene.
 
 
-\lipsum[1-2]
+
+
+
+
+% \lipsum[1-2]
 
