@@ -20,9 +20,11 @@ that correspond to a view from a pin-hole camera with intrinsic parameters $\mat
 The camera is placed on a sphere around the scene,
 up-vector is always positive in $Z$ axis,
 the orientation is always aimed to the center of the scene.
+% The position of the camera is described with two angles: azimuthal angle $\theta$ and inclination angle $\phi$.
 The position of the camera is described with two angles: azimuthal angle $\theta$ and inclination angle $\phi$.
 For each view the values of $(\theta, \phi)$ are sampled uniformly on the surface of the sphere.
-In the experiments the inclination angle is bounded between $-10$ and $80$ degrees.
+% In the experiments the inclination angle is bounded between $-10$ and $80$ degrees.
+In the experiments the inclination angle is bounded between $10$ and $100$ degrees.
 Camera extrinsics (in form of transformation matrix) are exported for each dataset sample along with the HDR image.
 Additionally to that the bounding box is also exported as it is required
 to initialize the octree for the NSVF method and all of the proposed methods as well.
@@ -83,6 +85,7 @@ This is done based on the fact that different methods can only handle datasets w
 
 
 \subsection{Scenes}
+\label{subsec:scenes}
 
 Creating the datasets from scratch is motivated by the fact that
 vast majority of related works do not consider any light interaction.
@@ -115,10 +118,15 @@ The surface of the rocket shows moderate level of specularities (in comparison w
 
 \textbf{Guitar}
 
-The \textit{guitar} scene (\Cref{fig:dataset_preview} (b)) is created for testing models ability
-to reproduce highly specular surface behavior.
-Complex geometry also allows to asses how model handles geometrical features on different scales.
+% The \textit{guitar} scene (\Cref{fig:dataset_preview} (b)) is created for testing model's ability
+% to reproduce highly specular surface behavior.
+% Complex geometry also allows to asses how model handles geometrical features on different scales.
+% For example strings can be barely seen on renders and they would presumably the most troublesome geometrical part of the whole scene.
+
+The \textit{guitar} scene (\Cref{fig:dataset_preview} (b)) is created for testing model's ability
+to reproduce complex geometrical features on different scales.
 For example strings can be barely seen on renders and they would presumably the most troublesome geometrical part of the whole scene.
+Fairly specular surface appearance also allows to asses how well does it model surface reglectance behavior.
 
 \textbf{Lego}
 
@@ -146,19 +154,22 @@ The acquired images can then be processed with such techniques as
 structure-from-motion (\cite{Moulon2012, Jancosek2011, schoenberger2016structure})
 in order to retrieve the camera intrinsics and extrinsics in correspondence with captured images.
 Another way is to use some special hardware setups with calibrated camera positions
-such as gonioreflectometers or e.g. x-rite tac7 (\cite{merzbach2017highquality}).
+% such as gonioreflectometers or e.g. x-rite tac7 (\cite{merzbach2017highquality}).
+such as gonioreflectometers.
 
 However, for the methods that model light interaction the light extrinsics information is lacking
 when using the aforementioned techniques.
 The acquisition of the dataset consisting of captures from real-world scenes
-for this group of methods is a fairly hard task that cannot be performed without any hardware assistance.
-Even for the 'colocated' case of the NRF method cellphones can only be used
+for this group of methods is a fairly hard task that most probably cannot be performed without any hardware assistance.
+Even for the 'colocated' case of the NRF method cellphones could only have been used
 together with the robotic arm holding the cellphone (\cite{bi2020neural}).
+Some hardware setups such as X-Rite tac7 \cite{merzbach2017highquality} are equipped with static cameras and light sources
+and a turntable, which allows to rotate the object and thereby acquire varying viewing and illumination directions.
+
 
 Another key point is the background that has to be as homogeneous as possible.
 The quality of final renders are sensitive to the too complex background behind the object on the scene.
 
-\im{Description of faulty flower dataset??}
 
 
 % \begin{enumerate}
@@ -175,14 +186,19 @@ The quality of final renders are sensitive to the too complex background behind 
 
 \section{Implementation details}
 
+% All of the proposed methods are implemented on Python
+% using PyTorch \cite{pytorch} and Fairseq \cite{ott2019fairseq} frameworks
+% for neural fields and ray casting procedure.
 All of the proposed methods are implemented on Python
-using PyTorch \cite{pytorch} and Fairseq \cite{ott2019fairseq} frameworks
+using PyTorch \cite{pytorch} framework
 for neural fields and ray casting procedure.
+The Fairseq \cite{ott2019fairseq} framework is used over the Pytorch,
+which provides easier easier training, evaluation and validation pipelines as well as extend the initial functionality.
 During training $80$ pixels are first sampled from each of $1$ or $2$ images 
 forming a batch that is used for one training iteration.
-These pixels are used to cast rays through the principle points of the corresponding cameras.
-These rays are then intersect the octree, which is initialized with $N_0^3 = 4^3$ voxels ($4$ voxels for each axis).
-These rays are then sampled on the intersection intervals with the step size $0.125$.
+These pixels are used to cast rays through the focal point of the corresponding cameras.
+These rays then intersect the octree, which is initialized with $N_0^3 = 4^3$ voxels ($4$ voxels for each axis).
+These rays are then sampled on the voxel intersection intervals with the step size $0.125$.
 The following procedure differs depending on the method
 and include additional light ray casting, intersecting and sampling for the 'brute-force' scheme and BRDF evaluation for the 'explicit schemes'.
 Alpha compositing is performed after the color (or radiance) values are achieved.
@@ -194,8 +210,8 @@ with $\beta = 10^{-3}$ that is used in the experiments.
 
 Adam optimizer is used as an optimization algorithm for learning parameters $(\Theta, I)$ ($I$ is light intensity value).
 Learning rate for the optimizer is initialized with value $10^{-4}$
-and polynomially decays to value $10^{-6}$ over 100k iterations.
-Refinement procedure as well as reducing ray casting step are performed on iterations 5k, 25k and 50k.
+and linearly decays to value $10^{-6}$ over 100k iterations.
+Octree refinement procedure as well as reducing ray casting step size are performed on iterations 5k, 25k and 50k.
 Self-pruning is performed every 5k iterations.
 Tone-mapping using scaling and gamma-correction (differ depending on scene)
 is performed to visualize HDR images (both inputs and outputs).
@@ -205,7 +221,7 @@ Dataset sample images are originally created in 1024x1024px resolution
 and then individually down-sampled to some lower values for each experiment to fit the GPU memory limitations.
 The resolutions from 64x64px (for \textit{brute-force scheme}) up to 512x512px 
 (for methods with lower memory load, such as Vanilla NSVF) are used.
-The \textit{log-transform} transformation is applied at the pre-processing phase
+The \textit{log-transform} is applied at the pre-processing phase
 to prepare the HDR data before it is processed by the model:
 \begin{equation}
     c = \log (c^{HDR} + 1),
@@ -264,12 +280,14 @@ This cannot be done for real-world images, which makes the whole task of quality
 
 \section{Experiments}
 
-The diversity of used models and the corresponding applicable datasets
-does not allow to well structure this section.
-A shortage of some baseline results does also contribute to some difficulties in the results quality assessment.
-Therefore this section if formed in the order of decreasing number of applicable methods (due to its limitations).
+% The diversity of used models and the corresponding applicable datasets
+% does not allow to well structure this section.
+% A shortage of some baseline results does also contribute to some difficulties in the results quality assessment.
+% Therefore this section if formed in the order of decreasing number of applicable methods (due to its limitations).
+
 % Therefore this section is formed in the order of increasing complexity of used methods and decreasing evaluation capabilities.
-The following methods are being evaluated in either event:
+% The following methods are being evaluated in either event:
+Following list overviews schemes that are compared in this section:
 \begin{enumerate}
     \item Vanilla \textit{NSVF} method \cite{liu2021neural} (described in \Cref{subsec:NSVF}).
     The fastest implementation (among other listed methods),
@@ -279,7 +297,7 @@ The following methods are being evaluated in either event:
     due to reuse of viewing sample points.
     The second fastest implementation as it does only contain
     a small overhead of evaluating BRDF instead of directly predicting colors.
-    However, similarly to \textit{NSVF} can only be evaluated on one type of dataset: with colocated light setting.
+    However, similarly to \textit{NSVF} can only be trained on one type of dataset: with colocated light setting.
     \item \textbf{Ex}plicit \textbf{B}rute-\textbf{F}orce scheme (\textit{ExBF}) (described in \Cref{sec:explicit_scheme}).
     The generalization of \textit{ExCol}.
     The slowest implementation with the highest memory demand,
@@ -289,7 +307,7 @@ The following methods are being evaluated in either event:
     Implementation involves the same complexity as \textit{ExCol},
     however also includes light rays octree intersection overhead,
     which makes it slower than \textit{ExCol}.
-    \item \textbf{Im}plicit \textbf{N}eural \textbf{F}ield scheme (\textit{ImNF}) (described in \Cref{sec:implicit_scheme}).
+    \item \textbf{Im}plicit \textbf{N}eural \textbf{R}eflectance \textbf{F}ield scheme (\textit{ImNRF}) (described in \Cref{sec:implicit_scheme}).
     This method is based on Vanilla NSVF approach
     that is also provided with the light direction vectors and distance values to the light source.
     This scheme is considered to implicitly represent the appearance of the scene
@@ -359,6 +377,7 @@ and overviewed in \Cref{tab:coloc_allresults}.
 The refinement procedure is performed on 5k, 25k and 50k iterations.
 For the \textit{ExBF} method the third refinement procedure requires too much memory,
 so the training only consists of 50k iterations.
+\im{update after ImNRF!}
 
 
 \input{tex/objects/coloc_results}
@@ -379,8 +398,6 @@ Both schemes are occasionally lacking specularities (rocket left)
 and failing to reproduce very fine details of the Lego dataset.
 The very bright spot on the Lego renders (bottom) is also reproduced incorrectly,
 however this is likely due to the model being underfitted.
-
-
 
 \subsubsection{ExCol vs. NRF}
 
@@ -441,7 +458,7 @@ which contain images evaluated from the same novel (has not been used during tra
 Each of these images is lit from the light source,
 which novel locations are different along different columns.
 The light source's location is defined by two angles:
-inclination angle $\phi = \const$ and azimuthal angle $\theta$
+inclination angle $\theta = \const$ and azimuthal angle $\phi$
 that takes values from -90\textdegree to 90\textdegree.
 In central column the light source is co-located with camera,
 which completely coincides with the light setting used for training \textit{ExCol}
@@ -454,7 +471,11 @@ whilst \textit{ExVA} has been trained on the dataset with arbitrary light settin
 It can be clearly seen that \textit{ExVA} method outperforms \textit{ExCol}.
 The major difference is in the capability of rendering shadows (non-zero angles)
 while for the zero-angle view both methods perform with approximately the same quality.
-However, the sigma field of \textit{ExVA} did not converge completely on the front part of base of the model.
+Note that for evaluation under novel light-view conditions the original NRF method used light transmittance caching
+(i.e. finding nearest sampled points and interpolating transmittance value between those),
+which allowed for realistic shadowing effects.
+In \textit{ExCol} no interpolation is performed, which reasons the lack of shadows on presented render.
+Another key observation is that the sigma field of \textit{ExVA} did not converge completely on the front part of base of the model.
 \textit{ExCol} renders this part without any difficulties.
 This difference is most likely due to more consistent lighting of this part
 captured in the colocated light dataset comparing to those in arbitrary light dataset.
@@ -465,9 +486,8 @@ which encourages the density predictor to better distinguish geometrical feature
 Note that due to the colocated nature of training dataset for the \textit{ExCol}
 the model does not happen to meet any shadows at all.
 Another inquiring tendency is how drastically quality of the \textit{ExCol} predictions drops
-when the azimuthal angle difference between camera and light source is increasing.
-This can also be explained by an infinitely (\im{1 out of infinity.. or is it too brave expression? :)})
-sparse light-view space of the colocated light dataset.
+when the angle between camera and light rays is increasing.
+This can also be explained by an extremely sparse light-view space of the colocated light dataset.
 
 
 
@@ -489,6 +509,8 @@ sparse light-view space of the colocated light dataset.
 
 
 \subsection{Static light setting}
+
+\im{REVIEW! <- ImNRF results}
 
 Static light setting is the only type of datasets that can be used
 for training the original NSVF method,

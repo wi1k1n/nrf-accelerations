@@ -43,15 +43,23 @@ This allows to almost completely eliminate any overheads comparing to \textit{Ex
 Only light rays intersection with the octree is left,
 which is efficiently handled using AABB ray intersection algorithm.
 
-The experiments are held to compare performance of corresponding schemes.
+The experiemnts were held on synthetic datasets listed in \Cref{subsec:scenes}.
+The possibility to use real-world scene in the experiments included the usage of measurements from X-Rite tac7 \cite{merzbach2017highquality}.
+However, there were no acquisitions available with calibrated camera poses
+and reconstruction produced not accurate enough camera calibrations.
+The BARF approach \cite{lin2021barf} could have presumably been better method for this specific case.
+The experiments were hence held on synthetic datasets to compare performance of corresponding schemes.
 Although \textit{ExBF} scheme is the most general and considered to produce the most accurate results,
 it appears with a questionable applicability and does not impress with the achieved results.
 The \textit{ExVA} scheme shows appealing results with approximately the same quality as the accurate and fast \textit{ExCol}.
-However, \textit{ExCol} implies no limitation for the training dataset,
+However, \textit{ExVA} implies no limitation for the training dataset,
 which is a severe drawback of the \textit{ExCol} method.
 In general case comparison of the novel light-view synthesis \textit{ExVA} 
 even outperforms \textit{ExCol} by leveraging denser light-view space of the arbitrary light dataset.
 
+
+
+\im{REVIEW after ImNRF!}
 
 
 \section{Extension points}
@@ -74,15 +82,19 @@ For example, in this work the GGX distribution \cite{walter2007microfacet}
 is used for specular term of the microfacet BRDF model.
 However, the better results might be obtained by using the symmertric variant of distribution - SGGX \cite{heitz2015sggx}.
 
-\im{using more light sources?? (e.g. 2 point lights would create even more denser view-light space, while i think \textit{ExVA} is still computationally able to deal with it)}
+% \im{using more light sources?? (e.g. 2 point lights would create even more denser view-light space, while i think \textit{ExVA} is still computationally able to deal with it)}
 
+
+\im{mention fail with the flower dataset: (sm) \textit{if you like, you can comment on the real world data in the conclusion: mention that we didn't have any acquisitions available with calibrated camera poses and reconstruction of the camera calibration proved too inaccurate. hence we decided to continue focusing on synthetic data to gain more insights about the different methods instead.}}
 
 \section{Acknowledgements}
 
-I thank my thesis advisor Sebastian Merzbach for a consistent dedicated involvement throughout the entire process
-and Prof. Dr. Reinhard Klein for steering this work in the right direction
-\textit{\im{and allowing it to be my own work.}}
-I would also acknowledge Dr. Michael Weinmann as a second reader of this thesis.
+% I thank my thesis advisor Sebastian Merzbach for a consistent dedicated involvement throughout the entire process
+% and Prof. Dr. Reinhard Klein for steering this work in the right direction
+% \textit{\im{and allowing it to be my own work.}}
+
+I thank Prof. Dr. Reinhard Klein for steering this work in the right direction and my thesis advisor Sebastian Merzbach for a consistent dedicated involvement throughout the entire process
+I would also like to acknowledge Dr. Michael Weinmann as a second reader of this thesis.
 University of Bonn provided computer pools with GPUs that have been used to manage experiments.
 I thank Oleg Kosenko for comments
 and CGTrader and Blend Swap users for the 3D models

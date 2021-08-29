@@ -3,7 +3,7 @@
 
 % \section{Basic models and knowledge}
 
-Laying out why the following sections are relevant for this work
+This chapter reviews previous related works as well as concurrent to this thesis works.
 
 
 % \subsection{Camera model}
@@ -21,7 +21,7 @@ Laying out why the following sections are relevant for this work
 The problem of scene reconstruction is an extensive challenge consisting of different aspects,
 one of which is scene representation.
 It defines the way how scene features are described.
-Different representations have its own properties and can be a better or worse fit depending on the task.
+Different representations have their own properties and can be a better or worse fit depending on the task.
 
 Scene features usually include geometry and illumination information
 and can be represented \textit{explicitly} or \textit{implicitly}.
@@ -43,11 +43,12 @@ Point clouds require a complex post-processing step
 (e.g. \cite{ballpivoting1999bernardini}) in order to produce the mesh of the scene,
 which makes them quite tedious to work with.
 
+\im{(sm): \textit{why do we need/want a mesh?}}
 Geometry can be represented using \textit{meshes},
 where corresponding edges and vertices form a graph (\cite{wang20183d}).
-Although these methods work directly on meshes,
+Although these methods \im{(sm): \textit{which methods?}} work directly on meshes,
 the downsides are in high limitations of these methods,
-such as requirement of reference template mesh,
+such as requirement of \im{reference template mesh (sm): ??},
 tendency to produce self-intersecting meshes or opened surfaces (\cite{groueix2018atlasnet}).
 
 \subsection{Implicit geometry}
@@ -60,12 +61,12 @@ which is basically a mapping $\mathbb{R}^3 \xrightarrow{} \mathbb{R}$ defining t
 
 Occupancy fields (\cite{occupancy2019mescheder}) are introduced as neural networks
 that directly learn continuous 3D occupancy function.
-This allows to achieve an arbitrary resolution
+This allows to achieve an arbitrary resolution and more compact and resolution-independent representation
 instead of learning voxelized representations
 that results only in fixed resolution.
 
 
-\im{Either reference brdf models here, or as it comes to them}
+% \im{Either reference brdf models here, or as it comes to them}
 
 
 
@@ -75,23 +76,26 @@ that results only in fixed resolution.
 Neural scene representations exploit the idea of employing
 deep neural networks in order to implicitly encode information about the scene.
 The network learns mapping between the spatial locations and feature representations of the scene.
-The rendering techniques is used in order to get novel views of the scene.
+% The rendering techniques is used in order to get novel views of the scene.
+Different rendering techniques can be applied to get novel views of the scene
+but the volumetric rendering technique is the most commonly used with neural scene representations.
 To make training possible the rendering process has to be formulated in a differentiable way.
 This allows to use loss functions that minimizes the differences between generated views and ground truth 2D images.
 
-\cite{niemeyer2020differentiable} introduce the volumetric rendering method,
-that uses the differentiable rendering functions,
+\cite{niemeyer2020differentiable} introduce a volumetric rendering method,
+that uses differentiable rendering functions,
 allowing the implicit neural geometry representations to be optimized
 with only 2D supervision instead of requiring 3D ground truth models.
-Using only 2D sample images the predicted surface depth is used
-for projecting and sampling the ray.
-Resulting intersection locations are then forwarded into texture prediction field,
-which outputs color value for that point.
+Using only 2D sample images the surface depth map is predicted
+and is then unprojected into 3D to be evaluated in texture prediction field,
+which outputs color values.
+% Resulting intersection locations are then forwarded into texture prediction field,
+% which outputs color value for that point.
 The appearance is not explicitly modelled, meaning that the view- and lighting-dependant effect are not taken into account.
 
 
 The Scene Representations Networks (SRNs) are introduced by \cite{sitzmann2019srns}.
-The recurrent neural networks lie in the core of this approach.
+Recurrent neural networks lie in the core of this approach.
 Camera extrinsics and intrinsics are passed as inputs into the network,
 which is then evaluated for all the samples along the ray,
 trying to decided where the surface is located.
@@ -102,10 +106,10 @@ where the feature vectors are integrated into a persistent cartesian 3D-voxel gr
 % The similar approach is used in \cite{saito2019pifu},
 % where 2 separate predictors are used for occupancy and texture fields.
 
-\cite{mildenhall2019local} propose to expand each sample view into local light field (LLF) using the multiplane images (MPIs).
+\cite{mildenhall2019local} propose to expand each sample view into local light field (LLF) using multiplane images (MPIs).
 The novel view is then rendered by projecting four nearest neighbors of the adjacent local light fields.
-This work is followed by Neural Radiance Fields (NeRF) \cite{mildenhall2020nerf} proposed by same authors.
-NeRF extends the LLFs in a different way by leveraging the volume rendering.
+This work is followed by Neural Radiance Fields (NeRF) \cite{mildenhall2020nerf} proposed by same already introduced in this text earlier authors.
+NeRF extends the LLFs in a different way by leveraging volume rendering.
 The fully differentiable pipeline allows to optimize parameters of deep neural networks,
 which predict the volume density and the scene color at given 3D point.
 The volume rendering technique is then used for gathering these sample points along the ray
@@ -118,7 +122,7 @@ Authors also propose to store learnable feature vectors in voxel corners,
 which allows to decrease the size of network while keeping its capacity.
 
 In FastNeRF \cite{garbin2021fastnerf} propose factorization of deep radiance maps
-that can be cached and queried on the high-end GPUs.
+that can be cached and queried on high-end GPUs.
 This technique extends the original NeRF network structre
 by two separate MLPs for position-dependent and direction-dependent inputs.
 The evaluation time can be decreased by up to 4000 times.
@@ -148,8 +152,11 @@ With this approach the training time can be 10 times smaller comparing to origin
 and propose the NeRF++ approach, which uses a separate NeRF to predict background,
 which increases performance for the unbounded scenes where the dynamic depth range can be very high.
 
+\cite{lin2021barf} propose BARF approach that is aimed to solve joint problem
+of learning neural 3D representations together with reconstructing unknown camera poses.
+This technique removes the limitation for the necessity of known camera views.
 
-
+\subsection{Relighting}
 
 Another branch of works focuses on extending the relighting limitations for NeRF-based approaches.
 \cite{martinbrualla2021nerfw} was one of the first works based on original NeRF approach.
@@ -161,7 +168,7 @@ The difference between this target image and the composited outputs is minimized
 The proposed solution is able to outperform original NeRF in terms of quality
 when applied for the datasets with less controlled multi-view collections.
 
-\cite{bi2020neural} reformulates the rendering equation for considering a single light source on the scene.
+\cite{bi2020neural} reformulates the rendering equation for considering a single non-static light source on the scene.
 Although, in general this is highly impractical, one specific case
 when the light source is co-located with the camera can be evaluated
 without any sufficient overhead comparing to the NeRF work.
@@ -171,7 +178,7 @@ which results in its main limitation of fixed volume resolution.
 
 \cite{nerv2021} with the NeRV approach addresses the relighting problem
 by extending the original NeRF method with a second MLP
-that predicts the visibility field.
+that predicts a visibility field.
 The 'one-bounce' indirect illumination is considered in this approach.
 
 Neural Reflectance Decomposition (NeRD) \cite{boss2020nerd} uses two networks:
@@ -187,14 +194,14 @@ Scene geometry is refined simultaneously with the spatially-varying reflectance 
 \cite{Zhang2021lighttransport} introduce a semi-parametric approach
 for learning light transports using neural representations.
 Authors use special hardware setup for capturing training images under known illumination.
-The approach consists of observation and query paths.
+The approach consists of observation- and query-paths.
 The observation path encodes K nearby observations into multiscale features,
 which are then concatenated and used in the query path as feature activations.
 The query path predicts residual maps from novel light and view directions
 and resample the texture-space rendering back to the camera space
 where it is supervised by the ground truth images.
 
-
+\im{ref to sebastian's review}
 
 
 
