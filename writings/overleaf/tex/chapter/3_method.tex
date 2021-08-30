@@ -1,9 +1,9 @@
 \chapter{Method}
 \label{chap:method}
 
-In this chapter I first describe techniques that lie in core of the proposed solution.
+In this chapter, I first describe techniques that lie at the core of the proposed solution.
 They then followed by a detailed explanation of the proposed solution.
-Finally I give the implementation details and settings.
+Finally, I give the implementation details and settings.
 
 \section{Neural Radiance Fields}
 
@@ -39,7 +39,7 @@ where $\tau_c(p(z)) = e^{\int_0^z \sigma(p(s)) ds}$ denotes the accumulated tran
 
 \cite{mildenhall2020nerf} propose to use a Multi-Layer Perceptron (MLP) as a representation
 of an implicit function $F = F_\Theta$ with parameters $\Theta$.
-The scheme structure of original NeRF's MLP is outlined in \Cref{fig:mlp_nerf}.
+The scheme structure of the original NeRF's MLP is outlined in \Cref{fig:mlp_nerf}.
 The position $p(z)$ is first encoded using position encoding function $\zeta(\cdot)$ (positional encoding is described in section \ref{subsec:pos_enc}) and then is processed with 8 fully-connected neural layers with ReLU activations.
 The resulting feature vector is then concatenated with positionally encoded vector direction $v$
 before the volume density $\sigma(p(z))$ and the color value $c(p(z), v)$ is output.
@@ -51,7 +51,7 @@ In order to perform the volume rendering, the continuous integral from equation 
 One can estimate this integral using a discrete set of densely sampled points as proposed by \cite{mildenhall2020nerf}.
 Separating each ray into $N$ bins and drawing random samples from each bin
 makes the representation able to learn continuous function
-while only using finite number of samples.
+while only using a finite number of samples.
 The estimate for the integral $C(p, v)$ will have a form (\cite{mildenhall2020nerf, max1995optical}):
 \begin{equation}
     \label{eq:integral_estimation}
@@ -64,8 +64,8 @@ where $p_i = p(z_i)$ for brevity, $\tau_c(p_i) = \exp (-\sum_{j=0}^i \sigma(p_j)
 
 Neural networks are known as a highly representative class of functions (\cite{hornik1989multilayer}).
 However, recent works (\cite{rahaman2019spectral, tancik2020fourfeat}) demonstrate the tendency of
-biasing towards low frequency functions during training of deep neural networks.
-The results can be smoothed and blurry as frequency-dependant learning speed
+biasing towards low-frequency functions during the training of deep neural networks.
+The results can be smoothed and blurry as frequency-dependent learning speed
 is much slower for high-frequency parts of the scene.
 \cite{rahaman2019spectral} show that one can highly improve the quality of the MLP outputs
 by using an embedding, which maps inputs to a higher dimensional space before passing them to the MLP.
@@ -82,21 +82,21 @@ The 3D Cartesian coordinates of $p$ and $v$ are then separately transformed usin
 \label{subsec:hierarchy_sampling}
 
 The proposed approach is ineffective in a way that it tends to generate a lot of unimportant samples
-that lie on a free space and do not contribute much.
-To solve that authors propose the hierarchical volume sampling algorithm (similar to \cite{levoy1990efficient}),
+that lie in free space and do not contribute much.
+To solve that authors propose the hierarchical volume sampling algorithm (similar to \cite{levoy1990efficient})
 when another "coarse" neural network is used in order to roughly estimate volume densities along the ray.
-This insight is then used to perform a more informed sampling of main ("fine") network.
+This insight is then used to perform a more informed sampling of the main ("fine") network.
 The "coarse" network is being optimized along with the main network, which can be considered as an overhead.
 However, taking into account the increase of training convergence the overall training gets more efficient.
 
 
 \subsection{Optimization}
 
-The fully-differentiable formulation of the problem makes it possible
+The fully differentiable formulation of the problem makes it possible
 to optimize network parameters $\Theta$ without any 3D supervision.
 This is done using the back-propagation approach from the differences
 between rendered predictions and ground truth images.
-This task therefore is reduced to the minimization problem of the loss function.
+This task, therefore, is reduced to the minimization problem of the loss function.
 The original method by \cite{mildenhall2020nerf} for loss function uses the following formulation:
 \begin{equation}
     \label{eq:loss_func}
@@ -113,7 +113,7 @@ forces the ray transmittance from the fine network $\tau_c$ to be close to $0$ o
     \label{eq:beta_regularizer}
     \Omega(\tau_c(p_i)) = \log(\tau_c(p_i)) + \log(1 - \tau_c(p_i))
 \end{equation}
-This helps the network to better handle background colors and get cleaner render after all.
+This helps the network to better handle background colors and get cleaner rendering after all.
 This regularization term is used in NSVF work (\cite{liu2021neural})
 that is described in \Cref{subsec:NSVF}
 and NRF work (\cite{bi2020neural}) that is described in \Cref{subsec:NRF}
@@ -127,14 +127,14 @@ However, the very inefficient way of sampling points along rays
 makes the training very slow and tough,
 since the model has to be repeatedly evaluated on unimportant samples
 of free space or occluded regions that do not make a worthwhile contribution to the finally rendered color value.
-The \textit{hierarchical sampling} strategy alleviates the problem,
+The \textit{hierarchical sampling} strategy alleviates the problem
 but does not solve it completely.
-The method in its formulation therefore is still barely practical.
+The method in its formulation, therefore, is still barely practical.
 
 
 \cite{liu2021neural} propose another framework
 that is able to increase the efficiency of this method
-and make the training time by up to an order of magnitude faster.
+and make the training time up to an order of magnitude faster.
 The main contribution is the usage of sparse voxel octrees (\cite{laine2011EfficientSV}) to divide space into voxels
 that are efficiently used for training MLPs with shared parameters.
 
@@ -144,7 +144,7 @@ The scene can then be represented as a set of voxel-bounded implicit functions
 \begin{equation}
     F(p, v) = F_\Theta^i(g_i(p), \zeta(v)), \forall p \in V_i,
 \end{equation}
-where each function $F_\Theta^i$ is modelled with an MLP with shared parameters $\Theta$:
+where each function $F_\Theta^i$ is modeled with an MLP with shared parameters $\Theta$:
 \begin{equation}
     F_\Theta^i: (g_i(p), \zeta(v)) \xrightarrow{} (c, \sigma), \forall p \in V_i
 \end{equation}
@@ -172,33 +172,33 @@ pink, green and blue dotted lines stand for encoder, density predictor and textu
 \end{figure}
 
 The proposed network structure is outlined in \Cref{fig:nsvf_structure}.
-The encoder part that is denoted with pink dotted line
+The encoder part that is denoted with a pink dotted line
 consists of only one layer comparing to the original NRF network
 where the encoder part consists of 5 deep layers.
 The density predictor (green dotted line) remains the same.
 The texture predictor (blue dotted line) is deeper comparing to the NeRF model.
 The overall model structure is slightly shallower comparing to the original NeRF network,
 which is still sufficient due to the distributed way of storing voxel embeddings in the voxel vertices.
-Without voxel embeddings the model contains approximately 0.5M learnable parameters,
+Without voxel embeddings, the model contains approximately 0.5M learnable parameters,
 which is lower than in the original NeRF model.
 
 The volumetric rendering itself does not undergo any significant changes
 except for some additional steps that have to be performed.
-The sampling of the ray is only performed on the intervals of intersection with voxels $V_i$.
-This allows to reject a descent amount of unimportant samples.
+The sampling of the ray is only performed at the intervals of intersection with voxels $V_i$.
+This allows rejecting a decent amount of unimportant samples.
 A very efficient Axis Aligned Bounding Box (AABB) ray intersection algorithm (\cite{haines1989essential}) is applied here
-to extract the above mentioned intervals.
+to extract the above-mentioned intervals.
 Another step is \textit{early termination}, which reduces the number of samples that have to be processed.
-Since solid surfaces does not imply color values being dispersed along the ray,
+Since solid surfaces do not imply color values being dispersed along the ray,
 the sample points that are behind the surface would be needless.
-The technique here is to straight forwardly stop evaluating points,
+The technique here is to straightforwardly stop evaluating points,
 that have an accumulated transmittance lower than some threshold.
 
 \subsection{Voxels pruning and refinement}
 \label{subsec:pruning}
 
 The training on the scene begins with the octree,
-which consists of $N=N^3_0$ voxels that fit in bounding box of the whole scene
+which consists of $N=N^3_0$ voxels that fit in the bounding box of the whole scene
 and cover all parts of the scene.
 One can get rid of non-essential voxels by performing a \textit{self-pruning} procedure.
 This technique leverages the property of neural radiance fields
@@ -212,8 +212,8 @@ where $\sigma (g_i(p_j))$ is the model prediction for $\sigma$ when processing $
 The pruning procedure has to be performed regularly as the accuracy of the model increases as it gets more and more trained,
 which means that more voxels can be pruned and therefore rejected from processing.
 
-As model learns more detailed representation of the scene it becomes necessary to refine voxel structure.
-During the refinement procedure each voxel is being subdivided into $2^3$ subvoxels by halving the voxel size.
+As the model learns a more detailed representation of the scene it becomes necessary to refine the voxel structure.
+During the refinement procedure, each voxel is being subdivided into $2^3$ subvoxels by halving the voxel size.
 Ray sampling steps are also being halved at this point in order to correspond new voxel size value.
 The feature representation vectors $\Tilde{g_i}$ of the new vertices are initialized similarly to calculating $G_i(p)$,
 namely using trilinear interpolation function $\chi(\cdot)$.
@@ -226,15 +226,15 @@ and also increases the model capacity.
 \label{subsec:NRF}
 
 Although the neural radiance fields approach is able to produce realistic renderings under novel view conditions,
-one of main limitations of this method is the inability to handle any kind of visual effects related to dynamic light conditions.
-The core assumption of these approaches is a static illumination,
+one of the main limitations of this method is the inability to handle any kind of visual effects related to dynamic light conditions.
+The core assumption of these approaches is static illumination,
 which is implicitly presented in the color values of the rendered images.
 This in turn does not allow to change illumination on the rendering phase.
 
 \cite{bi2020neural} propose the framework for eliminating this exact limitation.
-Authors introduce neural reflectance field (NRF), which is the neural scene representation
+Authors introduce the neural reflectance field (NRF), which is the neural scene representation
 that in addition to scene geometry also encodes normal and reflectance properties of the scene.
-This approach allows to evaluate an explicit reflectance model at the selected point after all.
+This approach allows the evaluation of an explicit reflectance model at the selected point after all.
 Although \cite{bi2020neural} focus on the microfacet bidirectional reflectance distribution function (BRDF) (\cite{walter2007microfacet}),
 any other reflectance model can be used within this method as well
 (i.e. authors also show some results of furry objects using hair reflectance model \cite{kajiya1989fur}).
@@ -259,7 +259,7 @@ how the light that comes from $l$ scatters at point $p$ if viewing from $v$.
 
 \cite{bi2020neural} only assume single light source setting
 and the reflectance function as the phase function,
-which allows to simplify \Cref{eq:radiance_Li}:
+which allows simplifying \Cref{eq:radiance_Li}:
 \begin{equation}
     L_s(p, v) = f_r(p, v, l, n(p), R(p)) L_i(p, l),
 \end{equation}
@@ -280,7 +280,7 @@ In my experiments the attenuation coefficients $k_c = k_l = 0$ and $k_q = 1$ wer
 so the attenuation coefficient is inverse proportional to squared distance between light sample point and light source:
 $f_{att} = \frac{1}{d^2}$
 
-Combining these equations together and applying the same technique for numerical integral estimation
+Combining these equations and applying the same technique for numerical integral estimation
 as used by \cite{mildenhall2020nerf} and \cite{liu2021neural} gives the following formulation of \Cref{eq:integral_estimation} for NRF:
 \begin{equation}
     \label{eq:integral_estimation_nrf}
@@ -290,7 +290,7 @@ Here $\tau_l$ plays the same role for light ray $l$
 as $\tau_c$ operates for view ray $v$.
 It is evaluated similarly along the light ray $l$:
 $\tau_l(p'_i, l) = \exp (-\sum_{j=1}^M \sigma(p'_j) \delta'_j)$,
-where $p'(z') = p'_0 + z' \cdot l$ are sample points that are additionaly sampled along the light ray $l$ and $\delta'_j = z'_{j=1} - z'_j$.
+where $p'(z') = p'_0 + z' \cdot l$ are sample points that are additionally sampled along the light ray $l$ and $\delta'_j = z'_{j=1} - z'_j$.
 
 
 \begin{figure}[!htb]
@@ -310,40 +310,40 @@ $L_l$ denotes light intensity with consideration to distance attenuation.
 
 The architecture of the MLP is outlined in \Cref{fig:nrf_structure}.
 The deeper structure is used as the model capacity has to be increased
-due to higher complexity of the task.
-For each view sample point $p$ model outputs both normal vector $n$ and parameters $R$,
+due to the higher complexity of the task.
+For each view sample point $p$ the model outputs both normal vector $n$ and parameters $R$,
 which are required by the selected BRDF model.
-For the microfacet BRDF (\cite{walter2007microfacet}) $R$ consists of 3-dimensional albedo value
+For the microfacet BRDF (\cite{walter2007microfacet}) $R$ consists of a 3-dimensional albedo value
 and 1-dimensional roughness value.
 
 
 
-This formulation covers the general case when light source can be located at arbitrary position ('arbitrary setting').
+This formulation covers the general case when the light source can be located at an arbitrary position ('arbitrary setting').
 Since the $l$ and $v$ vectors are different,
 the additional sampling of light ray for each view sample point is required.
 It makes this problem impractical. %infeasible.
-However, \cite{bi2020neural} show that one specific light setting exist,
+However, \cite{bi2020neural} show that one specific light setting exists,
 which can be used to handle this problem.
 When the light ray $l$ coincide with the view ray $v$,
 then sampling points $p(z)$ and $p'(z)$ would be the same,
 which in turn means that $\tau_c(p_i) = \tau_l(p_i)$ ('co-located setting').
-In this case there is no need in additionally sampling light rays,
-which leave the processing time requirements on the same level as original work by \cite{mildenhall2020nerf}.
+In this case, there is no need to additionally sample light rays,
+which leave the processing time requirements on the same level as the original work by \cite{mildenhall2020nerf}.
 % \Cref{fig:colocated_light_source} \im{add figure} shows this process in more details.
 Another advantage of this setting is that it has an accessible real-world analogy.
-In particular, all of modern cellphones are equipped with cameras
-and flash lights that are placed close to each other.
-On the scale of the scene this displacement can be neglected and the setting can be considered to be co-located.
+In particular, all modern cellphones are equipped with cameras
+and flashlights that are placed close to each other.
+On the scale of the scene, this displacement can be neglected and the setting can be considered to be co-located.
 
 The co-located setting results in a very sparse sampling of the scene in terms of light-view directions.
-During training there are no other samples
-where angle between light and view rays is greater than zero.
+During training, there are no other samples
+where the angle between light and view rays is greater than zero.
 This fact negatively affects the overall training performance,
 although \cite{bi2020neural} claim
 %proves
 that even with these restrictions
 the network is still able to generalize and reconstruct the scene appearance in high quality.
-Authors also show some renders where the 'arbitrary setting' had been used during prediction phase.
+The authors also show some renders where the 'arbitrary setting' had been used during the prediction phase.
 
 
 
@@ -354,14 +354,14 @@ Authors also show some renders where the 'arbitrary setting' had been used durin
 
 The described above methods have already achieved some appealing results.
 However, all of them have their own limitations that in either event reduce the performance either qualitatively (no light interaction) or quantitatively (too slow).
-The explained below solution is constructed to take advantages from both NRF and NSVF approaches.
-This method is later referred as 'brute-force scheme' as it performs the light rays sampling without any approximation techniques.
+The explained below solution is constructed to take advantage of both NRF and NSVF approaches.
+This method is later referred to as the 'brute-force scheme' as it performs the light rays sampling without any approximation techniques.
 
-Since the NRF approach \cite{bi2020neural} is based on NeRF, it inherits its poor performance behaviour
+Since the NRF approach \cite{bi2020neural} is based on NeRF, it inherits its poor performance behavior
 and forces it to be only applicable for the 'co-located setting'.
-Although the authors are even able to render the scene within 'arbitrary setting'
+Although the authors are even able to render the scene within the 'arbitrary setting'
 when only being trained on the co-located dataset,
-the sparsity of the training dataset still highly affects network's generalization opportunities.
+the sparsity of the training dataset still highly affects the network's generalization opportunities.
 
 \cite{liu2021neural} in turn propose the technique for increasing the effectiveness of the training
 for the color-based original NeRF approach.
@@ -380,43 +380,43 @@ BRDF evaluation ('appearance model' block) is required for achieving $f_r$ value
     \label{fig:mlnrf_bfex}
 \end{figure}
 
-Since both works NSVF and NRF use original NeRF framework,
+Since both works NSVF and NRF use the original NeRF framework,
 in particular similar numerical integral estimation,
-the process of reformulating NSVF problem to work with light radiances instead of color values is fairly straight forward.
+the process of reformulating NSVF problem to work with light radiances instead of color values is fairly straightforward.
 For the integral estimation \Cref{eq:integral_estimation} is directly replaced with \Cref{eq:integral_estimation_nrf}.
 The network architecture follows the guidelines from the NSVF work,
-namely the encoder is shallow while texture predictor is deeper
+namely the encoder is shallow while the texture predictor is deeper
 comparing to the original NeRF method.
 Appearance model block (right blue rhombus) includes BRDF evaluation,
 which results in $f_r$ value required for final radiance calculation (using integral estimation formula \cref{eq:integral_estimation_nrf})
 
-In order to train model on arbitrary light dataset
+In order to train the model on arbitrary light dataset
 an additional step of light rays sampling and volume density prediction is needed.
 This requires some nested model evaluations in order to retrieve $\sigma$ values at light sample points.
-This is a quite memory intense part, however the lower model size comparing to the NRF approach makes it more accessible.
-Another key note here is that there is no need in getting texture field predictions,
+This is quite a memory intense part, however, the lower model size comparing to the NRF approach makes it more accessible.
+Another keynote here is that there is no need in getting texture field predictions,
 as for light rays the only valuable information is the volume density.
-This allows to only evaluate the corresponding part of model.
+This allows to only evaluate the corresponding part of the model.
 
 Another key point here is the format of the dataset.
 The NeRF and NSVF methods only work with color values,
 which allows them to use the LDR images in the datasets
 (i.e. PNG, JPG image formats and others).
-However, NRF approach imply light intensity values that are integrated in final radiance calculations.
+However, the NRF approach implies light intensity values that are integrated into the final radiance calculations.
 The LDR images are usually lacking the information of radiances
 and only operate with color values.
 All these facts make the LDR images bad candidates for the training dataset.
 One should instead consider using HDR images (i.e. HDR, EXR formats).
 
-The point light intensity value $I$ that takes part in calculation of $L_l(p, l) = f_{att} \cdot I$
+The point light intensity value $I$ that takes part in the calculation of $L_l(p, l) = f_{att} \cdot I$
 represents the radiation power of the light source.
 This value is known when processing artificially generated scenes
-and thus can directly be used as value of $I$.
-The real-world scenes (e.g. captured with the cellphone and flash light)
-on the contrary does not have the exact light intensity value.
-One could estimate the power of the flash light, but this would give only a rough estimation.
+and thus can directly be used as the value of $I$.
+The real-world scenes (e.g. captured with the cellphone and flashlight)
+on the contrary do not have the exact light intensity value.
+One could estimate the power of the flashlight, but this would give only a rough estimation.
 To make the method robust to this kind of estimations,
-the light intensity value $I$ is passed to optimizer (along with other model parameter $\Theta$).
+the light intensity value $I$ is passed to the optimizer (along with other model parameters $\Theta$).
 This technique requires some robust estimation of $I$ as an initialization value as well as an increased learning rate.
 
 
@@ -427,27 +427,27 @@ This technique requires some robust estimation of $I$ as an initialization value
 Using sparse octree voxels for increasing the efficiency of the method
 makes the whole problem feasible within some commonly accessible hardware.
 However, the training procedure still remained highly computationally expensive and memory demanding
-and therefore very slow in training or still even intractable for high resolution scenes.
+and therefore very slow in training or still even intractable for high-resolution scenes.
 
 The main load of this approach still remains in the additional sampling of light rays
 and the consecutive model evaluation for calculating $\tau_l(p', l)$.
 This fact leads to the task of minimizing the overhead that is caused by calculating light ray transmittances.
 
 Predictions of volume densities at view ray sample points have primary importance
-as they contribute into the final radiance value the most.
+as they contribute to the final radiance value the most.
 This assumption brings to the fact that light rays are not required
 to be sampled as densely as view rays to remain the same level of accuracy.
 Thus the lower number of points can be sampled on the light rays,
 which would result in lower memory and time consumption.
-However, this approach only alleviates the problem while not solving its route cause.
+However, this approach only alleviates the problem while not solving its root cause.
 
 The octree structure that is used to encode feature vectors $\Tilde{g_i}$ in the corners of voxels
-represent itself a coarse geometry of the scene.
+represents itself a coarse geometry of the scene.
 Starting with only a few voxels that cover the whole bounding box around the scene,
 the voxels undergo the \textit{self-pruning} and \textit{refinement} procedure (explained in \Cref{subsec:pruning}),
-which increase the detailing capabilities of the octree
+which increases the detailing capabilities of the octree
 by increasing the number of voxels, lowering its sizes and rejecting empty voxels.
-After only a few steps of the aforementioned operations the overall voxel structure
+After only a few steps of the aforementioned operations, the overall voxel structure
 repeats scene geometry with a considerable amount of accuracy.
 These voxels that intersect with the light rays can be used as an estimation of volume densities.
 
@@ -505,11 +505,11 @@ of the light ray inside voxels.
 \end{figure}
 
 There are plenty of techniques that can be applied here in order to calculate light transmittances more efficiently.
-The main proposed technique imply the assumption
+The main proposed technique implies the assumption
 that the volume density is homogeneously distributed inside the voxel.
-This assumption is certainly wrong for general case,
+This assumption is certainly wrong for the general case
 but should give a fair estimation for the light ray transmittances.
-In this case the travelled distance $d_{V_k}$ of the ray inside voxel $V_k$
+In this case, the traveled distance $d_{V_k}$ of the ray inside voxel $V_k$
 can be used to weigh some value $\hat{\sigma_{V_k}}$ (\Cref{fig:samplings} f):
 \begin{equation}
     \label{eq:light_ray_transmittance}
@@ -538,10 +538,10 @@ Some other options can be applied here such as:
 
 The aforementioned methods that are proposed within this work
 extend existing approaches in terms of efficiency for the problem of reproducing the scene under novel view and light conditions.
-The novel light conditions is the essential requirement here
+The novel light conditions are the essential requirement here
 as it expects the method to not only account for color values
 but also care about the reflectance of the surface.
-Although, the NRF approach is formulated in general form
+Although the NRF approach is formulated in general form
 when any differentiable appearance model can be used for final radiance evaluation,
 the result is still limited by the chosen BRDF.
 
@@ -560,20 +560,20 @@ are provided in advance into texture predictor.
 To avoid
 %expand
 these limitations one can shift the appearance evaluation burden to the deep neural network,
-which is able to get trained for a very complex appearance representations.
+which is able to get trained for very complex appearance representations.
 This 'implicit scheme' would have a simpler neural network structure,
-which is shown on \Cref{fig:implicit_scheme}.
+which is shown in \Cref{fig:implicit_scheme}.
 The light interaction is performed here implicitly by providing the network
-with the light direction $l$ as well as distance from sample point to the light source $d_i = \norm{p^l_k - p_i}$
-as denoted on figure.
+with the light direction $l$ as well as the distance from the sample point to the light source $d_i = \norm{p^l_k - p_i}$
+as denoted in the figure.
 Light ray direction $l$ is also positionally encoded with the same $L$ as view ray direction $v$ is.
-Although, the shadowing is not explicitly modelled,
+Although the shadowing is not explicitly modeled,
 the network is expected to learn this effect by itself.
 
 The main downside of this scheme comes from its advantage.
 Implicit representation significantly decreases the amount of control over the learned field.
-In other words, bigger amount of parameters that are responsible for one or another effects on the scene
-are hidden in the weights of model and cannot be easily attained.
+In other words, bigger amount of parameters that are responsible for different effects on the scene
+are hidden in the weights of the model and cannot be easily attained.
 
 Another characteristic of this scheme is that it does not imply any kind of regularization.
 This means that the network is not guaranteed to be able to extract the appearance of the scene.

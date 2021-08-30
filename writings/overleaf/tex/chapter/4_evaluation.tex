@@ -3,16 +3,16 @@
 \label{chap:evaluation}
 
 This chapter addresses the implementation details,
-datasets, metrics and experiments with demonstration of the achieved results.
+datasets, metrics and experiments with the demonstration of the achieved results.
 
 
 
 \section{Training and validation data}
 \label{sec:datasets}
 
-Each training session consists of optimizing parameters of a separate neural representation from one of proposed methods.
+Each training session consists of optimizing parameters of a separate neural representation from one of the proposed methods.
 The dataset for each training session is created on one specific scene and with one specific light setting.
-All of used datasets have been created in an artificial environment using Blender \cite{blender}.
+All of the used datasets have been created in an artificial environment using Blender \cite{blender}.
 Each dataset consists of rendered RGB images of the scene.
 Each image is an HDR image (the OpenEXR \cite{openexr} format is used to store HDR data on disk).
 The dataset samples are the aforementioned images
@@ -22,22 +22,22 @@ up-vector is always positive in $Z$ axis,
 the orientation is always aimed to the center of the scene.
 % The position of the camera is described with two angles: azimuthal angle $\theta$ and inclination angle $\phi$.
 The position of the camera is described with two angles: azimuthal angle $\theta$ and inclination angle $\phi$.
-For each view the values of $(\theta, \phi)$ are sampled uniformly on the surface of the sphere.
+For each view, the values of $(\theta, \phi)$ are sampled uniformly on the surface of the sphere.
 % In the experiments the inclination angle is bounded between $-10$ and $80$ degrees.
-In the experiments the inclination angle is bounded between $10$ and $100$ degrees.
-Camera extrinsics (in form of transformation matrix) are exported for each dataset sample along with the HDR image.
-Additionally to that the bounding box is also exported as it is required
+In the experiments, the inclination angle is bounded between $10$ and $100$ degrees.
+Camera extrinsics (in form of a transformation matrix) are exported for each dataset sample along with the HDR image.
+Additionally to that, the bounding box is also exported as it is required
 to initialize the octree for the NSVF method and all of the proposed methods as well.
 $200$ sample images are used in datasets with 'static' and 'colocated' light settings.
 For the 'arbitrary' light setting each dataset consists of $500$ sample images
-for having more dense light-view sampling distribution.
+for having a more dense light-view sampling distribution.
 These sample images are then split into training (75\%) and validation (25\%) sets.
 
 
 \subsection{Light settings}
 
 Different light settings are required due to a diversity of tasks that different methods are to solve.
-The illumination of the scene is set using point light source.
+The illumination of the scene is set using a point light source.
 The intensity of the light source varies for different scenes and is chosen empirically.
 The positioning of the light source is performed according to the chosen light setting.
 Three different light settings are used in order to create three versions of each dataset (\Cref{fig:light_settings}).
@@ -45,8 +45,8 @@ This is done based on the fact that different methods can only handle datasets w
 \begin{enumerate}
     \item \textbf{Static setting}
     
-    In this case the light source positioned at the same global location for all of the dataset samples.
-    This allows to produce renders of the scene with static illumination.
+    In this case the light source is positioned at the same global location for all of the dataset samples.
+    This allows producing renders of the scene with static illumination.
     The motivation for this type of datasets comes from the limitation of the NSVF method
     as it does not imply dynamic illumination.
     Datasets with static setting are made for 'Vanilla NSVF' (\cite{liu2021neural})
@@ -57,7 +57,7 @@ This is done based on the fact that different methods can only handle datasets w
     \item \textbf{Colocated setting}
     
     This setting implies the light source to be co-located with the camera.
-    In this case there is no displacement between camera and light source,
+    In this case, there is no displacement between the camera and the light source,
     which allows the NRF (\cite{bi2020neural}) approach to reuse the view volume transmittances
     in calculations as transmittances of the light rays.
     The 'Brute-force' scheme as well as both explicit and implicit schemes
@@ -71,9 +71,9 @@ This is done based on the fact that different methods can only handle datasets w
     Another constraint is applied here that forces the angle
     between view and light rays to the center of the scene to be smaller
     than some value $\alpha_{max}$.
-    In the experiments the value $\alpha_{max} = 120$ degrees has been used.
+    In the experiments, the value $\alpha_{max} = 120$ degrees has been used.
     
-    This setting is focused on general case of the NRF approach
+    This setting is focused on the general case of the NRF approach
     and can be handled by proposed methods, such as: 'Brute force' scheme
     and both explicit and implicit schemes with in-voxel approximation.
 \end{enumerate}
@@ -88,12 +88,12 @@ This is done based on the fact that different methods can only handle datasets w
 \label{subsec:scenes}
 
 Creating the datasets from scratch is motivated by the fact that
-vast majority of related works do not consider any light interaction.
+the vast majority of related works do not consider any light interaction.
 This results in such a problem that the datasets that have been used in these works
 do not include any necessary light information (global position).
 Another limitation of these datasets is that the light source is static upon the dataset samples,
 which results in a sparse light-view sampling of the scene.
-To the date of writing this thesis the datasets from correponding related works \cite{nerv2021}
+To the date of writing this thesis, the datasets from corresponding related works \cite{nerv2021}
 still are not publicly available.
 Four different scenes have been used for the evaluation (\Cref{fig:dataset_preview}).
 
@@ -114,7 +114,7 @@ Four different scenes have been used for the evaluation (\Cref{fig:dataset_previ
 The \textit{rocket} scene (\Cref{fig:dataset_preview} (a)) contains a single object,
 which exhibits geometry of medium complexity and realistic non-Lambertian materials.
 This scene contains global geometry complications (rocket wings) and some fine details (rivets on the rocket shell).
-The surface of the rocket shows moderate level of specularities (in comparison with sphere scene)
+The surface of the rocket shows a moderate level of specularities (in comparison with sphere scene)
 
 \textbf{Guitar}
 
@@ -123,15 +123,15 @@ The surface of the rocket shows moderate level of specularities (in comparison w
 % Complex geometry also allows to asses how model handles geometrical features on different scales.
 % For example strings can be barely seen on renders and they would presumably the most troublesome geometrical part of the whole scene.
 
-The \textit{guitar} scene (\Cref{fig:dataset_preview} (b)) is created for testing model's ability
+The \textit{guitar} scene (\Cref{fig:dataset_preview} (b)) is created for testing the model's ability
 to reproduce complex geometrical features on different scales.
-For example strings can be barely seen on renders and they would presumably the most troublesome geometrical part of the whole scene.
-Fairly specular surface appearance also allows to asses how well does it model surface reglectance behavior.
+For example, strings can be barely seen on renders and they would presumably be the most troublesome geometrical part of the whole scene.
+A fairly specular surface appearance also allows assessing how well does it model surface reflectance behavior.
 
 \textbf{Lego}
 
 \textit{Lego} scene (\Cref{fig:dataset_preview} (c)) is the reproduction of the model
-that have been used in a former NeRF work \cite{mildenhall2020nerf}.
+that has been used in a former NeRF work \cite{mildenhall2020nerf}.
 The dataset is recreated under a specific illumination,
 which consists of only one point light source.
 The object exhibits a very complex geometry on all scales.
@@ -141,13 +141,13 @@ The appearance of the surface does not show any complications.
 
 \textit{Hotdog} scene (\Cref{fig:dataset_preview} (d)) is also a reproduction of the model
 from the NeRF work with only one point light source.
-The reflectance behavior of objects on this scene is more sphisticated
-coparing to the \textit{lego} scene while the geometry is simpler.
+The reflectance behavior of objects on this scene is more sophisticated
+comparing to the \textit{lego} scene while the geometry is simpler.
 
 
 \subsection{Real-world dataset handling}
 
-For the group of methods that only consider static illumination of the scene
+For the group of methods that only consider static illumination of the scene,
 the dataset acquisition can be performed in different ways.
 One of these ways is to use a cell phone with its camera to capture the scene.
 The acquired images can then be processed with such techniques as
@@ -168,7 +168,7 @@ and a turntable, which allows to rotate the object and thereby acquire varying v
 
 
 Another key point is the background that has to be as homogeneous as possible.
-The quality of final renders are sensitive to the too complex background behind the object on the scene.
+The quality of final renders is sensitive to the too complex background behind the object on the scene.
 
 
 
