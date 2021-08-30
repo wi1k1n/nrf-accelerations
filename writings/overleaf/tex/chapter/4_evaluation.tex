@@ -193,27 +193,27 @@ All of the proposed methods are implemented on Python
 using PyTorch \cite{pytorch} framework
 for neural fields and ray casting procedure.
 The Fairseq \cite{ott2019fairseq} framework is used over the Pytorch,
-which provides easier easier training, evaluation and validation pipelines as well as extend the initial functionality.
+which provides easier training, evaluation and validation pipelines as well as extends the initial functionality.
 During training $80$ pixels are first sampled from each of $1$ or $2$ images 
 forming a batch that is used for one training iteration.
 These pixels are used to cast rays through the focal point of the corresponding cameras.
 These rays then intersect the octree, which is initialized with $N_0^3 = 4^3$ voxels ($4$ voxels for each axis).
 These rays are then sampled on the voxel intersection intervals with the step size $0.125$.
 The following procedure differs depending on the method
-and include additional light ray casting, intersecting and sampling for the 'brute-force' scheme and BRDF evaluation for the 'explicit schemes'.
+and includes additional light ray casting, intersecting and sampling for the 'brute-force' scheme and BRDF evaluation for the 'explicit schemes'.
 Alpha compositing is performed after the color (or radiance) values are achieved.
-These values are then being supervised with the ground truth values using fine-network term from loss function from the \Cref{eq:loss_func} with the beta-distribution regularizer from the \Cref{eq:beta_regularizer}:
+These values are then being supervised with the ground truth values using the fine-network term from loss function from the \Cref{eq:loss_func} with the beta-distribution regularizer from the \Cref{eq:beta_regularizer}:
 \begin{equation}
     \mathcal{L} = \sum_{(p_0,v)\in\mathcal{B}} \norm{ C(p, v) - C^*(p, v) } + \beta(\log(\tau_c(p, v)) + \log(1 - \tau_c(p, v))),
 \end{equation}
 with $\beta = 10^{-3}$ that is used in the experiments.
 
 Adam optimizer is used as an optimization algorithm for learning parameters $(\Theta, I)$ ($I$ is light intensity value).
-Learning rate for the optimizer is initialized with value $10^{-4}$
+The learning rate for the optimizer is initialized with value $10^{-4}$
 and linearly decays to value $10^{-6}$ over 100k iterations.
 Octree refinement procedure as well as reducing ray casting step size are performed on iterations 5k, 25k and 50k.
 Self-pruning is performed every 5k iterations.
-Tone-mapping using scaling and gamma-correction (differ depending on scene)
+Tone-mapping using scaling and gamma-correction (differ depending on the scene)
 is performed to visualize HDR images (both inputs and outputs).
 
 All of the experiments are held on NVIDIA GTX 1080Ti GPU with 11GB of memory.
@@ -253,7 +253,7 @@ The inverse-log-transform is performed on the model outputs at the post-processi
 For evaluation of the results the following metrics have been used:
 \begin{enumerate}
     \item \textit{PSNR}$\uparrow$ \cite{hore2010image} (Peak Signal to Noise Ratio) is a traditional estimator for image comparison
-    that is based on MSE and concentrated on pixel-by-pixel comparison.
+    that is based on MSE and concentrates on the pixel-by-pixel comparison.
     Higher value is better.
     \item \textit{SSIM}$\uparrow$ \cite{zhou2004image, nilsson2020understanding, hore2010image} (Structural Similarity Index Measure) is a perceptual metric
     that assesses image quality based on perception of the human visual system.
@@ -268,11 +268,11 @@ For evaluation of the results the following metrics have been used:
     Lower value is better.
 \end{enumerate}
 
-Additionally to the above mentioned metrics the empirical evaluations has to be made
+Additionally to the above-mentioned metrics, empirical evaluations have to be made
 to assess the quality of the reproduced appearance.
 This can be done by evaluating the model on a given trajectory for camera and light sources.
-This produces the continuous changes in the appearance and reveals all of the artefacts of the produced renders.
-The usage of artificial datasets (\Cref{sec:datasets}) allows to generate the ground truth images
+This produces continuous changes in appearance and reveals all of the artifacts of the produced renders.
+The usage of artificial datasets (\Cref{sec:datasets}) allows generating the ground truth images
 even for novel light and view conditions, which are not contained in training or validation datasets.
 This cannot be done for real-world images, which makes the whole task of quality assessment more difficult for such datasets.
 % Metrics: MSE, SSIM, FLIPLoss/HDRFlipLoss
@@ -291,13 +291,13 @@ Following list overviews schemes that are compared in this section:
 \begin{enumerate}
     \item Vanilla \textit{NSVF} method \cite{liu2021neural} (described in \Cref{subsec:NSVF}).
     The fastest implementation (among other listed methods),
-    however can only be processed with static light dataset.
+    however, can only be processed with the static light dataset.
     \item \textbf{Ex}plicit \textbf{Col}ocated scheme (\textit{ExCol}) \cite{bi2020neural, liu2021neural}, which is explained in details in \Cref{subsec:NRF}.
-    This is a 'lighter' version of \textit{explicit brute-force scheme}
-    due to reuse of viewing sample points.
+    This is a 'lighter' version of the \textit{explicit brute-force scheme}
+    due to the reuse of viewing sample points.
     The second fastest implementation as it only contains
     a small overhead of evaluating BRDF instead of directly predicting colors.
-    However, similarly to \textit{NSVF} can only be trained on one type of dataset: with colocated light setting.
+    However, similarly to \textit{NSVF} can only be trained on one type of dataset: with the colocated light setting.
     \item \textbf{Ex}plicit \textbf{B}rute-\textbf{F}orce scheme (\textit{ExBF}) (described in \Cref{sec:explicit_scheme}).
     The generalization of \textit{ExCol}.
     The slowest implementation with the highest memory demand,
@@ -308,10 +308,10 @@ Following list overviews schemes that are compared in this section:
     as it also includes light rays octree intersection overhead,
     which makes it slower than \textit{ExCol}.
     \item \textbf{Im}plicit \textbf{N}eural \textbf{R}eflectance \textbf{F}ield scheme (\textit{ImNRF}) (described in \Cref{sec:implicit_scheme}).
-    This method is based on Vanilla NSVF approach.
+    This method is based on the Vanilla NSVF approach.
     Light direction vectors and distances to the light source are also provided along with view direction and sample point location.
     This scheme is considered to implicitly represent the appearance of the scene
-    and can handle on all of the listed dataset settings.
+    and can handle all of the listed dataset settings.
 \end{enumerate}
 
 
@@ -319,7 +319,7 @@ Following list overviews schemes that are compared in this section:
 % \catchmethodsdatasets
 \input{tex/objects/table_light_settings}
 
-Please refer to \Cref{tab:methods_datasets} for the visual representation of applicability of different types of datasets to methods mentioned above methods.
+Please refer to \Cref{tab:methods_datasets} for the visual representation of the applicability of different types of datasets to the methods mentioned above methods.
 
 
 
@@ -332,15 +332,15 @@ Please refer to \Cref{tab:methods_datasets} for the visual representation of app
 Datasets with the colocated light setting can be evaluated by all of the listed models except \textit{NSVF}.
 The fact that a very fast \textit{ExCol} scheme can be evaluated on these datasets
 makes them very advantageous for comparing against other methods.
-Since the \textit{ExCol} scheme is essentially a special case for \textit{ExBF} scheme
+Since the \textit{ExCol} scheme is essentially a special case for the \textit{ExBF} scheme
 they perform the same way as long as the sampling for light rays is performed the same way as for view rays.
-In contrary, the performance of \textit{ExBF} scheme is drastically worse comparing to \textit{ExCol} scheme.
-The \textit{ImNRF} scheme is expected to perform at the same efficiency level as Vanilla \textit{NSVF} method.
+On the contrary, the performance of the \textit{ExBF} scheme is drastically worse comparing to the \textit{ExCol} scheme.
+The \textit{ImNRF} scheme is expected to perform at the same efficiency level as the Vanilla \textit{NSVF} method.
 This is due to the fact, that light rays coincide with view rays 
 and the scheme does not consider any kind of regularization for the model
 to distinguish light rays from view rays.
 The light distance is only applicable for light attenuation, 
-which is not expected to make a very noticable effect.
+which is not expected to make a very noticeable effect.
 Hence the main focus here is to compare colocated scheme \textit{ExCol} with the in-voxel approximation scheme \textit{ExVA}.
 
 
@@ -352,11 +352,11 @@ Hence the main focus here is to compare colocated scheme \textit{ExCol} with the
 An overview of quantitative results of evaluation methods on colocated datasets is presented in \Cref{tab:colocated_metrics}.
 Four aforementioned metrics are calculated on renders over the validation dataset (25\% of the whole dataset, 50 images for these experiments).
 \textit{ImNRF} is the fastest scheme since it almost completely shares complexity from Vanilla NSVF.
-The \textit{ExCol} scheme is the second fastest,
+The \textit{ExCol} scheme is the second fastest
 since it does not evaluate any overhead related to sampling light rays
 as the view samples are simply reused as samples for light rays.
-The overhead of \textit{ExCol} method comparing with \textit{ImNRF} comes from additional evaluation of BRDF model before alpha compositing of view samples.
-The \textit{ExVA} scheme is an approximation of \textit{ExCol} method
+The overhead of the \textit{ExCol} method comparing with \textit{ImNRF} comes from the additional evaluation of the BRDF model before alpha compositing of view samples.
+The \textit{ExVA} scheme is an approximation of the \textit{ExCol} method
 that uses the distance of travel of light rays inside the voxels scaled by some constant sigma value.
 The implementation implies light rays intersection with the octree,
 which is a fairly fast task, although it still substantially drops the performance.
@@ -364,22 +364,22 @@ The approximation scheme \textit{ExVA} is from $1.4$ to $2$ times slower
 than the fastest \textit{ExCol} depending on the scene.
 
 
-The \textit{ExCol} scheme similar to \textit{ExBF} results,
+The \textit{ExCol} scheme is similar to \textit{ExBF} results,
 which concurs with the expectations.
 However, the \textit{ExBF} method has a massive overhead in sampling light rays
-and evaluating model on these samples,
+and evaluating the model on these samples,
 which makes it naturally impractical.
 Training of \textit{ExBF} model even on 64px images takes $1.5$ times more time
 than training approximation \textit{ExVA} scheme on 256px images.
-In these experiments the \textit{ExBF} scheme did not manage
-to converge completely due to the hardware memory limitations.
-The \textit{ImNRF} scheme shows best performance on this dataset.
+In these experiments, the \textit{ExBF} scheme did not manage
+to converge completely due to hardware memory limitations.
+The \textit{ImNRF} scheme shows the best performance on this dataset.
 This is presumably due to the fact that it is not forced
 to perform any kind of light interaction generalization.
 As can be seen later (\Cref{tab:arb_dynamic_light}) the model
-mostly does not change predictions for non-conicident view and light rays.
-For these experiments \textit{ImNRF} is believed to perform
-in a similar way Vanilla \textit{NSVF} would have performed if it used a consideration of light interaction.
+mostly does not change predictions for non-coincident view and light rays.
+For these experiments, the \textit{ImNRF} is believed to perform
+in a similar way Vanilla \textit{NSVF} would have performed if it used consideration of light interaction.
 
 
 % % The best values are denoted in bold.
@@ -410,8 +410,8 @@ in a similar way Vanilla \textit{NSVF} would have performed if it used a conside
 
 \input{tex/objects/coloc_results}
 
-Some selected views from these experiments are presented for the comparison in \Cref{tab:coloc_allresults}.
-As was already said the \textit{ExBF} did not show high quality results.
+Some selected views from these experiments are presented for comparison in \Cref{tab:coloc_allresults}.
+As was already said the \textit{ExBF} did not show high-quality results.
 The main limitation is that this scheme is very memory-demanding and fairly slow.
 Images in 64px resolution have been used for the \textit{ExBF} scheme.
 The synthesized views are also in the same resolution and scaled up for clearer comparison.
@@ -421,27 +421,27 @@ When comparing \textit{ExCol}, \textit{ExVA} and \textit{ImNRF} schemes,
 the results are very similar especially for \textit{ExCol} and \textit{ExVA} methods.
 % One can find \textit{ExCol} to reproduce views with more details,
 % however the differences are truly slight and could come from the deviation between training iterations.
-The \textit{ImNRF} scheme generally showed best results
-(fine detalis on lego dataset, specularities on hotdog and guitar datasets),
+The \textit{ImNRF} scheme generally showed the best results
+(fine details on lego dataset, specularities on hotdog and guitar datasets),
 which confirms the tendency from \Cref{tab:colocated_metrics}.
 Both \textit{ExCol} and \textit{ExVA} schemes are occasionally lacking specularities (rocket left)
 and failing to reproduce very fine details of the Lego dataset.
 The very bright spot on the Lego renders (bottom) is also reproduced incorrectly,
-however this is likely due to the models being underfitted.
+however, this is likely due to the models being underfitted.
 
 \subsubsection{ExCol vs. NRF}
 
-The \textit{ExCol} scheme is originally based on NRF framework \cite{bi2020neural},
+The \textit{ExCol} scheme is originally based on the NRF framework \cite{bi2020neural},
 which extends the problem of novel view rendering to
 'novel view-light rendering' by considering reflectance of the objects in the scene.
-However, \textit{ExCol} method in turn uses NSVF framework for increasing the efficiency of sampling.
+However, the \textit{ExCol} method in turn uses the NSVF framework for increasing the efficiency of sampling.
 Although \cite{bi2020neural} do not provide the datasets from their experiments,
 some rough time estimation comparison can be done.
 It takes approximately 48 hours for the NRF model to get trained on 4 GPUs NVIDIA RTX 2080Ti.
 This hardware setup is much more powerful than the hardware used in this thesis.
-Nevertheless as it can be seen from \Cref{tab:colocated_metrics}
+Nevertheless, as it can be seen from \Cref{tab:colocated_metrics}
 the \textit{ExCol} can get trained in approximately 12 hours on a single GPU NVIDIA 1080Ti,
-which is $4$ times faster than original NRF approach.
+which is $4$ times faster than the original NRF approach.
 Even considering the differences in the datasets and quantitative differences in achieved results,
 the efficiency improvement is fairly distinct.
 Unfortunately, \cite{bi2020neural} do not provide any metrics values to compare our results with.
@@ -454,25 +454,25 @@ Unfortunately, \cite{bi2020neural} do not provide any metrics values to compare 
 Datasets with the arbitrary setting cannot be processed with \textit{ExCol} scheme,
 since the light source is not co-located with the camera.
 The \textit{ExBF} method is an impractically slow generalization for the \textit{ExCol}.
-Thus \textit{ExVA} an \textit{ImNRF} are main methods for achieving renders on this type of datasets.
+Thus \textit{ExVA} and \textit{ImNRF} are the main methods for achieving renders on this type of datasets.
 Although \textit{ExVA} is an approximation,
 which theoretically produces worse results than the 'brute-force' or 'colocated' schemes,
 experiments with the colocated datasets (\Cref{subsec:experiments_coloc}) showed
 that evaluations are very similar between \textit{ExVA} and \textit{ExCol}
 by assessing both using metrics (\Cref{tab:colocated_metrics}) and empirically (\Cref{tab:coloc_allresults}).
-The implicit scheme is not restricted to represent scene appearance with some specific model,
-on the contrary it is remained to implicitly learn scene appearance
+The implicit scheme is not restricted to represent scene appearance with some specific model.
+On the contrary, it is remained to implicitly learn scene appearance
 by including light ray directions and distances along with a viewing direction.
 
-\Cref{tab:arb_selective_results} gives an overview on the results of two mentioned above methods
-trained on Lego dataset with an arbitrary light setting.
+\Cref{tab:arb_selective_results} gives an overview of the results of the two mentioned above methods
+trained on the Lego dataset with an arbitrary light setting.
 Images marked with \textit{HDRFlip} are the difference images produced within HDRFlipLoss \cite{andersson2020flip, theisel2021hdrflip}
 between target images and corresponding renders.
 It can be seen that both models reproduced the scene with fairly high quality,
 although they produce more errors on darker views with some highly specular flares (3rd row, HDRFlip images show strong deviation from target images).
-Please note that model predictions as well as target image on the 3rd row
+Please note that model predictions, as well as target image on the 3rd row,
 are post-processed by scaling and applying gamma-correction ($\gamma = 2.5$)
-and in reality they contain very dark object with a very bright spot of light reflection.
+and in reality, they contain a very dark object with a very bright spot of light reflection.
 \textit{ImNRF} shows higher overall performance than \textit{ExVA}.
 
 
@@ -482,8 +482,8 @@ Although \cite{bi2020neural} claim that deep neural network from their framework
 can generalize to some arbitrary light position while only being trained on coinciding light-view positions,
 the quality of this generalization is still doubtful.
 Datasets that were created with the arbitrary light setting
-contain denser light-view sample space than those created with colocated setting.
-This results in higher quality of novel-light synthesized views.
+contain denser light-view sample space than those created with the colocated setting.
+This results in a higher quality of novel-light synthesized views.
 \Cref{tab:arb_dynamic_light} contains five columns,
 which contain images evaluated from the same novel (has not been used during training) camera position: $\phi = 0$ and $\theta = 0$.
 Each of these images is lit from the light source,
@@ -491,12 +491,12 @@ which novel locations are different along different columns.
 The light source's location is defined by two angles:
 inclination angle $\theta = \const$ and azimuthal angle $\phi$
 that takes values from -90\textdegree to 90\textdegree.
-In central column the light source is co-located with camera,
+In the central column, the light source is co-located with the camera,
 which completely coincides with the light setting used for training \textit{ExCol}
 (although this view is novel for the method).
 Both camera and light positions are the same for renders inside each column.
 Please note that for this experiment \textit{ExCol} has been trained on the dataset with colocated light setting
-whilst \textit{ExVA} has been trained on the dataset with arbitrary light setting.
+whilst \textit{ExVA} has been trained on the dataset with the arbitrary light setting.
 % \textit{Note}: a significant mistake in implementation of \textit{ExCol} was noticed only shortly before the submission deadline.
 % For the non-colocated evaluation of the original NRF approach the \textit{light caching} technique is used,
 % which reuses volume density from the view samples for the light transmittance calculation.
@@ -506,7 +506,7 @@ whilst \textit{ExVA} has been trained on the dataset with arbitrary light settin
 % In these experiments \textit{ExCol} does not interpolate for the light transmittance,
 % which means that it does not consider any shadowing effects (which is proved by the results from \Cref{tab:arb_dynamic_light}).
 
-It can be clearly seen that \textit{ImNRF} trained on colocated light dataset,
+It can be clearly seen that \textit{ImNRF} trained on the colocated light dataset,
 did not manage to properly generalize for the non-colocated light-view case.
 There also are no shadows on the predictions as \textit{ImNRF} does not consider any shadowing.
 In general \textit{ExVA} method outperforms \textit{ExCol}.
@@ -515,14 +515,14 @@ while for the zero-angle view both methods perform with approximately the same q
 \textit{Note:} that for evaluation under novel light-view conditions the original NRF method used light transmittance caching
 (i.e. finding nearest sampled points and interpolating transmittance value between those),
 which allowed for realistic shadowing effects.
-In \textit{ExCol} \textit{no interpolation is performed}, which reasons the lack of shadows on presented render.
-Another key observation is that the sigma field of \textit{ExVA} did not converge completely on the front part of base of the model.
+In \textit{ExCol} \textit{no interpolation is performed}, which reasons the lack of shadows on the presented render.
+Another key observation is that the sigma field of \textit{ExVA} did not converge completely on the front part of the base of the model.
 \textit{ExCol} renders this part without any difficulties.
-This difference is most likely due to more consistent lighting of this part
-captured in the colocated light dataset comparing to those in arbitrary light dataset.
-Another noticable difference is that \textit{ExVA} better handles fine details on the scene.
+This difference is most likely due to the more consistent lighting of this part
+captured in the colocated light dataset comparing to those in the arbitrary light dataset.
+Another noticeable difference is that \textit{ExVA} better handles fine details on the scene.
 This can be explained by the fact that these fine features appear
-in the arbitrary light dataset its own shadows casted in different directions (depending on light source location),
+in the arbitrary light dataset with its own shadows casted in different directions (depending on light source location),
 which encourages the density predictor to better distinguish geometrical features from appearance effects.
 % Note that due to the colocated nature of training dataset for the \textit{ExCol}
 % the model does not happen to meet any shadows at all.
@@ -531,8 +531,8 @@ which encourages the density predictor to better distinguish geometrical feature
 % This can also be explained by an extremely sparse light-view space of the colocated light dataset.
 \textit{ImNRF} (trained on the arbitrary light dataset)
 managed to reproduce the scene even better than \textit{ExVA}.
-Same tendency as in \Cref{tab:arb_selective_results} can be noticed
-that \textit{ImNrf} is able to recover more details comparing to \textit{ExVA}.
+The same tendency as in \Cref{tab:arb_selective_results} can be noticed
+that \textit{ImNrf} is able to recover more details comparing to the \textit{ExVA}.
 
 
 
@@ -558,7 +558,7 @@ that \textit{ImNrf} is able to recover more details comparing to \textit{ExVA}.
 Static light setting is the only type of datasets that can be used
 for training the original NSVF method,
 due to the limitation of the illumination to be static.
-However, this type of dataset appear to be challenging for the novel light-view synthesis task.
+However, this type of dataset appears to be challenging for the novel light-view synthesis task.
 Although, the sampling in the light-view space is denser comparing with the colocated setting
 where no other than coincided light and view rays exist,
 the scene is lit with the light from only one side.
@@ -572,9 +572,9 @@ as the shadows will move revealing incorrect parts of the geometry prediction.
 % and cannot reliably get trained.
 
 This problem is exaggerated by the consideration of using a single light source to illuminate the scene
-that comes with formulating the rendering equation \cref{eq:integral_estimation_nrf}.
-In the NeRF and NSVF methods the global static illumination is considered,
-which is not limited my only one light source and can be very complex.
+that comes with formulating the rendering equation (\cref{eq:integral_estimation_nrf}).
+In the NeRF and NSVF methods, the global static illumination is considered,
+which is not limited by only one light source and can be very complex.
 
 \input{tex/objects/static_valid_results}
 
@@ -583,7 +583,7 @@ which is not limited my only one light source and can be very complex.
 
 Some comparisons of evaluations of these two methods are presented in \Cref{fig:static_valid_results}.
 The training was performed on static light datasets.
-Each row consists of three sub-rows that contains evaluation outputs for \textit{ExVA}, \textit{NSVF} and \textit{ImNRF} methods.
+Each row consists of three sub-rows that contain evaluation outputs for \textit{ExVA}, \textit{NSVF} and \textit{ImNRF} methods.
 Columns correspond to different types of evaluation outputs.
 \textit{Normal} is the normal map (in the viewing coordinate frame)
 that is calculated from the sigma field.
@@ -591,16 +591,16 @@ that is calculated from the sigma field.
 \textit{Voxel} map is the visualization of the octree for the presented view rendering.
 
 It can be easily seen that all methods struggle
-with correct prediction of shadowed parts of the scenes
-(holes in hotdog dataset, missing part of base in lego dataset bottom subrow).
+with the correct prediction of shadowed parts of the scenes
+(holes in hotdog dataset, missing part of the base in lego dataset bottom subrow).
 Although the geometry fails, the produced renderings
 of the \textit{NSVF} and \textit{ImNRF} method match target images with fairly high accuracy.
 The reason for that is the static lighting, which is 'baked' into the scene appearance.
-In contrary, the \textit{ExVA} method implements BRDF model,
+On contrary, the \textit{ExVA} method implements the BRDF model,
 which relies on geometry and is especially sensitive to correct normal estimation
 on spots with high light contribution (i.e. flares from the light source).
-This behaviour can be seen on hotdog dataset and guitar dataset.
-In general both \textit{NSVF} and \textit{ImNRF} outperforms \textit{ExVA} on this dataset light setting.
+This behavior can be seen on the hotdog dataset and guitar dataset.
+In general, both \textit{NSVF} and \textit{ImNRF} outperform \textit{ExVA} on this dataset light setting.
 
 
 
