@@ -5,29 +5,30 @@
 \label{sec:summary}
 %\addcontentsline{toc}{chapter}{Zusammenfassung}
 
+% \im{condense}
 
 Photo-realistic scene reconstruction under novel viewing and illumination conditions
 is a challenging long-standing problem in computer graphics.
-Recent studies in this field has shown the applicability of deep neural networks
-to learn an implicit neural representations of the scene
+Recent studies in this field have shown the applicability of deep neural networks
+to learn an implicit neural representation of the scene
 containing both geometric and appearance information about the scene.
 
-Most works focus on extracting radiance fields under static illumination of the scene.
+Most works focus on extracting radiance fields under the static illumination of the scene.
 \cite{mildenhall2020nerf} presented the state-of-the-art approach NeRF,
-that learns continuous volumetric scene representation from the set of known 2D views.
-This allows to reconstruct learned scene from novel view points,
-however proposed approach suffers from inefficiency.
+which learns continuous volumetric scene representation from the set of known 2D views.
+This allows to reconstruct the learned scene from the novel viewpoints,
+however, the proposed approach suffers from inefficiency.
 To improve NeRF's performance \cite{liu2021neural} show the application of octrees
 to learn Neural Sparse Voxel Fields (NSVF) that achieve up to 10 times better performance.
 
 However, learned with NSVF radiance fields are still not implying any light interaction that allows
-to model light-dependant effects and reconstruct the scene under novel illumination conditions.
+to model light-dependent effects and reconstruct the scene under novel illumination conditions.
 \cite{bi2020neural} propose Neural Reflectance Fields (NRF)
-that consider a single non-static point light illumination on the scene
-and imply additionally sampling light rays, which drastically increases method complexity.
+that considers a single non-static point light illumination on the scene
+and implies additional light rays sampling, which drastically increases method complexity.
 
-In this work the performance limitation is addressed and several methods
-that allows to increase NRF's efficiency are offered.
+In this work, the performance limitation is addressed and several methods
+that allow increasing NRF's efficiency are offered.
 Explicit schemes \textit{ExCol} and \textit{ExBF} are meant to accelerate NRF approach
 using voxel octree structure, similarly to NSVF approach.
 Explicit scheme \textit{ExVA} offers the in-voxel approximation,

@@ -43,13 +43,16 @@ Point clouds require a complex post-processing step
 (e.g. \cite{ballpivoting1999bernardini}) in order to produce the mesh of the scene,
 which makes them quite tedious to work with.
 
-\im{(sm): \textit{why do we need/want a mesh?}}
+% \im{(sm): \textit{why do we need/want a mesh?}}
 Geometry can be represented using \textit{meshes},
 where corresponding edges and vertices form a graph (\cite{wang20183d}).
-Although these methods \im{(sm): \textit{which methods?}} work directly on meshes,
-the downsides are in high limitations of these methods,
-such as requirement of \im{reference template mesh (sm): ??},
-tendency to produce self-intersecting meshes or opened surfaces (\cite{groueix2018atlasnet}).
+Although, meshes have advantages (e.g. they are good for forward rendering),
+the downsides of methods that are using meshes appear in high limitations
+(e.g. AtlasNet approach \cite{groueix2018atlasnet} tends to produce self-intersecting meshes or opened surfaces)
+% Although these methods \im{(sm): \textit{which methods?}} work directly on meshes,
+% the downsides are in high limitations of these methods,
+% such as requirement of \im{reference template mesh (sm): ??},
+% tendency to produce self-intersecting meshes or opened surfaces (\cite{groueix2018atlasnet}).
 
 \subsection{Implicit geometry}
 
@@ -114,30 +117,35 @@ The fully differentiable pipeline allows to optimize parameters of deep neural n
 which predict the volume density and the scene color at given 3D point.
 The volume rendering technique is then used for gathering these sample points along the ray
 and calculating color values for the novel view.
+NeRF lies in the the basis of the proposed in this work methods.
 
 The downside of the NeRFs is the inefficiency of this method.
 \cite{liu2021neural} proposes to use the octree as an underlying structure for the scene,
 which allows to increase the efficiency of sampling at the cost of very efficient ray voxel intersections.
 Authors also propose to store learnable feature vectors in voxel corners,
 which allows to decrease the size of network while keeping its capacity.
+The concept of using sparse voxel octrees is used in all of the proposed in this thesis methods.
 
 In FastNeRF \cite{garbin2021fastnerf} propose factorization of deep radiance maps
 that can be cached and queried on high-end GPUs.
 This technique extends the original NeRF network structre
 by two separate MLPs for position-dependent and direction-dependent inputs.
 The evaluation time can be decreased by up to 4000 times.
+The method is not able to relight the scene.
 
 \cite{reiser2021kilonerf} with the KiloNeRF approach employ thousand of tiny MLPs 
 instead of one large MLP as proposed in NeRF.
 Each of these MLPs is responsible for its own part of the scene
 and all of them can be processed simultaniously on modern GPUs.
-This work reaches more than 2000 times faster in both training and inference stages.
+This work reaches more than 2000 times faster in both training and inference stages,
+does not consider any light interaction though.
 
 \cite{yu2021plenoctrees} propose PlenOctrees as another structure that can be used to increase the efficiency of original NeRF method.
 Authors separate the original network to factorize the appearance using closed-form
 spherical basis functions - spherical harmonics (SH) \cite{mohlenkamp1997spherical}.
 The SH coefficients together with volume density values are then used
 for building the PlenOctree.
+Although faster inference time is achieved, novel light conditions are not considered.
 
 In DeRF approach \cite{rebain2020derf} the scene is separated into parts by applying spatial decomposition.
 These parts are then processed with smaller networks, which allows to achieve near-constant inference time.
@@ -167,6 +175,8 @@ The key idea is to optimize uncertainty image, which is used to weigh target ima
 The difference between this target image and the composited outputs is minimized during training.
 The proposed solution is able to outperform original NeRF in terms of quality
 when applied for the datasets with less controlled multi-view collections.
+This approach allows to interpolate color and illumination between two training images,
+which add relighting capabilities, which are highly limited though.
 
 \cite{bi2020neural} reformulates the rendering equation for considering a single non-static light source on the scene.
 Although, in general this is highly impractical, one specific case
@@ -175,33 +185,41 @@ without any sufficient overhead comparing to the NeRF work.
 This approach implies the appearance to be modelled using any differentiable BRDF model.
 In former work \cite{bi2020deep} the authors reconstructs discrete reflectance volumes,
 which results in its main limitation of fixed volume resolution.
+The formulation of rendering equation from NRF
+lies in the basis of all of proposed in this thesis methods except the implicit scheme \textit{ImNRF}.
 
 \cite{nerv2021} with the NeRV approach addresses the relighting problem
 by extending the original NeRF method with a second MLP
 that predicts a visibility field.
 The 'one-bounce' indirect illumination is considered in this approach.
+This is a concurrent to this thesis work, which results are presented in \Cref{fig:concur_nerv} for performance comparison.
 
 Neural Reflectance Decomposition (NeRD) \cite{boss2020nerd} uses two networks:
 'coarse' Sampling and 'fine' Decomposition networks to decompose the scene into
 spatially varying BRDF material properties.
-The approach does not limit illumination conditions.
+This concurrent approach consider uncontrolled illumination 
+and is able to relight the scene under novel lighting conditions.
+The results of this work are shown in \Cref{fig:concur_nerd} for comparison with results of this work.
 
 In NeRFactor \cite{nerfactor} the surface representation is extracted from the NeRF scene representation.
 Scene geometry is refined simultaneously with the spatially-varying reflectance and environment lighting.
+This approach does not have requirement for known illumination
+and allows for novel light-view synthesis.
+Some selective results of this concurrent approach are shown in \Cref{fig:concur_nerfactor1} and \Cref{fig:concur_nerfactor2}
 
 
 
-\cite{Zhang2021lighttransport} introduce a semi-parametric approach
-for learning light transports using neural representations.
-Authors use special hardware setup for capturing training images under known illumination.
-The approach consists of observation- and query-paths.
-The observation path encodes K nearby observations into multiscale features,
-which are then concatenated and used in the query path as feature activations.
-The query path predicts residual maps from novel light and view directions
-and resample the texture-space rendering back to the camera space
-where it is supervised by the ground truth images.
+% \cite{Zhang2021lighttransport} introduce a semi-parametric approach
+% for learning light transports using neural representations.
+% Authors use special hardware setup for capturing training images under known illumination.
+% The approach consists of observation- and query-paths.
+% The observation path encodes K nearby observations into multiscale features,
+% which are then concatenated and used in the query path as feature activations.
+% The query path predicts residual maps from novel light and view directions
+% and resample the texture-space rendering back to the camera space
+% where it is supervised by the ground truth images.
 
-\im{ref to sebastian's review}
+% \im{ref to sebastian's review}
 
 
 

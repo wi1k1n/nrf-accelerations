@@ -7,8 +7,8 @@ COPY2CLIPBOARD = False
 INJECT_PYCHARM = True
 SAVE_FILE = True
 
-DATA = "lego_coloc_exr"
-NAME = "u4106"  # postfix for dataset name
+DATA = "lego_static_exr"
+NAME = "u4110"  # postfix for dataset name
 RENDER_OUTPUT = "test"  # output if empty
 RES = "256x256"
 # RENDER_PATH_LIGHT = True  # True - light source is moving, False - camera is moving
@@ -100,10 +100,10 @@ MODEL_PATH = SAVE + '/' + MODEL + '/' + CHECKPOINT
 ####################################################
 #### Lego  (pl: (-2.2 2.7 2.7) -> (a=129.17; h=2.7)
 RENDER_AT_VECTOR = '"(0, 0, 0)"'
-# RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17}"'
-# RENDER_LIGHT_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17}"'
-RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.0,\'o\':(0,0,0),\'t0\':0}"'
-RENDER_LIGHT_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.0,\'o\':(0,0,0),\'t0\':0}"'
+RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17}"'
+RENDER_LIGHT_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17}"'
+# RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.0,\'o\':(0,0,0),\'t0\':0}"'
+# RENDER_LIGHT_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.0,\'o\':(0,0,0),\'t0\':0}"'
 # # !!Static Light!!
 # RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17}"'
 # RENDER_LIGHT_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17}"'
