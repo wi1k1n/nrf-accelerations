@@ -192,7 +192,7 @@ def train(args, trainer, task, epoch_itr):
                 logger.info("reset the trainer at {}".format(trainer.get_num_updates()))    
                 log_output = trainer.train_step(samples)
 
-            metrics.log_scalar('mem', torch.cuda.memory_stats()['active_bytes.all.peak'] / 1024 / 1024, 0)
+            metrics.log_scalar('mem', torch.cuda.memory_stats()['reserved_bytes.all.allocated'] / 1024 / 1024, 0)
             if log_output is None:  # OOM, overflow, ...
                 continue
 

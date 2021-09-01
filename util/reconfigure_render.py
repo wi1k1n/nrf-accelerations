@@ -5,8 +5,8 @@ import pyperclip
 DATA = "lego_random_exr"
 DATA_MODEL = ''  # data_folder for the model checkpoints; == DATA if empty
 NAME = ""  # postfix for dataset name
-RENDER_OUTPUT = "test3"  # output if empty
-RES = "128x128"
+RENDER_OUTPUT = ""  # output if empty
+RES = "256x256"
 # RENDER_PATH_LIGHT = True  # True - light source is moving, False - camera is moving
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/'\
 # 			   + DATA + '_' + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
@@ -14,11 +14,11 @@ RES = "128x128"
 TARGETS_PATH = 'datasets/' + DATA + '_target' + '/target'
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/guitar_coloc_exr_target_cam/target'
 # TARGETS_PATH = '/tmp/mazlov/blender/guitar_coloc_exr_target_cam/target'
-DRY_RUN = False  # only create camera/light positions and do not evaluate model
+DRY_RUN = True  # only create camera/light positions and do not evaluate model
 
-CHUNK_SIZE = 1
+CHUNK_SIZE = 128
 RENDER_BEAM = '1'  # should be an even divisor of NUM_FRAMES TODO: fix it
-NUM_WORKERS = '0'
+NUM_WORKERS = '10'
 
 PREPROCESS = 'log' # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #
@@ -40,11 +40,11 @@ MODELOVERRIDES = {
 # # <!/-- Original NSVF from facebook -->
 
 # ARCH = "mlnrf_base"  # Implicit model with ignoring light interaction
-# ARCH = "mlnrfiva_base"  # Implicit model with InVoxelApproximation light interaction
+ARCH = "mlnrfiva_base"  # Implicit model with InVoxelApproximation light interaction
 # ARCH = "mlnrfex_base"  # Explicit model with ignoring light interaction
 
-ARCH = "mlnrfnrf_base"  # Explicit model with NRF (colocated!) light interaction
-MODELOVERRIDES.update({'evaluate_novel_light': True, 'light_intensity': 5000})
+# ARCH = "mlnrfnrf_base"  # Explicit model with NRF (colocated!) light interaction
+# MODELOVERRIDES.update({'evaluate_novel_light': True, 'light_intensity': 5000})
 
 # ARCH = "mlnrfexva_base"  # Explicit model with VoxelApproximation light interaction
 # ARCH = "mlnrfexbf_base"  # Explicit model with Brute Force light interaction
