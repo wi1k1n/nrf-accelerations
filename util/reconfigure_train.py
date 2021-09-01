@@ -4,33 +4,33 @@ import xml.etree.ElementTree as ET
 from shutil import copyfile
 from reconfigure_utils import inject_pycharm_config
 
-DATA = "lego_random_exr"
-NAME = "test"  # postfix for dataset name
+DATA = "lego_coloc_exr"
+NAME = ""  # postfix for dataset name
 
-RES = "64x64"
-PIXELS_PER_VIEW = '100'
-VIEW_PER_BATCH = '3'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
-CHUNK_SIZE = '2'  #'256'  # > 1 to save memory to time
+RES = "256x256"
+PIXELS_PER_VIEW = '256'
+VIEW_PER_BATCH = '4'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
+CHUNK_SIZE = '6'  #'256'  # > 1 to save memory to time
 
-LR = '0.0002'  # 0.001
+LR = '0.0003'  # 0.001
 
 COLOR_WEIGHT = '1.0'  #'256.0'
 ALPHA_WEIGHT = '1e-3'  #'1e-3'
 
 
-REDUCE_STEP_SIZE_AT = '5000,25000,50000'
-HALF_VOXEL_SIZE_AT = '5000,25000,50000'
-PRUNNING_EVERY_STEPS = '5000'
+REDUCE_STEP_SIZE_AT = '7500,22500,60000'
+HALF_VOXEL_SIZE_AT = '7500,22500,60000'
+PRUNNING_EVERY_STEPS = '7500'
 # REDUCE_STEP_SIZE_AT = '10000,50000,100000'  # '5000,25000,75000'
 # HALF_VOXEL_SIZE_AT = '10000,50000,100000'  # '5000,25000,75000'
 # PRUNNING_EVERY_STEPS = '10000'
 
 PRUNNING_TH = '0.5'  # '0.5'
-SAVE_INTERVAL_UPDATES = '1000'#'750'  # '100'
-TOTAL_NUM_UPDATE = '150000'  # 150000
-TRAIN_VIEWS = '0..475'  # '0..100'
-VALID_VIEWS = '475..500'  # '100..200
-NUM_WORKERS = '0'  # '0'
+SAVE_INTERVAL_UPDATES = '100'#'750'  # '100'
+TOTAL_NUM_UPDATE = '500000'  # 150000
+TRAIN_VIEWS = '0..150'  # '0..100'
+VALID_VIEWS = '150..200'  # '100..200
+NUM_WORKERS = '10'  # '0'
 
 PREPROCESS = 'log'  # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #
@@ -73,7 +73,7 @@ PREDICT_L = True
 # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
 # LIGHT_INTENSITY = '500.0'  # rocket_exr -> 5k Watt
 # LIGHT_INTENSITY = '300.0'  # guitar_exr -> 0.5k Watt
-LIGHT_INTENSITY = '500.0'#'300.0'  # lego -> 0.7k Watt
+LIGHT_INTENSITY = '400.0'#'300.0'  # lego -> 0.7k Watt
 # LIGHT_INTENSITY = '1000.0'  # drums -> 1k Watt
 # LIGHT_INTENSITY = '500.0'  # hotdog -> 0.7k Watt
 TEXTURE_LAYERS = '5'

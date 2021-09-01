@@ -191,7 +191,8 @@ def train(args, trainer, task, epoch_itr):
 
                 logger.info("reset the trainer at {}".format(trainer.get_num_updates()))    
                 log_output = trainer.train_step(samples)
-            
+
+            metrics.log_scalar('mem', torch.cuda.memory_stats()['active_bytes.all.peak'] / 1024 / 1024, 0)
             if log_output is None:  # OOM, overflow, ...
                 continue
 
@@ -257,6 +258,7 @@ def get_training_stats(stats):
     if 'nll_loss' in stats and 'ppl' not in stats:
         stats['ppl'] = utils.get_perplexity(stats['nll_loss'])
     stats['wall'] = round(metrics.get_meter('default', 'wall').elapsed_time, 0)
+    # stats['mem'] = round(metrics.get_meter('default', 'wall'))
     return stats
 
 

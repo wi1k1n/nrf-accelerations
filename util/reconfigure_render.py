@@ -3,7 +3,7 @@ from reconfigure_utils import inject_pycharm_config
 import pyperclip
 
 DATA = "lego_random_exr"
-DATA_MODEL = 'lego_coloc_exr'  # data_folder for the model checkpoints; == DATA if empty
+DATA_MODEL = ''  # data_folder for the model checkpoints; == DATA if empty
 NAME = ""  # postfix for dataset name
 RENDER_OUTPUT = "test3"  # output if empty
 RES = "128x128"
