@@ -630,7 +630,8 @@ class LightBFVolumeRenderer(LightVolumeRenderer):
         outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
                                                early_stop, output_types)
 
-        outputs['light_transmittance'] = tau
+        if outputs is not None:
+            outputs['light_transmittance'] = tau
 
         return outputs, _evals
 

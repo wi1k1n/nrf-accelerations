@@ -6,7 +6,7 @@ DATA = "lego_random_exr"
 DATA_MODEL = 'lego_coloc_exr'  # data_folder for the model checkpoints; == DATA if empty
 NAME = ""  # postfix for dataset name
 RENDER_OUTPUT = "test3"  # output if empty
-RES = "256x256"
+RES = "128x128"
 # RENDER_PATH_LIGHT = True  # True - light source is moving, False - camera is moving
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/'\
 # 			   + DATA + '_' + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
@@ -29,7 +29,9 @@ BG_COLOR = '0.0'  # '0.25,0.25,0.25'  # '1.0,1.0,1.0'
 TASK = 'single_object_light_rendering'
 LAMBERT_ONLY = False
 TRACE_NORMAL = False
-MODELOVERRIDES = {}
+MODELOVERRIDES = {
+	'valid_chunk_size': CHUNK_SIZE
+}
 
 
 # # <!-- Original NSVF from facebook -->
@@ -42,7 +44,7 @@ MODELOVERRIDES = {}
 # ARCH = "mlnrfex_base"  # Explicit model with ignoring light interaction
 
 ARCH = "mlnrfnrf_base"  # Explicit model with NRF (colocated!) light interaction
-MODELOVERRIDES.update({'evaluate_novel_light': True})
+MODELOVERRIDES.update({'evaluate_novel_light': True, 'light_intensity': 5000})
 
 # ARCH = "mlnrfexva_base"  # Explicit model with VoxelApproximation light interaction
 # ARCH = "mlnrfexbf_base"  # Explicit model with Brute Force light interaction
@@ -159,7 +161,6 @@ if 'PREPROCESS' in locals():
 	parameters += '\n--preprocess ' + PREPROCESS
 if 'NRF_NOVEL_LIGHT' in locals() and NRF_NOVEL_LIGHT:
 	parameters += '\n--evaluate-novel-light'
-# parameters += '\n--model-overrides \'{"chunk_size":'+CHUNK_SIZE+',"raymarching_tolerance":0.01}\''
 parameters += '\n--render-beam ' + RENDER_BEAM
 parameters += '\n--render-save-fps ' + FPS
 # parameters += '\n--render-camera-poses ' + DATASET + '/test_traj.txt'
