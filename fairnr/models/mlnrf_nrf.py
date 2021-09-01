@@ -31,9 +31,15 @@ class MLNRFNRFModel(MLNRFExModel):
 	FIELD = 'radiance_explicit_light_field'
 	RAYMARCHER = 'light_nrf_volume_renderer'
 
+	def __init__(self, args, setups):
+		# if getattr(args, "evaluate_novel_light", False):
+		# 	setups['raymarcher'] = 'light_bruteforce_volume_renderer'
+		super().__init__(args, setups)
+
 	@classmethod
 	def add_args(cls, parser):
 		super().add_args(parser)
+		# parser.add_argument('--evaluate-novel-light', action='store_true', help='enables brute-forcing light rays for NRF')
 
 	def intersecting(self, ray_start, ray_dir, encoder_states, **kwargs):
 		return super().intersecting(ray_start, ray_dir, encoder_states, **kwargs)

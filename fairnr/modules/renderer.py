@@ -501,19 +501,6 @@ class LightIVAVolumeRenderer(LightVolumeRenderer):
 
 
 
-@register_renderer('light_nrf_volume_renderer')
-class LightNRFVolumeRenderer(LightVolumeRenderer):
-    def forward_once(
-            self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
-            early_stop=None, output_types=['sigma', 'texture'], **kwargs):
-        outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
-                                               early_stop, output_types)
-        if outputs is not None:
-            outputs['light_transmittance'] = torch.Tensor([])
-        return outputs, _evals
-
-
-
 @register_renderer('light_bruteforce_volume_renderer')
 class LightBFVolumeRenderer(LightVolumeRenderer):
     def __init__(self, args):
@@ -572,7 +559,7 @@ class LightBFVolumeRenderer(LightVolumeRenderer):
             self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
             early_stop=None, output_types=['sigma', 'texture'], **kwargs):
         ######### <LIGHT_RAYS>
-        if not 'texture' in output_types:
+        if not 'texture' in output_types or kwargs.pop('passthrough', False):
             return super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
                                                    early_stop, output_types)
 
@@ -645,6 +632,31 @@ class LightBFVolumeRenderer(LightVolumeRenderer):
 
         outputs['light_transmittance'] = tau
 
+        return outputs, _evals
+
+
+
+@register_renderer('light_nrf_volume_renderer')
+class LightNRFVolumeRenderer(LightBFVolumeRenderer):
+    def __init__(self, args):
+        super().__init__(args)
+        self.brute_force_light_rays = getattr(args, 'evaluate_novel_light', False)
+
+    @staticmethod
+    def add_args(parser):
+        super(LightNRFVolumeRenderer, LightNRFVolumeRenderer).add_args(parser)
+
+    def forward_once(
+            self, input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+            early_stop=None, output_types=['sigma', 'texture'], **kwargs):
+        if self.brute_force_light_rays:
+            return super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+                                                   early_stop, output_types)
+
+        outputs, _evals = super().forward_once(input_fn, field_fn, ray_start, ray_dir, samples, encoder_states,
+                                               early_stop, output_types, passthrough=True)
+        if outputs is not None:
+            outputs['light_transmittance'] = torch.Tensor([])
         return outputs, _evals
 
 

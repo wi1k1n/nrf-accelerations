@@ -60,3 +60,5 @@ def add_rendering_args(parser):
                         help='path to folder with target images')
     group.add_argument('--render-dry-run', action='store_true',
                         help='if the rendering should proceed without forward passes')
+
+    parser.add_argument('--evaluate-novel-light', action='store_true', help='enables brute-forcing light rays for NRF')

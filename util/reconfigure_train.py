@@ -2,23 +2,17 @@ import os, os.path as op, sys, time
 import pyperclip
 import xml.etree.ElementTree as ET
 from shutil import copyfile
-
 from reconfigure_utils import inject_pycharm_config
 
-COPY2CLIPBOARD = False  # after running the script the configuration is inserted into clipboard
-INJECT_PYCHARM = True
-SAVE_FILE = True
-
 DATA = "lego_random_exr"
-NAME = ""  # postfix for dataset name
-RES = "256x256"
-PIXELS_PER_VIEW = '128'
-VIEW_PER_BATCH = '4'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
+NAME = "test"  # postfix for dataset name
 
-USE_OCTREE = True
+RES = "64x64"
+PIXELS_PER_VIEW = '100'
+VIEW_PER_BATCH = '3'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
 CHUNK_SIZE = '2'  #'256'  # > 1 to save memory to time
-LR = '0.0005'  # 0.001
-VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
+
+LR = '0.0002'  # 0.001
 
 COLOR_WEIGHT = '1.0'  #'256.0'
 ALPHA_WEIGHT = '1e-3'  #'1e-3'
@@ -36,9 +30,8 @@ SAVE_INTERVAL_UPDATES = '1000'#'750'  # '100'
 TOTAL_NUM_UPDATE = '150000'  # 150000
 TRAIN_VIEWS = '0..475'  # '0..100'
 VALID_VIEWS = '475..500'  # '100..200
-NUM_WORKERS = '8'  # '0'
+NUM_WORKERS = '0'  # '0'
 
-HDRFLIP = True
 PREPROCESS = 'log'  # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #
 MAX_COLOR = '0.8'  # 0.8 - rocket/guitar/lego/hotdog; 5.0 - sphere; 0.3 - drums; 0.6 - lego-random
@@ -57,9 +50,9 @@ TASK = 'single_object_light_rendering'
 # TASK = 'single_object_rendering'
 # # <!/-- Original NSVF from facebook -->
 
-# <!-- Implicit model with ignoring light interaction -->
-ARCH = "mlnrf_base"
-# <!/-- Implicit model with ignoring light interaction -->
+# # <!-- Implicit model with ignoring light interaction -->
+# ARCH = "mlnrf_base"
+# # <!/-- Implicit model with ignoring light interaction -->
 
 # # <!-- Implicit model with InVoxelApproximation light interaction -->
 # ARCH = "mlnrfiva_base"
@@ -74,17 +67,17 @@ ARCH = "mlnrf_base"
 # LIGHT_INTENSITY = '1000.0'
 # # <!/-- Explicit model with ignoring light interaction -->
 
-# # <!-- Explicit model with NRF (colocated!) light interaction -->
-# ARCH = "mlnrfnrf_base"
-# PREDICT_L = True
-# # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
-# # LIGHT_INTENSITY = '500.0'  # rocket_exr -> 5k Watt
-# # LIGHT_INTENSITY = '300.0'  # guitar_exr -> 0.5k Watt
-# # LIGHT_INTENSITY = '500.0'#'300.0'  # lego -> 0.7k Watt
-# # LIGHT_INTENSITY = '1000.0'  # drums -> 1k Watt
+# <!-- Explicit model with NRF (colocated!) light interaction -->
+ARCH = "mlnrfnrf_base"
+PREDICT_L = True
+# LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
+# LIGHT_INTENSITY = '500.0'  # rocket_exr -> 5k Watt
+# LIGHT_INTENSITY = '300.0'  # guitar_exr -> 0.5k Watt
+LIGHT_INTENSITY = '500.0'#'300.0'  # lego -> 0.7k Watt
+# LIGHT_INTENSITY = '1000.0'  # drums -> 1k Watt
 # LIGHT_INTENSITY = '500.0'  # hotdog -> 0.7k Watt
-# TEXTURE_LAYERS = '5'
-# # <!/-- Explicit model with NRF (colocated!) light interaction -->
+TEXTURE_LAYERS = '5'
+# <!/-- Explicit model with NRF (colocated!) light interaction -->
 
 # # <!-- Explicit model with VoxelApproximation light interaction -->
 # ARCH = "mlnrfexva_base"
@@ -113,6 +106,7 @@ ARCH = "mlnrf_base"
 
 
 
+HDRFLIP = True
 LPIPS = True
 
 SUFFIX = "v1"
@@ -120,11 +114,17 @@ DATASET = "datasets/" + DATA  # "data/Synthetic_NeRF/" + DATA
 SAVE = "checkpoint/" + DATA + (('_' + NAME) if NAME else '')
 # SAVE = "checkpoint/rocket_random_exr_test4"
 MODEL = ARCH + SUFFIX
+VOXEL_NUM = '64'  # '512'  # mutually exclusive with VOXEL_SIZE = 0.27057
 #TODO: VOXEL_NUM & VOXEL_SIZE might not work as intended!
 
 
+USE_OCTREE = True
 # USE_CPU = False  # WARNING: does not work on CPU
 # SCENE_SCALE = '1.0'
+
+COPY2CLIPBOARD = False  # after running the script the configuration is inserted into clipboard
+INJECT_PYCHARM = True
+SAVE_FILE = True
 XML_PATH = '.run/train.run.xml'
 NUM_BACKUPS = 10
 

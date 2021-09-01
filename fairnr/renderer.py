@@ -143,6 +143,16 @@ class NeuralRenderer(object):
         image_names = []
         sample, step, frames = self.parse_sample(sample)
 
+        # assert sample['shape'].size(0) == 1, 'The code has not been tested for multiple shapes!'
+        # # save camera poses as 4x4 matrices in numpy format
+        # inv_RTs = [self.generate_rays(k,
+        #                             sample['intrinsics'][0],
+        #                             sample['size'][0, 0],
+        #                             self.test_poses[k] if self.test_poses is not None else None)[1].cpu()
+        #         for k in range(step, frames)
+        # ]
+        # np.save(os.path.join(output_path, 'poses'), np.stack(inv_RTs, 0))
+
         # fix the rendering size
         a = sample['size'][0,0,0] / self.resolution[0]
         b = sample['size'][0,0,1] / self.resolution[1]

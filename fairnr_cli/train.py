@@ -54,6 +54,9 @@ def main(args, init_distributed=False):
 
     # Print args
     logger.info(args)
+    # Save args as a separate file
+    with open(os.path.join(args.save_dir, 'args.txt'), 'w') as f:
+        print(' '.join(sys.argv), file=f)
 
     # Setup task, e.g., translation, language modeling, etc.
     task = tasks.setup_task(args)

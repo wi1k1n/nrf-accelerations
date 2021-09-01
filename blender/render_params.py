@@ -5,16 +5,16 @@ options_train = {
 	"START_FROM": 0,
 
 	"PATH_MODEL": 'models/hotdog.blend',
-	"DATASET_NAME": 'hotdog_coloc_exr',
+	"DATASET_NAME": 'hotdog_static_exr',
 	"OUTPUT_DIR": '%DATASET_NAME%',
 	# "PRESET_VIEWS_FOLDER": 'checkpoints/%DATASET_NAME%/mlnrf_base/output_cam',
 	"RESULTS_PATH": 'rgb',
 
 	"VOXEL_NUMS": 64,  # 512,  # can still be later overridden using argument 'VOXEL_NUM'
-	"VIEWS": 200,  # number of renderings. Ignored, if RANDOM_VIEWS == False
-	"RESOLUTION": 512,  # resolution of resulting renders
+	"VIEWS": 500,  # number of renderings. Ignored, if RANDOM_VIEWS == False
+	"RESOLUTION": 256,  # resolution of resulting renders
 	
-	"LIGHT_SETUP": 'colocated', # none/fixed/colocated/random. Ignored, if RANDOM_VIEWS == False
+	"LIGHT_SETUP": 'fixed', # none/fixed/colocated/random. Ignored, if RANDOM_VIEWS == False
 	"LIGHT_COS_CONSTRAIN": 120, # None/(0 ~ 180). Max angle between cam and light. Ignored, if RANDOM_VIEWS == False
 	# "LIGHT_COS_CONSTRAIN_RND": False,  	# False/(mean, std) (e.g. (0, 3*light_cos_constr). 
 	# 									# If constain is sharp or stochastic
@@ -22,7 +22,7 @@ options_train = {
 
 	"COLOR_DEPTH": 16,  # 8
 	"FORMAT": 'OPEN_EXR',  # 'PNG'/OPEN_EXR'/'HDR' # use 16/32 bit color depth with OPEN_EXR format
-	"CYCLES_SAMPLES": 1000,#100,
+	"CYCLES_SAMPLES": 500,#100,
 	"CYCLES_MAX_BOUNCES": 15,#4,
 
 	# "CAM_DISTANCE": 1.0,
@@ -42,17 +42,19 @@ options_train = {
 options_render = {
 	"START_FROM": 0,
 
-	"PATH_MODEL": 'models/guitar.blend',
-	"DATASET_NAME": 'guitar_coloc_exr',
+	"PATH_MODEL": 'models/lego.blend',
+	"DATASET_NAME": 'lego_static_exr',
 	# "MOVING_TYPE": 'light',
-	"MOVING_TYPE": 'cam',
+	# "MOVING_TYPE": 'cam',
 	"RESOLUTION": 256,  # resolution of resulting renders
 
-	"ARCH": 'mlnrfnrf_base',  # nsvf_base/mlnrf_base/mlnrfiva_base/mlnrfex_base/mlnrfnrf_base/mlnrfexbf_base
-	"POOLS": '../pool/u4106/checkpoint/', # ../pool/u4101/checkpoint/
+	"ARCH": 'mlnrf_base',  # nsvf_base/mlnrf_base/mlnrfiva_base/mlnrfex_base/mlnrfnrf_base/mlnrfexbf_base/mlnrfexva_base
+	"POOLS": '../pool/u4110/checkpoint/', # ../pool/u4101/checkpoint/
 
-	"OUTPUT_DIR": '%DATASET_NAME%_target_%MOVING_TYPE%',
-	"PRESET_VIEWS_FOLDER": 'checkpoints/%POOLS%%DATASET_NAME%/%ARCH%/output_%MOVING_TYPE%',
+	# "OUTPUT_DIR": '%DATASET_NAME%_target_%MOVING_TYPE%',
+	"OUTPUT_DIR": '%DATASET_NAME%_target',
+	# "PRESET_VIEWS_FOLDER": 'checkpoints/%POOLS%%DATASET_NAME%/%ARCH%/test_%MOVING_TYPE%',
+	"PRESET_VIEWS_FOLDER": 'checkpoints/%POOLS%%DATASET_NAME%/%ARCH%/test',
 	"VIEWS_PATH": '%PRESET_VIEWS_FOLDER%/pose',
 	"LIGHTS_PATH": '%PRESET_VIEWS_FOLDER%/pose_pl',
 
@@ -60,7 +62,7 @@ options_render = {
 
 	"COLOR_DEPTH": 16,
 	"FORMAT": 'OPEN_EXR',
-	"CYCLES_SAMPLES": 1000,#7000,
+	"CYCLES_SAMPLES": 500,#7000,
 	"CYCLES_MAX_BOUNCES": 20,#20,
 
 	# "CAM_DISTANCE": 1.0,
@@ -75,8 +77,8 @@ options_render = {
 	"PERCENTILE_MAX": 99.5,
 }
 
-options = options_train; print('\n'.join([''.join(['=']*10)]*3), '>>>>> TRAIN <<<<<');
-# options = options_render; print('\n'.join([''.join(['=']*10)]*3), '>>>>> RENDER <<<<<');
+# options = options_train; print('\n'.join([''.join(['=']*10)]*3), '>>>>> TRAIN <<<<<');
+options = options_render; print('\n'.join([''.join(['=']*10)]*3), '>>>>> RENDER <<<<<');
 
 # Substitute vars
 for key in options:
