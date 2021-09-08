@@ -5,7 +5,7 @@ import pyperclip
 DATA = "lego_random_exr"
 DATA_MODEL = ''  # data_folder for the model checkpoints; == DATA if empty
 NAME = ""  # postfix for dataset name
-RENDER_OUTPUT = ""  # output if empty
+RENDER_OUTPUT = "test"  # output if empty
 RES = "256x256"
 # RENDER_PATH_LIGHT = True  # True - light source is moving, False - camera is moving
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/'\
@@ -14,11 +14,11 @@ RES = "256x256"
 TARGETS_PATH = 'datasets/' + DATA + '_target' + '/target'
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/guitar_coloc_exr_target_cam/target'
 # TARGETS_PATH = '/tmp/mazlov/blender/guitar_coloc_exr_target_cam/target'
-DRY_RUN = True  # only create camera/light positions and do not evaluate model
+DRY_RUN = False  # only create camera/light positions and do not evaluate model
 
-CHUNK_SIZE = 128
+CHUNK_SIZE = 64
 RENDER_BEAM = '1'  # should be an even divisor of NUM_FRAMES TODO: fix it
-NUM_WORKERS = '10'
+NUM_WORKERS = '1'
 
 PREPROCESS = 'log' # none/mstd/minmax/log/nsvf(min_color==-1!)
 MIN_COLOR = '0.0'  #
@@ -39,8 +39,8 @@ MODELOVERRIDES = {
 # TASK = 'single_object_rendering'
 # # <!/-- Original NSVF from facebook -->
 
-# ARCH = "mlnrf_base"  # Implicit model with ignoring light interaction
-ARCH = "mlnrfiva_base"  # Implicit model with InVoxelApproximation light interaction
+ARCH = "mlnrf_base"  # Implicit model with ignoring light interaction
+# ARCH = "mlnrfiva_base"  # Implicit model with InVoxelApproximation light interaction
 # ARCH = "mlnrfex_base"  # Explicit model with ignoring light interaction
 
 # ARCH = "mlnrfnrf_base"  # Explicit model with NRF (colocated!) light interaction

@@ -19,6 +19,7 @@ from fairnr.data import trajectory, geometry, data_utils
 from fairseq.meters import StopwatchMeter
 from fairnr.data.data_utils import recover_image, get_uv, parse_views, load_rgb, load_exr
 from pathlib import Path
+from fairnr.data.data_utils import Preprocessor, LogPreprocessor
 
 logger = logging.getLogger(__name__)
 
@@ -137,6 +138,13 @@ class NeuralRenderer(object):
     def generate(self, models, sample, **kwargs):
         model = models[0]
         model.eval()
+        pprc = None
+        if 'log' == model.args.preprocess.lower():
+            pprc = LogPreprocessor()
+        elif 'none' == model.args.preprocess.lower():
+            pass
+        else:
+            raise Exception('No other preprocessor than log has been implemented for rendering!')
         
         logger.info("rendering starts. {}".format(model.text))
         output_path = self.output_dir
@@ -207,7 +215,7 @@ class NeuralRenderer(object):
                     if self.dry_run:
                         images = []
                     else:
-                        images = model.visualize(_sample, None, 0, k-step)
+                        images = model.visualize(_sample, None, 0, k-step, pprc=pprc)
                     image_name = "{:04d}".format(k)
 
                     for key in images:
@@ -235,7 +243,7 @@ class NeuralRenderer(object):
                                 save_image(image, os.path.join(prefix, image_name + '.png'), format=None)
                                 image_names.append(os.path.join(prefix, image_name + '.png'))
 
-                    for imgPath in self.save_additional(shape, k, step, _sample, output_path, image_name, **kwargs):
+                    for imgPath in self.save_additional(shape, k, step, _sample, output_path, image_name, args=model.args, **kwargs):
                         image_names.append(imgPath)
 
                 step = next_step
@@ -361,7 +369,8 @@ class LightNeuralRenderer(NeuralRenderer):
             targetRGB, _, _ = load_rgb(targetFiles[0], (w, h), with_alpha=False)
             targetRGB = torch.Tensor(targetRGB.transpose(1, 2, 0)).reshape(w * h, -1)
 
-            targetRGB = recover_image(targetRGB, min_val=self.min_color, max_val=self.max_color, width=w).permute(2, 0, 1)
+            gamma = kwargs['args'].gamma_correction if 'args' in kwargs else 1.0
+            targetRGB = recover_image(targetRGB, min_val=self.min_color, max_val=self.max_color, width=w, gamma=gamma).permute(2, 0, 1)
             savePath = os.path.join(prefix, image_name + '.png')
             save_image(targetRGB, savePath, format=None)
             imgPathsReturn.append(savePath)

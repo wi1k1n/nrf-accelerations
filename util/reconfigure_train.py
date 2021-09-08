@@ -4,15 +4,15 @@ import xml.etree.ElementTree as ET
 from shutil import copyfile
 from reconfigure_utils import inject_pycharm_config
 
-DATA = "lego_coloc_exr"
+DATA = "lego_random_exr"
 NAME = ""  # postfix for dataset name
 
 RES = "256x256"
-PIXELS_PER_VIEW = '128'
-VIEW_PER_BATCH = '3'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
-CHUNK_SIZE = '1'  #'256'  # > 1 to save memory to time
+PIXELS_PER_VIEW = '256'
+VIEW_PER_BATCH = '6'  # not sure, but better to be an even divisor of PIXELS_PER_VIEW
+CHUNK_SIZE = '4'  #'256'  # > 1 to save memory to time
 
-LR = '0.0003'  # 0.001
+LR = '0.0001'  # 0.001
 
 COLOR_WEIGHT = '1.0'  #'256.0'
 ALPHA_WEIGHT = '1e-3'  #'1e-3'
@@ -53,19 +53,6 @@ TASK = 'single_object_light_rendering'
 # ARCH = "mlnrf_base"
 # # <!/-- Implicit model with ignoring light interaction -->
 
-# # <!-- Implicit model with InVoxelApproximation light interaction -->
-# ARCH = "mlnrfiva_base"
-# VOXEL_SIGMA = 0.8
-# # <!/-- Implicit model with InVoxelApproximation light interaction -->
-
-# # <!-- Explicit model with ignoring light interaction -->
-# ARCH = "mlnrfex_base"
-# TRACE_NORMAL = True
-# LAMBERT_ONLY = False
-# TEXTURE_LAYERS = '4'
-# LIGHT_INTENSITY = '1000.0'
-# # <!/-- Explicit model with ignoring light interaction -->
-
 # # <!-- Explicit model with NRF (colocated!) light interaction -->
 # ARCH = "mlnrfnrf_base"
 # PREDICT_L = True
@@ -78,30 +65,30 @@ TASK = 'single_object_light_rendering'
 # TEXTURE_LAYERS = '5'
 # # <!/-- Explicit model with NRF (colocated!) light interaction -->
 
-# # <!-- Explicit model with VoxelApproximation light interaction -->
-# ARCH = "mlnrfexva_base"
-# PREDICT_L = True
-# VOXEL_SIGMA = 0.5
-# # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
-# # LIGHT_INTENSITY = '40.0'  # 500 excol; rocket_exr -> 5k Watt
-# # LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
-# # LIGHT_INTENSITY = '50.0'  # guitar_exr -> 0.5k Watt
-# LIGHT_INTENSITY = '400.0'  # 20 exbf/exva; lego -> 0.7k Watt
-# # LIGHT_INTENSITY = '50.0'  # hotdog -> 0.7k Watt
-# TEXTURE_LAYERS = '5'
-# # <!/-- Explicit model with VoxelApproximation light interaction -->
-
-# <!-- Explicit model with Brute Force light interaction -->
-ARCH = "mlnrfexbf_base"
+# <!-- Explicit model with VoxelApproximation light interaction -->
+ARCH = "mlnrfexva_base"
 PREDICT_L = True
+VOXEL_SIGMA = 0.5
 # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
-# LIGHT_INTENSITY = '500.0'  # rocket_exr -> 5k Watt
+# LIGHT_INTENSITY = '40.0'  # 500 excol; rocket_exr -> 5k Watt
 # LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
-# LIGHT_INTENSITY = '200.0'  # guitar_exr -> 0.5k Watt
-LIGHT_INTENSITY = '400.0'  # lego -> 0.7k Watt
-# LIGHT_INTENSITY = '300.0'  # hotdog -> 0.7k Watt
+# LIGHT_INTENSITY = '50.0'  # guitar_exr -> 0.5k Watt
+LIGHT_INTENSITY = '40.0'  # lego -> 0.7k Watt
+# LIGHT_INTENSITY = '50.0'  # hotdog -> 0.7k Watt
 TEXTURE_LAYERS = '5'
-# <!/-- Explicit model with Brute Force light interaction -->
+# <!/-- Explicit model with VoxelApproximation light interaction -->
+
+# # <!-- Explicit model with Brute Force light interaction -->
+# ARCH = "mlnrfexbf_base"
+# PREDICT_L = True
+# # LIGHT_INTENSITY = '1000.0'  # sphere_exr -> 1k Watt
+# # LIGHT_INTENSITY = '500.0'  # rocket_exr -> 5k Watt
+# # LIGHT_INTENSITY = '350.0'  # tablelamp_exr -> 0.5k Watt
+# # LIGHT_INTENSITY = '200.0'  # guitar_exr -> 0.5k Watt
+# LIGHT_INTENSITY = '40.0'  # lego -> 0.7k Watt
+# # LIGHT_INTENSITY = '300.0'  # hotdog -> 0.7k Watt
+# TEXTURE_LAYERS = '5'
+# # <!/-- Explicit model with Brute Force light interaction -->
 
 
 
@@ -234,3 +221,16 @@ if COPY2CLIPBOARD:
 
 if INJECT_PYCHARM:
 	inject_pycharm_config('train', XML_PATH, parameters, NUM_BACKUPS)
+
+# # <!-- Explicit model with ignoring light interaction -->
+# ARCH = "mlnrfex_base"
+# TRACE_NORMAL = True
+# LAMBERT_ONLY = False
+# TEXTURE_LAYERS = '4'
+# LIGHT_INTENSITY = '1000.0'
+# # <!/-- Explicit model with ignoring light interaction -->
+
+# # <!-- Implicit model with InVoxelApproximation light interaction -->
+# ARCH = "mlnrfiva_base"
+# VOXEL_SIGMA = 0.8
+# # <!/-- Implicit model with InVoxelApproximation light interaction -->
