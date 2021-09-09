@@ -6,12 +6,12 @@ DATA = "lego_random_exr"
 DATA_MODEL = ''  # data_folder for the model checkpoints; == DATA if empty
 NAME = ""  # postfix for dataset name
 RENDER_OUTPUT = "test"  # output if empty
-RES = "256x256"
+RES = "1024x1024"
 # RENDER_PATH_LIGHT = True  # True - light source is moving, False - camera is moving
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/'\
 # 			   + DATA + '_' + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
 # TARGETS_PATH = 'datasets/' + DATA + ('_' if NAME else '') + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
-TARGETS_PATH = 'datasets/' + DATA + '_target' + '/target'
+TARGETS_PATH = 'datasets/' + DATA + '_vs_lpan' + '/target'
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/guitar_coloc_exr_target_cam/target'
 # TARGETS_PATH = '/tmp/mazlov/blender/guitar_coloc_exr_target_cam/target'
 DRY_RUN = False  # only create camera/light positions and do not evaluate model
@@ -59,12 +59,12 @@ CHECKPOINT = 'checkpoint_last.pt'  # 'checkpoint_last.pt'
 MODEL_PATH = SAVE + '/' + MODEL + '/' + CHECKPOINT
 
 ####################################################
-#### Rocket
+#### Rocket - pl: (-0.98 -2.5 7.2) -> (a=111.4; h=7.2) camDst=5.0
 # # RENDER_PATH_ARGS = '{\'radius\':1.5,\'h\':3,\'o\':(-0.1,0.05,1.25)}'  # top diagonal view
 # RENDER_PATH_ARGS = '{\'radius\':4.5,\'h\':0.0,\'o\':(-0.1,0.05,1.25)}'
 # RENDER_AT_VECTOR = '"(-0.1,0.05,1.25)"'
 ####################################################
-#### Guitar
+#### Guitar - pl: (1.37, -1.22, 1.38) -> (a=41.7; h=1.38) camDst=1.6
 # RENDER_AT_VECTOR = '"(0, -0.06, 0.575)"'
 # # RENDER_PATH_ARGS = '"{\'radius\':0.8,\'h\':1.0,\'o\':(0,-0.06,0.5),\'t0\':0}"'
 # # RENDER_LIGHT_PATH_ARGS = '"{\'radius\':0.8,\'h\':1.0,\'o\':(0,-0.06,0.5),\'t0\':0}"'
@@ -76,13 +76,17 @@ MODEL_PATH = SAVE + '/' + MODEL + '/' + CHECKPOINT
 # RENDER_AT_VECTOR = '"(0,0,0)"'
 
 ####################################################
-#### Lego  (pl: (-2.2 2.7 2.7) -> (a=129.17; h=2.7)
+#### Lego - pl: (-2.2 2.7 2.7) -> (a=129.17; h=2.7)
 RENDER_AT_VECTOR = '"(0, 0, 0)"'
-
-# RENDER_PATH_ARGS = RENDER_LIGHT_PATH_ARGS = {'radius': 3.8, 'h': 2.7, 'o': (0, 0, 0), 't0': 180, 'axis': 'z'}
-
-RENDER_PATH_ARGS = {'radius': 2.0, 'h': 0, 'o': (0, -3.8, 2.7), 't0': 180, 'axis': 'z'}
-RENDER_LIGHT_PATH_ARGS = {'radius': 3.8, 'h': 2.7, 'o': (0, 0, 0), 't0': 129.17, 'axis': 'z'}
+# # === vs_lpan ===
+# RENDER_PATH_ARGS = 			{'radius': 3.8, 'h': 2.7, 'o': (0, 0, 0), 't0': 180, 'axis': 'z'}
+# RENDER_LIGHT_PATH_ARGS = 	{'radius': 3.8, 'h': 2.7, 'o': (0, 0, 0), 't0': 129.17, 'axis': 'z'}
+# # === vcirc_ls ===
+# RENDER_PATH_ARGS = 			{'radius': 1.5, 'h': 0, 'o': (-3.8, 0, 2.7-1.5), 't0': 90, 'axis': 'x'}
+# RENDER_LIGHT_PATH_ARGS = 	{'radius': 3.8, 'h': 2.7, 'o': (0, 0, 0), 't0': 129.17, 'axis': 'z'}
+# # === vpan_ls ===
+RENDER_PATH_ARGS = 			{'radius': 3.8, 'h': 2.7, 'o': (0, 0, 0), 't0': 180, 'axis': 'z'}
+RENDER_LIGHT_PATH_ARGS = 	{'radius': 3.8, 'h': 2.7, 'o': (0, 0, 0), 't0': 129.17, 'axis': 'z'}
 
 # RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17,\'axis\':\'y\'}"'
 # RENDER_LIGHT_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17,\'axis\':\'z\'}"'
@@ -92,12 +96,12 @@ RENDER_LIGHT_PATH_ARGS = {'radius': 3.8, 'h': 2.7, 'o': (0, 0, 0), 't0': 129.17,
 # RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17}"'
 # RENDER_LIGHT_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17}"'
 
-NUM_FRAMES = '12' #180
+NUM_FRAMES = '1' #180
 RENDER_PATH_STYLE = 'circle'
-RENDER_SPEED = '0'
+RENDER_SPEED = '5'
 RENDER_LIGHT_PATH_STYLE = 'circle'
-RENDER_LIGHT_SPEED = '30'
-FPS = '2'
+RENDER_LIGHT_SPEED = '0'
+FPS = '24'
 
 
 RAYMARCHING_TOLERANCE = 0.01

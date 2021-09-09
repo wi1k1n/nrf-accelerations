@@ -168,6 +168,8 @@ class NeuralRenderer(object):
         sample['size'][:, :, 1] /= b
         sample['size'][:, :, 2] *= a
         sample['size'][:, :, 3] *= b
+        sample['intrinsics'][:, 0, 2] *= a
+        sample['intrinsics'][:, 1, 2] *= b
 
         for shape in range(sample['shape'].size(0)):
             max_step = step + frames
