@@ -6,12 +6,12 @@ DATA = "lego_coloc_exr"
 DATA_MODEL = ''  # data_folder for the model checkpoints; == DATA if empty
 NAME = ""  # postfix for dataset name (e.g. u4101)
 RENDER_OUTPUT = "coloc1"  # output if empty
-RES = "512x512"
+RES = "128x128"
 # RENDER_PATH_LIGHT = True  # True - light source is moving, False - camera is moving
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/'\
 # 			   + DATA + '_' + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
 # TARGETS_PATH = 'datasets/' + DATA + ('_' if NAME else '') + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
-TARGETS_PATH = 'datasets/' + DATA + '_vs_lpan' + '/target'
+TARGETS_PATH = 'datasets/' + DATA + '_coloc1' + '/target'
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/guitar_coloc_exr_target_cam/target'
 # TARGETS_PATH = '/tmp/mazlov/blender/guitar_coloc_exr_target_cam/target'
 DRY_RUN = False  # only create camera/light positions and do not evaluate model

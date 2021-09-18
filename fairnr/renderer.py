@@ -13,6 +13,7 @@ import torch
 import numpy as np
 import logging
 import imageio
+import cv2
 
 from torchvision.utils import save_image
 from fairnr.data import trajectory, geometry, data_utils
@@ -373,6 +374,7 @@ class LightNeuralRenderer(NeuralRenderer):
 
             gamma = kwargs['args'].gamma_correction if 'args' in kwargs else 1.0
             targetRGB = recover_image(targetRGB, min_val=self.min_color, max_val=self.max_color, width=w, gamma=gamma).permute(2, 0, 1)
+            targetRGB = torch.Tensor(cv2.resize(targetRGB.permute(1, 2, 0).numpy(), (w, h), interpolation=cv2.INTER_LINEAR).astype('float32').transpose(2, 0, 1))
             savePath = os.path.join(prefix, image_name + '.png')
             save_image(targetRGB, savePath, format=None)
             imgPathsReturn.append(savePath)
