@@ -33,6 +33,12 @@ def circle(radius=3.5, h=0.0, axis='z', t0=0, r=1, o=(0,0,0)):
     else:
         return lambda t: [h + o[0], radius * np.cos(r * t+ra(t0)) + o[1], radius * np.sin(r * t+ra(t0)) + o[2]]
 
+@register_traj('drunk')
+def drunk(radius=3.5, h=0.0, N=4, A=1.0, axis='z', t0=0, r=1, o=(0,0,0)):
+    assert axis == 'z', 'not Z aligned axis is not supported'
+    ra = lambda t: t * np.pi / 180.0
+    # o - origin point
+    return lambda t: [radius * np.cos(r * t+ra(t0)) + o[0], radius * np.sin(r * t+ra(t0)) + o[1], h + o[2] + A * np.cos(N * t + ra(t0))]
 
 @register_traj('zoomin_circle')
 def zoomin_circle(radius=3.5, h=0.0, axis='z', t0=0, r=1):

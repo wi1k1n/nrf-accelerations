@@ -3,15 +3,15 @@ from reconfigure_utils import inject_pycharm_config
 import pyperclip
 
 DATA = "lego_coloc_exr"
-DATA_MODEL = ''  # data_folder for the model checkpoints; == DATA if empty
+DATA_MODEL = 'lego_random_exr'  # data_folder for the model checkpoints; == DATA if empty
 NAME = ""  # postfix for dataset name (e.g. u4101)
-RENDER_OUTPUT = "coloc1"  # output if empty
+RENDER_OUTPUT = "coloc4"  # output if empty
 RES = "256x256"
 # RENDER_PATH_LIGHT = True  # True - light source is moving, False - camera is moving
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/'\
 # 			   + DATA + '_' + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
 # TARGETS_PATH = 'datasets/' + DATA + ('_' if NAME else '') + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
-TARGETS_PATH = 'datasets/' + DATA + '_coloc1' + '/target'
+TARGETS_PATH = 'datasets/' + DATA + '_coloc2' + '/target'
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/guitar_coloc_exr_target_cam/target'
 # TARGETS_PATH = '/tmp/mazlov/blender/guitar_coloc_exr_target_cam/target'
 DRY_RUN = False  # only create camera/light positions and do not evaluate model
@@ -39,16 +39,16 @@ MODELOVERRIDES = {
 # TASK = 'single_object_rendering'
 # # <!/-- Original NSVF from facebook -->
 
-ARCH = "mlnrf_base"  # Implicit model with ignoring light interaction
-# ARCH = "mlnrfiva_base"  # Implicit model with InVoxelApproximation light interaction
-# ARCH = "mlnrfex_base"  # Explicit model with ignoring light interaction
-
 # ARCH = "mlnrfnrf_base"  # Explicit model with NRF (colocated!) light interaction
 # MODELOVERRIDES.update({'evaluate_novel_light': True, 'light_intensity': 5000})
 
+ARCH = "mlnrf_base"  # Implicit model with ignoring light interaction
 # ARCH = "mlnrfexva_base"  # Explicit model with VoxelApproximation light interaction
 # ARCH = "mlnrfexbf_base"  # Explicit model with Brute Force light interaction
 
+
+# ARCH = "mlnrfiva_base"  # Implicit model with InVoxelApproximation light interaction
+# ARCH = "mlnrfex_base"  # Explicit model with ignoring light interaction
 
 DATASET = "datasets/" + DATA  # "data/Synthetic_NeRF/" + DATA
 SAVE = "checkpoint/" + (DATA_MODEL if DATA_MODEL else DATA) + (('_' + NAME) if NAME else '')
@@ -66,6 +66,10 @@ MODEL_PATH = SAVE + '/' + MODEL + '/' + CHECKPOINT
 ####################################################
 #### Guitar - pl: (1.37, -1.22, 1.38) -> (a=41.7; h=1.38) camDst=1.6
 # RENDER_AT_VECTOR = '"(0, -0.06, 0.575)"'
+# # === vs_lpan ===
+# RENDER_PATH_ARGS = 			{'radius': 0.8, 'h': 1.0, 'o': (0, -0.06, 0.5), 't0': 41.7, 'axis': 'z'}
+# RENDER_LIGHT_PATH_ARGS = 	{'radius': 0.8, 'h': 1.38, 'o': (0, -0.06, 0.5), 't0': 41.7, 'axis': 'z'}
+
 # # RENDER_PATH_ARGS = '"{\'radius\':0.8,\'h\':1.0,\'o\':(0,-0.06,0.5),\'t0\':0}"'
 # # RENDER_LIGHT_PATH_ARGS = '"{\'radius\':0.8,\'h\':1.0,\'o\':(0,-0.06,0.5),\'t0\':0}"'
 # RENDER_PATH_ARGS = '"{\'radius\':1.7,\'h\':0.5,\'o\':(0,-0.06,0.5),\'t0\':-90}"'
@@ -84,20 +88,15 @@ RENDER_AT_VECTOR = '"(0, 0, 0)"'
 # # === vcirc_ls ===
 # RENDER_PATH_ARGS = 			{'radius': 1.5, 'h': 0, 'o': (-3.8, 0, 2.7-1.5), 't0': 90, 'axis': 'x'}
 # RENDER_LIGHT_PATH_ARGS = 	{'radius': 3.8, 'h': 2.7, 'o': (0, 0, 0), 't0': 129.17, 'axis': 'z'}
-# # === vpan_ls ===
+# === vpan_ls ===
 RENDER_PATH_ARGS = 			{'radius': 3.8, 'h': 2.7, 'o': (0, 0, 0), 't0': 180, 'axis': 'z'}
 RENDER_LIGHT_PATH_ARGS = 	{'radius': 3.8, 'h': 2.7, 'o': (0, 0, 0), 't0': 129.17, 'axis': 'z'}
-
-# RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17,\'axis\':\'y\'}"'
-# RENDER_LIGHT_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17,\'axis\':\'z\'}"'
-# RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.0,\'o\':(0,0,0),\'t0\':0}"'
-# RENDER_LIGHT_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.0,\'o\':(0,0,0),\'t0\':0}"'
-# # !!Static Light!!
-# RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17}"'
-# RENDER_LIGHT_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17}"'
+# # === vpan_lpan ===
+# RENDER_PATH_ARGS = 			{'radius': 3.8, 'h': 2.7, 'o': (0, 0, 0), 't0': 180, 'axis': 'z'}
+# RENDER_LIGHT_PATH_ARGS = 	{'radius': 3.8, 'h': 2.7, 'o': (0, 0, 0), 't0': 180, 'axis': 'z'}
 
 NUM_FRAMES = '180' #180
-RENDER_PATH_STYLE = 'circle'
+RENDER_PATH_STYLE = 'drunk'
 RENDER_SPEED = '2'
 RENDER_LIGHT_PATH_STYLE = 'circle'
 RENDER_LIGHT_SPEED = '0'
