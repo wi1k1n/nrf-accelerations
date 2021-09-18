@@ -2,11 +2,11 @@ import os, os.path as op, sys
 from reconfigure_utils import inject_pycharm_config
 import pyperclip
 
-DATA = "lego_random_exr"
+DATA = "lego_coloc_exr"
 DATA_MODEL = ''  # data_folder for the model checkpoints; == DATA if empty
-NAME = ""  # postfix for dataset name
-RENDER_OUTPUT = "test"  # output if empty
-RES = "1024x1024"
+NAME = ""  # postfix for dataset name (e.g. u4101)
+RENDER_OUTPUT = "coloc1"  # output if empty
+RES = "512x512"
 # RENDER_PATH_LIGHT = True  # True - light source is moving, False - camera is moving
 # TARGETS_PATH = '/data/mazlov2/Documents/thesis/codes/blender/'\
 # 			   + DATA + '_' + NAME + '_target_' + ('light' if RENDER_PATH_LIGHT else 'cam') + '/target'
@@ -16,7 +16,7 @@ TARGETS_PATH = 'datasets/' + DATA + '_vs_lpan' + '/target'
 # TARGETS_PATH = '/tmp/mazlov/blender/guitar_coloc_exr_target_cam/target'
 DRY_RUN = False  # only create camera/light positions and do not evaluate model
 
-CHUNK_SIZE = 64
+CHUNK_SIZE = 2
 RENDER_BEAM = '1'  # should be an even divisor of NUM_FRAMES TODO: fix it
 NUM_WORKERS = '1'
 
@@ -39,11 +39,11 @@ MODELOVERRIDES = {
 # TASK = 'single_object_rendering'
 # # <!/-- Original NSVF from facebook -->
 
-ARCH = "mlnrf_base"  # Implicit model with ignoring light interaction
+# ARCH = "mlnrf_base"  # Implicit model with ignoring light interaction
 # ARCH = "mlnrfiva_base"  # Implicit model with InVoxelApproximation light interaction
 # ARCH = "mlnrfex_base"  # Explicit model with ignoring light interaction
 
-# ARCH = "mlnrfnrf_base"  # Explicit model with NRF (colocated!) light interaction
+ARCH = "mlnrfnrf_base"  # Explicit model with NRF (colocated!) light interaction
 # MODELOVERRIDES.update({'evaluate_novel_light': True, 'light_intensity': 5000})
 
 # ARCH = "mlnrfexva_base"  # Explicit model with VoxelApproximation light interaction
@@ -96,9 +96,9 @@ RENDER_LIGHT_PATH_ARGS = 	{'radius': 3.8, 'h': 2.7, 'o': (0, 0, 0), 't0': 129.17
 # RENDER_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17}"'
 # RENDER_LIGHT_PATH_ARGS = '"{\'radius\':3.8,\'h\':2.7,\'o\':(0,0,0),\'t0\':129.17}"'
 
-NUM_FRAMES = '1' #180
+NUM_FRAMES = '180' #180
 RENDER_PATH_STYLE = 'circle'
-RENDER_SPEED = '5'
+RENDER_SPEED = '1'
 RENDER_LIGHT_PATH_STYLE = 'circle'
 RENDER_LIGHT_SPEED = '0'
 FPS = '24'

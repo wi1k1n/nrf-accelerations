@@ -51,6 +51,8 @@ TASK = 'single_object_light_rendering'
 
 # # <!-- Implicit model with ignoring light interaction -->
 # ARCH = "mlnrf_base"
+# # EMBL_L = '10'  # !! Both EMBL_V & EMBL_L should be set in order to have effect !!
+# # EMBL_V = '10'
 # # <!/-- Implicit model with ignoring light interaction -->
 
 # # <!-- Explicit model with NRF (colocated!) light interaction -->
@@ -186,6 +188,8 @@ if USE_OCTREE:
 	parameters += '\n--use-octree'
 if 'TEXTURE_LAYERS' in locals():
 	parameters += '\n--texture-layers ' + TEXTURE_LAYERS
+if 'EMBL_L' in locals() and 'EMBL_V' in locals():
+	parameters += '\n--inputs-to-texture feat:0:256,ray:'+EMBL_V+',light:'+EMBL_L+',lightd:0:1'
 # if USE_CPU:
 # 	parameters += '\n--cpu'
 parameters += '\n--optimizer "adam"'
