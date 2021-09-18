@@ -49,6 +49,9 @@ def _main(args, output_file):
     if args.max_tokens is None and args.max_sentences is None:
         args.max_tokens = 12000
     logger.info(args)
+    # Save args as a separate file
+    with open(os.path.join(args.render_output, 'args.txt'), 'w') as f:
+        print(' '.join(sys.argv), file=f)
 
     use_cuda = torch.cuda.is_available() and not args.cpu
 
