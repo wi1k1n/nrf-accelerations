@@ -5,7 +5,7 @@
 import subprocess, sys
 from render_params import opts
 
-cmd = ['blender', opts.PATH_MODEL, '--background', '--python', 'create_dataset.py', '--', opts.OUTPUT_DIR]
+cmd = ['blender', opts.PATH_MODEL, '--background', '--python', 'create_dataset.py', '--', opts.OUTPUT_DIR, 'render']
 subprocess.run(cmd, stdout=sys.stdout)
 
 # cmd = ['blender', opts.PATH_MODEL, '--background', '--python', 'test.py']

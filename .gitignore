@@ -17,7 +17,6 @@ tools/
 fb_sweep/
 fb_scripts/
 
-configuration.txt
 configuration_render.txt
 fairnr.uml
 examples/data/ilya/

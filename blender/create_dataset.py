@@ -18,9 +18,6 @@ import numpy as np
 from pprint import pprint
 from pathlib import Path
 
-sys.path.append(os.getcwd())
-from render_params import opts
-
 
 np.random.seed(2)  # fixed seed
 POSTPROCESSING_SCRIPT = True
@@ -29,10 +26,19 @@ POSTPROCESSING_SCRIPT = True
 ### Argument Parser code
 parser = argparse.ArgumentParser(description='Renders given obj file by rotation a camera around it.')
 parser.add_argument('output', type=str, help='path where files will be saved')
+parser.add_argument('task', type=str, help='task type: train/render')
 
 argv = sys.argv
 argv = argv[argv.index("--") + 1:]
 args = parser.parse_args(argv)
+
+sys.path.append(os.getcwd())
+if args.task.lower() == 'train':
+    from train_params import opts
+elif args.task.lower() == 'render':
+    from render_params import opts
+else:
+    raise Exception('Provided argument task={} is not recognized!'.format(args.task))
 
 ### Manage directories
 homedir = args.output
@@ -67,6 +73,7 @@ bpy.context.scene.render.use_persistent_data = True
 print("---------------   SCENE LIST   ---------------")
 for scene in bpy.data.scenes:
     print('Scene name: ', scene.name)
+    # bpy.context.scene.render.engine = opts.RENDER_ENGINE
     scene.cycles.device = 'GPU'
     scene.render.resolution_percentage = 200
     scene.cycles.samples = opts.CYCLES_SAMPLES
@@ -97,29 +104,29 @@ bpy.context.scene.render.image_settings.file_format = str(opts.FORMAT)
 if (opts.FORMAT == 'OPEN_EXR'): bpy.context.scene.render.image_settings.exr_codec = 'PIZ'
 bpy.context.scene.render.image_settings.color_depth = str(opts.COLOR_DEPTH)
 
-if not opts.DEBUG:
-    # Create input render layer node.
-    render_layers = tree.nodes.new('CompositorNodeRLayers')
+# if not opts.DEBUG:
+#     # Create input render layer node.
+#     render_layers = tree.nodes.new('CompositorNodeRLayers')
 
-    depth_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
-    depth_file_output.label = 'Depth Output'
-    if opts.FORMAT == 'OPEN_EXR':
-      links.new(render_layers.outputs['Depth'], depth_file_output.inputs[0])
-    else:
-      # Remap as other types can not represent the full range of depth.
-      map = tree.nodes.new(type="CompositorNodeMapValue")
-      # Size is chosen kind of arbitrarily, try out until you're satisfied with resulting depth map.
-      map.offset = [-0.7]
-      map.size = [opts.DEPTH_SCALE]
-      map.use_min = True
-      map.min = [0]
-      links.new(render_layers.outputs['Depth'], map.inputs[0])
+#     depth_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
+#     depth_file_output.label = 'Depth Output'
+#     if opts.FORMAT == 'OPEN_EXR':
+#       links.new(render_layers.outputs['Depth'], depth_file_output.inputs[0])
+#     else:
+#       # Remap as other types can not represent the full range of depth.
+#       map = tree.nodes.new(type="CompositorNodeMapValue")
+#       # Size is chosen kind of arbitrarily, try out until you're satisfied with resulting depth map.
+#       map.offset = [-0.7]
+#       map.size = [opts.DEPTH_SCALE]
+#       map.use_min = True
+#       map.min = [0]
+#       links.new(render_layers.outputs['Depth'], map.inputs[0])
 
-      links.new(map.outputs[0], depth_file_output.inputs[0])
+#       links.new(map.outputs[0], depth_file_output.inputs[0])
 
-    normal_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
-    normal_file_output.label = 'Normal Output'
-    links.new(render_layers.outputs['Normal'], normal_file_output.inputs[0])
+#     normal_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
+#     normal_file_output.label = 'Normal Output'
+#     links.new(render_layers.outputs['Normal'], normal_file_output.inputs[0])
 
 ### Background
 bpy.context.scene.render.dither_intensity = 0.0
@@ -267,9 +274,9 @@ assert scene.objects.get('PointLight'), 'PointLight not found. Please make sure 
 
 
 out_data['frames'] = []
-if not opts.DEBUG:
-    for output_node in [depth_file_output, normal_file_output]:
-        output_node.base_path = ''
+# if not opts.DEBUG:
+#     for output_node in [depth_file_output, normal_file_output]:
+#         output_node.base_path = ''
 
 def listify_matrix(matrix):
     matrix_list = []
@@ -404,6 +411,7 @@ for i in range(0, views2iterate):
 
 
     if opts.DEBUG:
+        # time.sleep(1)
         continue
     else:
         print('BEFORE RENDER')
