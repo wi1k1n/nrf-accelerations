@@ -1,15 +1,15 @@
 # Neural Radiance Fields Accelerations
 
-### [Slides.pptx](https://drive.google.com/file/d/1i-JHoEFQpQDFWPiEMsnoChZDTb_iUa3K/view?usp=sharing) | [Thesis](writings/thesis.pdf) | [Datasets](#dataset)
+### [Slides.pptx <small>(32MB)</small>](https://drive.google.com/file/d/1i-JHoEFQpQDFWPiEMsnoChZDTb_iUa3K/view?usp=sharing) | [G.Slides <small>(>100MB)</small>](https://docs.google.com/presentation/d/1fEngk_6vb-xVJexkbAmytQwUyBLu2KVcjKzn4UpqoZo/edit?usp=sharing) | [Thesis](writings/thesis.pdf) | [Datasets](#dataset)
 
 <img title="" src="docs/figs/thanks.gif" alt="">
 
 Photo-realistic scene reconstruction under novel viewing and illumination conditions
 is a challenging long-standing problem in computer graphics. Recent studies in this field have shown the applicability of deep neural networks to learn an implicit neural representation of the scene containing both geometric and appearance information about the scene.
 
-Most works focus on extracting radiance fields under the static illumination of the scene. [Mildenhall et al. 2020](https://github.com/bmild/nerf) presented the state-of-the-art approach NeRF, which learns continuous volumetric scene representation from the set of known 2D views. This allows to reconstruct the learned scene from the novel viewpoints, however, the proposed approach suffers from inefficiency. To improve NeRF's performance [Liu et al. 2020](https://github.com/facebookresearch/NSVF) show the application of octrees to learn Neural Sparse Voxel Fields (NSVF) that achieve up to 10 times better performance.
+Most works focus on extracting radiance fields under the static illumination of the scene. [Mildenhall et al. 2020] presented the state-of-the-art approach [NeRF](https://github.com/bmild/nerf), which learns continuous volumetric scene representation from the set of known 2D views. This allows to reconstruct the learned scene from the novel viewpoints, however, the proposed approach suffers from inefficiency. To improve NeRF's performance [Liu et al. 2020] show the application of octrees to learn [Neural Sparse Voxel Fields (NSVF)](https://github.com/facebookresearch/NSVF) that achieve up to 10 times better performance.
 
-However, learned with NSVF radiance fields are still not implying any light interaction that allows to model light-dependent effects and reconstruct the scene under novel llumination conditions. [Bi et al. 2020](https://arxiv.org/abs/2008.03824) propose Neural Reflectance Fields (NRF) that considers a single non-static point light illumination on the scene and implies additional light rays sampling, which drastically increases method complexity.
+However, learned with NSVF radiance fields are still not implying any light interaction that allows to model light-dependent effects and reconstruct the scene under novel llumination conditions. [Bi et al. 2020] propose [Neural Reflectance Fields (NRF)](https://arxiv.org/abs/2008.03824) that considers a single non-static point light illumination on the scene and implies additional light rays sampling, which drastically increases method complexity.
 
 In this work, the performance limitation is addressed and several methods that allow increasing NRF's efficiency are offered. Explicit schemes *ExCol* and *ExBF* are meant to accelerate NRF approach using voxel octree structure, similarly to NSVF approach. Explicit scheme *ExVA* offers the in-voxel approximation, which makes the *ExBF* method more practical. Another *ImNRF* method is based on the original NSVF approach and implies learning an implicit neural reflectance representation of the scene.
 
