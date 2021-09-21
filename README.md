@@ -1,4 +1,4 @@
-# Neural Radiance Fields Accelerations
+# Neural Radiance & Reflectance Fields Accelerations
 
 ### [Slides.pptx <small>(32MB)</small>](https://drive.google.com/file/d/1i-JHoEFQpQDFWPiEMsnoChZDTb_iUa3K/view?usp=sharing) | [G.Slides <small>(>100MB)</small>](https://docs.google.com/presentation/d/1fEngk_6vb-xVJexkbAmytQwUyBLu2KVcjKzn4UpqoZo/edit?usp=sharing) | [Thesis](writings/thesis.pdf) | [Datasets](#dataset)
 
